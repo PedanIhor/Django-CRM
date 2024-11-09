@@ -132,7 +132,6 @@ class BillingAddressSerializer(serializers.ModelSerializer):
 
 
 class CreateUserSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = User
         fields = (
@@ -177,7 +176,6 @@ class CreateProfileSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = User
         fields = ["id", "email", "profile_pic"]
@@ -248,9 +246,9 @@ class DocumentCreateSerializer(serializers.ModelSerializer):
     def validate_title(self, title):
         if self.instance:
             if (
-                Document.objects.filter(title__iexact=title, org=self.org)
-                .exclude(id=self.instance.id)
-                .exists()
+                    Document.objects.filter(title__iexact=title, org=self.org)
+                            .exclude(id=self.instance.id)
+                            .exists()
             ):
                 raise serializers.ValidationError(
                     "Document with this Title already exists"
@@ -289,7 +287,7 @@ class APISettingsSerializer(serializers.ModelSerializer):
 
     def validate_website(self, website):
         if website and not (
-            website.startswith("http://") or website.startswith("https://")
+                website.startswith("http://") or website.startswith("https://")
         ):
             raise serializers.ValidationError("Please provide valid schema")
         if not len(find_urls(website)) > 0:
@@ -403,14 +401,29 @@ class UserPatchSwaggerSerializer(serializers.Serializer):
 
 
 class UserUpdateStatusSwaggerSerializer(serializers.Serializer):
-
     STATUS_CHOICES = ["Active", "Inactive"]
 
+    status = serializers.ChoiceField(choices=STATUS_CHOICES, required=True)
 
-    status = serializers.ChoiceField(choices = STATUS_CHOICES,required=True)
 
 class PasswordSetupSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True)
 
+    def validate_password(self, value):
+        """
+        I define some rules for password set_up serializer
+        - At least 6 characters long.
+        - No spaces allowed in the password.
+        """
 
+        if len(value) < 6:
+            raise serializers.ValidationError("Password must be at least 6 characters long.")
 
+        if " " in value:
+            raise serializers.ValidationError("Password should not contain spaces.")
+
+        weak_passwords = ["password", "123456", "qwerty", "admin"]
+        if value.lower() in weak_passwords:
+            raise serializers.ValidationError("This password is too weak. Please choose a stronger password.")
+
+        return value

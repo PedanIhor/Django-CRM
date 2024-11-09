@@ -348,9 +348,9 @@ class UserDetailView(APIView):
         address_obj = profile.address
 
         if (
-            self.request.profile.role != "ADMIN"
-            and not self.request.user.is_superuser
-            and self.request.profile.id != profile.id
+                self.request.profile.role != "ADMIN"
+                and not self.request.user.is_superuser
+                and self.request.profile.id != profile.id
         ):
             return Response(
                 {"error": True, "errors": "Permission Denied"},
@@ -1085,46 +1085,48 @@ class ValidateTokenView(APIView):
         if user.key_expires < timezone.now():
             return Response({"error": True, "message": "Token expired"}, status=status.HTTP_400_BAD_REQUEST)
         # Token is valid
-        return Response({"error": False, "message": "Token is valid", "token": activation_key}, status=status.HTTP_200_OK)
+        return Response({"error": False, "message": "Token is valid", "token": activation_key},
+                        status=status.HTTP_200_OK)
 
 
-@extend_schema(request=PasswordSetupSerializer)
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework import status
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.auth.hashers import make_password
+from django.utils import timezone
+from django.shortcuts import get_object_or_404
+from .serializer import PasswordSetupSerializer
+from .models import User
+
+
 class PasswordSetupView(APIView):
     def post(self, request, activation_key):
-        # Validate the incoming request data
-        serializer = PasswordSetupSerializer(data=request.data)
-        if serializer.is_valid():  # If data is valid
-            # Access the validated password
+
+        user = get_object_or_404(User, activation_key=activation_key)
+
+        if user.key_expires < timezone.now():
+            return Response({"error": True, "message": "Token expired"}, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = PasswordSetupSerializer(data=request.data, context={'user': user})
+        if serializer.is_valid():
             new_password = serializer.validated_data['password']
 
-            # Fetch the user by activation_key
-            user = get_object_or_404(User, activation_key=activation_key)
-
-            # Confirm token is still valid
-            if user.key_expires < timezone.now():
-                return Response({"error": True, "message": "Token expired"}, status=status.HTTP_400_BAD_REQUEST)
-
-            # Set the new password for the user and activate the account
-            user.password = make_password(new_password)  # Set hashed password
-            user.is_active = True  # Activate the user
+            user.password = make_password(new_password)
+            user.is_active = True
             user.save()
 
-            # Invalidate the token
             user.activation_key = None
             user.key_expires = None
             user.save()
 
-            # Create JWT tokens for the user
             refresh = RefreshToken.for_user(user)
 
-            # Return the tokens to the frontend
             return Response({
                 "error": False,
                 "message": "Password set successfully",
                 "refresh": str(refresh),
-                # This is the access token
                 "access": str(refresh.access_token),
             }, status=status.HTTP_200_OK)
 
-        # If validation fails, return the errors
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
