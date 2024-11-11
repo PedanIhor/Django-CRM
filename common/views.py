@@ -2,7 +2,15 @@ import json
 import secrets
 from multiprocessing import context
 from re import template
-
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework import status
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.auth.hashers import make_password
+from django.utils import timezone
+from django.shortcuts import get_object_or_404
+from .serializer import PasswordSetupSerializer
+from .models import User
 import requests
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.hashers import make_password
@@ -1087,17 +1095,6 @@ class ValidateTokenView(APIView):
         # Token is valid
         return Response({"error": False, "message": "Token is valid", "token": activation_key},
                         status=status.HTTP_200_OK)
-
-
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework import status
-from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.auth.hashers import make_password
-from django.utils import timezone
-from django.shortcuts import get_object_or_404
-from .serializer import PasswordSetupSerializer
-from .models import User
 
 
 class PasswordSetupView(APIView):
