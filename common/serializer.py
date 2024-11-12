@@ -407,15 +407,19 @@ class UserUpdateStatusSwaggerSerializer(serializers.Serializer):
 
 
 class PasswordSetupSerializer(serializers.Serializer):
-    password = serializers.CharField(write_only=True)
+    password = serializers.CharField(
+        write_only=True,
+        help_text="Password should be at least 6 characters long, without spaces or weak patterns like 'password', "
+                  " '123456'."
+    )
 
     def validate_password(self, value):
         """
-        I define some rules for password set_up serializer
+        Define rules for password validation.
         - At least 6 characters long.
         - No spaces allowed in the password.
+        - Should not be a common, weak password.
         """
-
         if len(value) < 6:
             raise serializers.ValidationError("Password must be at least 6 characters long.")
 

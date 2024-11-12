@@ -1097,6 +1097,7 @@ class ValidateTokenView(APIView):
                         status=status.HTTP_200_OK)
 
 
+@extend_schema(request=PasswordSetupSerializer)
 class PasswordSetupView(APIView):
     def post(self, request, activation_key):
 
