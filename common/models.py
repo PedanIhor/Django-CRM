@@ -31,6 +31,20 @@ def img_url(self, filename):
     return "%s/%s/%s" % ("profile_pics", hash_, filename)
 
 
+class Module(models.Model):
+    name = models.CharField(max_length=50)
+
+
+class Permission(models.Model):
+    name = models.CharField(max_length=500, unique=True, primary_key=True)
+    module = models.ForeignKey(Module, on_delete=models.CASCADE, related_name="permissions")
+
+
+class Role(models.Model):
+    name = models.CharField(max_length=50, unique=True, primary_key=True)
+    permissions = models.ManyToManyField(Permission)
+
+
 class User(AbstractBaseUser, PermissionsMixin):
     id = models.UUIDField(
         default=uuid.uuid4, unique=True, editable=False, db_index=True, primary_key=True
@@ -206,7 +220,7 @@ class Profile(BaseModel):
         blank=True,
         null=True,
     )
-    role = models.CharField(max_length=50, choices=ROLES, default="USER")
+    role = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True, related_name="users")
     has_sales_access = models.BooleanField(default=False)
     has_marketing_access = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)

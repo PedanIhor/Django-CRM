@@ -25,8 +25,37 @@ from common.models import (
     Org,
     Profile,
     User,
+    Role,
+    Permission,
+    Module
 )
 
+
+class ModuleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Module
+        fields = (
+            "id",
+            "name"
+        )
+
+class PermissionSerializer(serializers.ModelSerializer):
+    module = ModuleSerializer()
+    class Meta:
+        model = Permission
+        fields = (
+            "name",
+            "module"
+        )
+
+class RoleSerializer(serializers.ModelSerializer):
+    permissions = PermissionSerializer(many=True)
+    class Meta:
+        model = Role
+        fields = (
+            "name",
+            "permissions"
+        )
 
 class OrganizationSerializer(serializers.ModelSerializer):
     class Meta:
@@ -102,6 +131,7 @@ class ShowOrganizationListSerializer(serializers.ModelSerializer):
     """
 
     org = OrganizationSerializer()
+    role = RoleSerializer()
 
     class Meta:
         model = Profile
@@ -167,6 +197,8 @@ class CreateUserSerializer(serializers.ModelSerializer):
 
 
 class CreateProfileSerializer(serializers.ModelSerializer):
+    role = serializers.PrimaryKeyRelatedField(queryset=Role.objects.all())
+
     class Meta:
         model = Profile
         fields = (
@@ -194,6 +226,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 class ProfileSerializer(serializers.ModelSerializer):
     # address = BillingAddressSerializer()
+    role = RoleSerializer()
 
     class Meta:
         model = Profile

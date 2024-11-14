@@ -39,7 +39,7 @@ from cases.serializer import CaseSerializer
 
 # from common.custom_auth import JSONWebTokenAuthentication
 from common import serializer, swagger_params1
-from common.models import APISettings, Document, Org, Profile, User
+from common.models import APISettings, Document, Org, Profile, User, Role
 from common.serializer import *
 # from common.serializer import (
 #     CreateUserSerializer,
@@ -142,7 +142,7 @@ class UsersListView(APIView, LimitOffsetPagination):
 
     @extend_schema(parameters=swagger_params1.user_list_params)
     def get(self, request, format=None):
-        if self.request.profile.role != "ADMIN" and not self.request.user.is_superuser:
+        if self.request.profile.role.name != "ADMIN" and not self.request.user.is_superuser:
             return Response(
                 {"error": True, "errors": "Permission Denied"},
                 status=status.HTTP_403_FORBIDDEN,
@@ -499,7 +499,7 @@ class OrgProfileCreateView(APIView):
                 user=request.user, org=org_obj)
             # now the current user is the admin of the newly created organisation
             profile_obj.is_organization_admin = True
-            profile_obj.role = 'ADMIN'
+            profile_obj.role = Role.objects.filter(pk='ADMIN').first()
             profile_obj.save()
 
             return Response(

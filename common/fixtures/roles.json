@@ -1,0 +1,118 @@
+[
+  {
+    "model": "common.module",
+    "pk": 0,
+    "fields": {
+      "name": "Leads"
+    }
+  },
+  {
+    "model": "common.module",
+    "pk": 1,
+    "fields": {
+      "name": "Contacts"
+    }
+  },
+  {
+    "model": "common.module",
+    "pk": 2,
+    "fields": {
+      "name": "Opportunieties"
+    }
+  },
+  {
+    "model": "common.module",
+    "pk": 3,
+    "fields": {
+      "name": "Accounts"
+    }
+  },
+  {
+    "model": "common.module",
+    "pk": 4,
+    "fields": {
+      "name": "Companies"
+    }
+  },
+  {
+    "model": "common.module",
+    "pk": 5,
+    "fields": {
+      "name": "Users"
+    }
+  },
+  {
+    "model": "common.module",
+    "pk": 6,
+    "fields": {
+      "name": "Cases"
+    }
+  },
+  {
+    "model": "common.module",
+    "pk": 7,
+    "fields": {
+      "name": "Settings"
+    }
+  },
+  {
+    "model": "common.permission",
+    "fields": {
+      "name": "add_user",
+      "module": 5
+    }
+  },
+  {
+    "model": "common.permission",
+    "fields": {
+      "name": "get_user",
+      "module": 5
+    }
+  },
+  {
+    "model": "common.permission",
+    "fields": {
+      "name": "edit_user",
+      "module": 5
+    }
+  },
+  {
+    "model": "common.permission",
+    "fields": {
+      "name": "delete_user",
+      "module": 5
+    }
+  },
+  {
+    "model": "common.role",
+    "pk": "ADMIN",
+    "fields": {
+      "name": "ADMIN",
+      "permissions": ["add_user", "get_user", "edit_user", "delete_user"]
+    }
+  },
+  {
+    "model": "common.role",
+    "pk": "SALES_MANAGER",
+    "fields": {
+      "name": "SALES_MANAGER",
+      "permissions": ["get_user"]
+    }
+  },
+  {
+    "model": "common.role",
+    "pk": "SALES_REPRESENTATIVE",
+    "fields": {
+      "name": "SALES_REPRESENTATIVE",
+      "permissions": ["get_user"]
+    }
+  },
+  {
+    "model": "common.role",
+    "pk": "USER",
+    "fields": {
+      "name": "USER",
+      "permissions": ["get_user"]
+    }
+  }
+]
