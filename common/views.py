@@ -64,7 +64,8 @@ from opportunity.serializer import OpportunitySerializer
 from teams.models import Teams
 from teams.serializer import TeamsSerializer
 from django.core.exceptions import ObjectDoesNotExist
-
+from common.access_decorators_mixins import has_permission
+from common.crm_permissions import IsAdmin, CrmPermissions, CrmRoles
 
 class GetTeamsAndUsersView(APIView):
     permission_classes = (IsAuthenticated,)
