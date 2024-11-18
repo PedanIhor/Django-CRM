@@ -11,7 +11,7 @@ if [ ! -e $CONTAINER_ALREADY_STARTED ]; then
     touch $CONTAINER_ALREADY_STARTED
     echo "-- First container startup --"
     # YOUR_JUST_ONCE_LOGIC_HERE
-    python3 manage.py loaddata roles.json
+    python3 manage.py loaddata roles.yaml
 
 else
     echo "-- Not first container startup --"
