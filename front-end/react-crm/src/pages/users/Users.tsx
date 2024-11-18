@@ -321,7 +321,7 @@ export default function Users() {
                         state: {
                             value: {
                                 email: data?.user_details?.email,
-                                role: data?.role,
+                                role: data?.role.name,
                                 phone: data?.phone,
                                 alternate_phone: data?.alternate_phone,
                                 address_line: data?.address?.address_line,
@@ -595,7 +595,7 @@ export default function Users() {
                                                                     </div>
                                                                 </TableCell>
                                                                 <TableCell className='tableCell'>
-                                                                    {item?.role ? item.role : '---'}
+                                                                    {item?.role.name ? item.role.name : '---'}
                                                                 </TableCell>
                                                                 {/* <TableCell
                                                             align='left'
@@ -681,7 +681,7 @@ export default function Users() {
                                                                     </div>
                                                                 </TableCell>
                                                                 <TableCell className='tableCell'>
-                                                                    {item?.role ? item.role : '---'}
+                                                                    {item?.role.name ? item.role.name : '---'}
                                                                 </TableCell>
                                                                 {/* <TableCell
                                                             align='left'
