@@ -139,3 +139,43 @@ class OpportunityUpdateStageSerializer(serializers.ModelSerializer):
         fields = (
             "stage",
         )
+
+class OpportunityCardViewSerializer(serializers.ModelSerializer):
+    profile_pics = serializers.SerializerMethodField()
+    stage = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Opportunity
+        fields = [
+            "id",
+            "name",
+            "stage",
+            "amount",
+            "probability",
+            "profile_pics",
+        ]
+
+    def get_profile_pics(self, obj):
+        """Get profile pictures of all assigned users."""
+        if hasattr(obj, 'assigned_profiles'):
+            return [
+                profile.user.profile_pic
+                for profile in obj.assigned_profiles
+                if profile.user and profile.user.profile_pic
+            ]
+        return []
+    def get_stage(self, obj):
+        """Map individual statuses to stages"""
+        STAGE_MAPPING = {
+            'QUALIFICATION': 'early_stage',
+            'ID.DECISION MAKERS': 'early_stage',
+            'NEEDS ANALYSIS': 'middle_stage',
+            'PERCEPTION ANALYSIS': 'middle_stage',
+            'VALUE PROPOSITION': 'middle_stage',
+            'PROPOSAL/PRICE QUOTE': 'late_stage',
+            'NEGOTIATION/REVIEW': 'late_stage',
+            'CLOSED WON': 'final_stage',
+            'CLOSED LOST': 'final_stage'
+        }
+        return STAGE_MAPPING.get(obj.stage, 'unknown')
+
