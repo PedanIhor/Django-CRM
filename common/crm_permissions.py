@@ -1,5 +1,5 @@
-from rest_framework.permissions import IsAuthenticated, BasePermission
-from common.models import Profile, Role, Permission
+from rest_framework.permissions import IsAuthenticated
+from common.models import Profile, Permission
 
 
 class IsAdmin(IsAuthenticated):
@@ -26,14 +26,16 @@ class CrmRoles(IsAuthenticated):
 
 class CrmPermissions(IsAuthenticated):
     def __init__(self,
+                 list: str = None,
                  get: str = None,
                  post: str = None,
                  patch: str = None,
                  put: str = None,
                  delete: str = None
                  ):
-        self.get = get
+        self.list = list
         self.post = post
+        self.get = get
         self.patch = patch
         self.put = put
         self.delete = delete
@@ -46,7 +48,10 @@ class CrmPermissions(IsAuthenticated):
             user_permissions = set(map(lambda x: x.name, role_permissions))
 
             if self.get and request.method == 'GET':
-                return self.get in user_permissions
+                if view.action == "list":
+                    return self.list in user_permissions
+                else:
+                    return self.get in user_permissions
 
             elif self.post and request.method == 'POST':
                 return self.post in user_permissions
@@ -74,13 +79,14 @@ def crm_roles(roles: list[str]):
     return CustomCrmRoles
 
 
-def crm_permissions(get: str = None,
+def crm_permissions(list: str = None,
+                    get: str = None,
                     post: str = None,
                     patch: str = None,
                     put: str = None,
                     delete: str = None):
     class CustomCrmPermission(CrmPermissions):
         def __init__(self):
-            super().__init__(get=get, post=post, patch=patch, put=put, delete=delete)
+            super().__init__(list=list, get=get, post=post, patch=patch, put=put, delete=delete)
 
     return CustomCrmPermission

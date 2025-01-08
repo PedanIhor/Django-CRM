@@ -1,4 +1,3 @@
-from asyncore import write
 from dataclasses import field
 from email.message import EmailMessage
 from importlib.metadata import requires
@@ -30,69 +29,120 @@ from common.models import (
     Permission,
     Module
 )
+from help_tools.default_roles import generate_default_access_models
 
 
 class ModuleSerializer(serializers.ModelSerializer):
+    org_id = serializers.PrimaryKeyRelatedField(source='org', read_only=True)
+
     class Meta:
         model = Module
         fields = (
             "id",
-            "name"
+            "name",
+            "org_id"
         )
 
 
-class PermissionSerializer(serializers.ModelSerializer):
-    module = ModuleSerializer()
+class PermissionSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=100)
+    module_id = serializers.PrimaryKeyRelatedField(queryset=Module.objects.all())
+
     class Meta:
         model = Permission
-        fields = (
-            "name",
-            "module"
-        )
+        fields = [
+            "name", "module_id"
+        ]
 
+    def create(self, validated_data):
+        org_id = self.context.get('org_id')
+        name = validated_data.pop("name")
+        module = validated_data.pop("module_id")
+        instance = Permission.objects.create(name=name, module=module, org_id=org_id)
+        return instance
 
-class RoleSerializer(serializers.ModelSerializer):
-    permissions = PermissionSerializer(many=True)
+    def update(self, instance, validated_data):
+        name = validated_data.pop("name", None)
+        module = validated_data.pop("module_id", None)
+        if name:
+            instance.name = name
+        if module:
+            instance.module = module
+        instance.save()
+        return instance
 
-    class Meta:
-        model = Role
-        fields = (
-            "name",
-            "permissions"
-        )
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['org_id'] = instance.org.id
+        representation['id'] = instance.id
+        return representation
 
 
 class RoleInputSerializer(serializers.ModelSerializer):
-    permissions = serializers.ListSerializer(child=serializers.CharField())
+    permissions = serializers.ListField(child=serializers.CharField())
 
     class Meta:
         model = Role
-        fields = (
-            "name",
-            "permissions"
-        )
-
+        fields = [
+            "name", "permissions"
+        ]
 
     def validate_permissions(self, value):
+        org_id = self.context.get("org_id")
         for name in value:
-            if not Permission.objects.filter(name=name).exists():
-                raise serializers.ValidationError(f"Permission {name} is not exist")
+            if not Permission.objects.filter(name=name, org__id=org_id).exists():
+                raise serializers.ValidationError(f"Permission {name} is not exist in org {org_id}")
         return value
 
     def create(self, validated_data):
-        permissions_data = validated_data.pop("permissions")
-        permissions = Permission.objects.filter(name__in=permissions_data).all()
-        role = Role.objects.create(**validated_data)
-        role.permissions.set(permissions)
+        permissions_data = validated_data.pop("permissions", None)
+        org_id = self.context.get("org_id")
+        if not org_id:
+            raise ValidationError(f"org_id = {org_id}")
+        role = Role.objects.create(**validated_data, org_id=org_id)
+        if permissions_data:
+            permissions = Permission.objects.filter(name__in=permissions_data, org__id=org_id).all()
+            role.permissions.set(permissions)
         return role
 
     def update(self, instance, validated_data):
-        instance.name = validated_data.pop('name')
-        permissions_names = validated_data.pop('permissions')
-        permissions = Permission.objects.filter(name__in=permissions_names).all()
+        name = validated_data.pop('name', None)
+        if name:
+            instance.name = name
+        org_id = self.context.get("org_id")
+        permissions_names = validated_data.pop('permissions', None)
+        permissions = Permission.objects.filter(name__in=permissions_names, org__id=org_id).all()
         instance.permissions.set(permissions)
         instance.save()
         return instance
+
+
+class RoleSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Role
+        fields = [
+            "name"
+        ]
+
+    def __init__(self, *args, **kwargs):
+        include_permissions = kwargs.pop('include_permissions', True)
+        super().__init__(*args, **kwargs)
+        if include_permissions:
+            self.fields['permissions'] = self.get_permissions_field()
+
+    def get_permissions_field(self):
+        return serializers.SerializerMethodField()
+
+    def get_permissions(self, obj):
+        permissions = obj.permissions.all()
+        return list(map(lambda x: x.name, permissions))
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['id'] = instance.id
+        representation['org_id'] = instance.org.id
+        return representation
 
 
 class OrganizationSerializer(serializers.ModelSerializer):
@@ -161,6 +211,11 @@ class OrgProfileCreateSerializer(serializers.ModelSerializer):
                 "Organization already exists with this name"
             )
         return name
+
+
+    def create(self, validated_data):
+        org = Org.objects.create(**validated_data)
+        generate_default_access_models(org)
 
 
 class ShowOrganizationListSerializer(serializers.ModelSerializer):

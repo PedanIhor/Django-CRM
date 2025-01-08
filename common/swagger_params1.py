@@ -35,3 +35,12 @@ document_get_params = [
     OpenApiParameter("shared_to", OpenApiTypes.STR,OpenApiParameter.QUERY),
 ]
 
+permissions_params = [
+    OpenApiParameter(
+        name='module_id',
+        type=int,
+        description='Filter permissions by module id.',
+        required=False,
+        location=OpenApiParameter.QUERY
+    ),
+]

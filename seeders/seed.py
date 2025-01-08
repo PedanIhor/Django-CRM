@@ -6,6 +6,7 @@ from leads.models import Lead, Company
 from opportunity.models import Opportunity
 from accounts.models import Account
 from teams.models import Teams
+from help_tools.default_roles import generate_default_access_models
 
 faker = Faker()
 
@@ -18,6 +19,7 @@ def seed_database():
             google_auth_enabled=True,  # All google_auth_enabled set to True
             is_active=True
         )
+        generate_default_access_models(org)
         organizations.append(org)
 
     for org in organizations:
@@ -43,9 +45,9 @@ def seed_database():
                 country="US"
             )
             if i == 0:
-                role = Role.objects.get(pk="ADMIN")
+                role = Role.objects.filter(org=org).filter(name="ADMIN").first()
             else:
-                role = Role.objects.get(pk="EMPLOYEE")
+                role = Role.objects.filter(org=org).filter(name="EMPLOYEE").first()
             profile = Profile.objects.create(
                 user=user,
                 org=org,
@@ -186,4 +188,6 @@ def seed_database():
             opportunity.contacts.add(lead.contacts.first())
             opportunity.assigned_to.set(lead.assigned_to.all())
 
-seed_database()
+
+if not Org.objects.all():
+    seed_database()

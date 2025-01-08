@@ -33,16 +33,25 @@ def img_url(self, filename):
 
 class Module(models.Model):
     name = models.CharField(max_length=50)
+    org = models.ForeignKey('Org', on_delete=models.CASCADE, related_name="modules")
 
 
 class Permission(models.Model):
-    name = models.CharField(max_length=500, unique=True, primary_key=True)
-    module = models.ForeignKey(Module, on_delete=models.CASCADE, related_name="permissions")
+    id = models.UUIDField(
+        default=uuid.uuid4, unique=True, editable=False, db_index=True, primary_key=True
+    )
+    name = models.CharField(max_length=100, db_index=True)
+    module = models.ForeignKey(Module, on_delete=models.SET_NULL, related_name="permissions", null=True)
+    org = models.ForeignKey('Org', on_delete=models.CASCADE, related_name="permissions")
 
 
 class Role(models.Model):
-    name = models.CharField(max_length=50, unique=True, primary_key=True)
+    id = models.UUIDField(
+        default=uuid.uuid4, unique=True, editable=False, db_index=True, primary_key=True
+    )
+    name = models.CharField(max_length=50, db_index=True)
     permissions = models.ManyToManyField(Permission, related_name="roles")
+    org = models.ForeignKey('Org', on_delete=models.CASCADE, related_name="roles")
 
 
 class User(AbstractBaseUser, PermissionsMixin):

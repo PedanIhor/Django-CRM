@@ -22,9 +22,9 @@ from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import OpenApiExample, OpenApiParameter, extend_schema
+from drf_spectacular.utils import OpenApiExample, OpenApiParameter, extend_schema, extend_schema_view
 # from common.external_auth import CustomDualAuthentication
-from rest_framework import status
+from rest_framework import status, viewsets
 from rest_framework.authtoken.models import Token
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticated
@@ -64,8 +64,8 @@ from opportunity.serializer import OpportunitySerializer
 from teams.models import Teams
 from teams.serializer import TeamsSerializer
 from django.core.exceptions import ObjectDoesNotExist
-from common.access_decorators_mixins import has_permission
 from common.crm_permissions import IsAdmin, crm_permissions, crm_roles
+from help_tools import help_views
 
 class GetTeamsAndUsersView(APIView):
     permission_classes = (IsAuthenticated,)
@@ -1185,64 +1185,8 @@ class VerifyEmailForRegistrationView(APIView):
             },
             status=status.HTTP_200_OK
         )
-    
 
 
-class RoleView(APIView):
-    permission_classes = (crm_permissions(get='get_role', post='add_role', put='edit_role', delete='delete_role'),)
-
-    @extend_schema(tags=['roles'], summary='Get role object for a provided name', responses=RoleSerializer)
-    def get(self, request, pk):
-        role = get_object_or_404(Role, pk=pk)
-        return Response(RoleSerializer(role).data)
-
-    @extend_schema(tags=['roles'],
-                   summary='Update a role object with a new name or permissions',
-                   request=RoleInputSerializer,
-                   responses=RoleSerializer)
-    def put(self, request, pk):
-        current = Role.objects.get(pk=pk)
-        is_new = not current
-        serializer = RoleInputSerializer(data=request.data, instance=current)
-        serializer.is_valid(raise_exception=True)
-        role = serializer.save()
-
-        response_serializer = RoleSerializer(role)
-
-        if is_new:
-            return Response(response_serializer.data, status=status.HTTP_201_CREATED)
-        else:
-            return Response(response_serializer.data, status=status.HTTP_200_OK)
-
-    @extend_schema(tags=['roles'], summary='Delete a role object for a provided name')
-    def delete(self, request, pk):
-        role = get_object_or_404(Role, pk=pk)
-        role.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-class RolesView(APIView):
-    permission_classes = (crm_roles(roles=["ADMIN", "SALES_MANAGER", "SALES_REPRESENTATIVE"]),)
-
-    @extend_schema(tags=['roles'], summary='Get all roles object')
-    def get(self, request):
-        roles = Role.objects.all()
-        role_serializer = RoleSerializer(roles, many=True)
-        return Response(role_serializer.data)
-
-    @extend_schema(tags=['roles'],
-                   summary='Create a new role object for a provided name and permissions',
-                   responses=RoleSerializer,
-                   request=RoleInputSerializer)
-    def post(self, request):
-        role_serializer = RoleInputSerializer(data=request.data)
-        if role_serializer.is_valid():
-            role = role_serializer.save()
-            response_serializer = RoleSerializer(role)
-            return Response(response_serializer.data,
-                            status=status.HTTP_201_CREATED)
-        return Response(role_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
 class UnreadNotificationsView(APIView):
     def get(self, request):
         # Fetch unread notifications for the authenticated user
@@ -1278,3 +1222,88 @@ class UserNotificationsView(APIView):
         return Response({
             "notifications": serializer.data
         })
+
+
+@extend_schema_view(list=extend_schema(parameters=swagger_params1.permissions_params))
+class PermissionsViewSet(help_views.OrgViewSet):
+    permission_classes = (crm_roles(["ADMIN"]),)
+    serializer_class = PermissionSerializer
+    queryset = Permission.objects.all()
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        module_id = self.request.GET.get('module_id', None)  # Fetch the 'module_id' query parameter
+        if module_id:
+            # Filter permissions by the module id
+            queryset = queryset.filter(module__id=module_id)
+
+        return queryset
+
+
+class ModulesListView(APIView):
+    permission_classes = (crm_roles("ADMIN"),)
+
+    @extend_schema(parameters=[swagger_params1.organization_params_in_header])
+    def get(self, request, *args, **kwargs):
+        org_header = request.headers.get("org")
+        org_id = str(request.profile.org.id)
+
+        if request.user.is_superuser:
+            modules = Module.objects.all()
+        elif not request.user.is_superuser and org_id == org_header:
+            modules = Module.objects.filter(org__id=org_id).all()
+        else:
+            return Response(
+                {"error": True, "errors": "You don't have permissions to perform this action!"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        serializer = ModuleSerializer(modules, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class RolesViewSet(help_views.OrgViewSet):
+    permission_classes = (crm_permissions(
+        list='list_roles', get='get_roles', post='add_roles',
+        put='edit_roles', patch='edit_roles', delete='delete_roles'),
+    )
+    queryset = Role.objects.all()
+    serializer_class = RoleSerializer
+
+    @extend_schema(parameters=swagger_params1.organization_params)
+    def create(self, request, *args, **kwargs):
+        serializer = RoleInputSerializer(data=request.data, context=self.get_serializer_context())
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+
+        response_serializer = RoleSerializer(instance=serializer.instance,
+                                             context=self.get_serializer_context(),
+                                             include_permissions=True)
+        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+
+    @extend_schema(parameters=swagger_params1.organization_params)
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = RoleInputSerializer(instance=instance, data=request.data, context=self.get_serializer_context())
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        response_serializer = RoleSerializer(instance=serializer.instance,
+                                             context=self.get_serializer_context(),
+                                             include_permissions=True)
+        return Response(response_serializer.data, status=status.HTTP_200_OK)
+
+    @extend_schema(parameters=[
+        OpenApiParameter("include_permissions",
+                         type=bool,
+                         location=OpenApiParameter.QUERY,
+                         description='Include the array of permissions',
+                         required=False),
+        swagger_params1.organization_params_in_header
+    ])
+    def list(self, request, *args, **kwargs):
+        include_permissions = request.query_params.get('include_permissions', None)
+        if include_permissions is not None:
+            include_permissions = include_permissions.lower() in ['true', '1', 't']
+        role_serializer = RoleSerializer(self.get_queryset(), many=True, include_permissions=include_permissions)
+        return Response(role_serializer.data)

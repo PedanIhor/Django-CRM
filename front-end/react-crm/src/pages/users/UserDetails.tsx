@@ -23,7 +23,10 @@ type response = {
         is_active: boolean;
         profile_pic: string;
     };
-    role: string;
+    role: {
+        name: string;
+        permissions: string[];
+    };
     address: {
         address_line: string;
         street: string;
@@ -106,7 +109,7 @@ export default function UserDetails() {
             state: {
                 value: {
                     email: userDetails?.user_details?.email,
-                    role: userDetails?.role,
+                    role: userDetails?.role.name,
                     phone: userDetails?.phone,
                     alternate_phone: userDetails?.alternate_phone,
                     address_line: userDetails?.address?.address_line,
@@ -210,7 +213,7 @@ export default function UserDetails() {
                                 <div style={{ width: '32%' }}>
                                     <div className='title2'>Role</div>
                                     <div style={{ fontSize: '16px', color: '#1E90FF', marginTop: '5%' }}>
-                                        {userDetails?.role || '---'}
+                                        {userDetails?.role.name || '---'}
                                     </div>
                                 </div>
                                 <div style={{ width: '32%' }}>
