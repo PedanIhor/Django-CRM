@@ -54,7 +54,7 @@ from common.crm_permissions import crm_permissions
 
 class LeadListView(APIView, LimitOffsetPagination):
     model = Lead
-    permission_classes = (crm_permissions(get="get_lead", post="add_lead"),)
+    permission_classes = (crm_permissions(get="get_leads", list="list_leads", post="add_leads"),)
 
     def get_context_data(self, **kwargs):
         params = self.request.query_params
