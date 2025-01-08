@@ -1,4 +1,5 @@
 from rest_framework.permissions import IsAuthenticated
+from rest_framework import viewsets
 from common.models import Profile, Permission
 
 
@@ -48,10 +49,13 @@ class CrmPermissions(IsAuthenticated):
             user_permissions = set(map(lambda x: x.name, role_permissions))
 
             if self.get and request.method == 'GET':
-                if view.action == "list":
-                    return self.list in user_permissions
+                if hasattr(view, 'action'):
+                    if view.action == "list":
+                        return self.list in user_permissions
+                    else:
+                        return self.get in user_permissions
                 else:
-                    return self.get in user_permissions
+                    return self.list in user_permissions or self.get in user_permissions
 
             elif self.post and request.method == 'POST':
                 return self.post in user_permissions
