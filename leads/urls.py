@@ -19,6 +19,5 @@ urlpatterns = [
     path("attachment/<str:pk>/", views.LeadAttachmentView.as_view()),
     path("companies",views.CompaniesView.as_view()),
     path('company/<str:pk>', views.CompanyDetail.as_view()),
-    path('<str:pk>/status', views.LeadStatusUpdate.as_view()),
-
+    path('<str:pk>/status/', views.LeadStatusUpdate.as_view()),
 ]
