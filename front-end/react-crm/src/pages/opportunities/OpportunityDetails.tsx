@@ -158,16 +158,11 @@ export const OpportunityDetails = (props: any) => {
             );
             setCompletedSteps(initialCompletedSteps);
             setActiveStep(stages.findIndex(stage => stage === currentStage));
+            console.log(activeStep)
         }
     }, [stages, currentStage]);
 
-    const extractStages = (stagesArray: [string, string][]) => {
-        return stagesArray.map(([key]) => key); // Extract the first element of each tuple
-    };
 
-    const getActiveStep = (stages: string[], currentStage: string): number => {
-        return stages.findIndex(stage => stage.toLowerCase() === currentStage.toLowerCase());
-    };
 
 
     const CustomStepConnector = styled(StepConnector)({
@@ -258,6 +253,7 @@ export const OpportunityDetails = (props: any) => {
                     // setComments(res?.comments)
                     setCurrentStage(res?.opportunity_obj.stage)
                     setStages(res?.stage?.map((stage: [string, string]) => stage[1]) || []);
+                    
 
 
                 }
@@ -318,69 +314,49 @@ export const OpportunityDetails = (props: any) => {
 
     const handleStageUpdate = async () => {
         if (activeStep > -1) {
-            // Determine the updated stage based on the active step
             const updatedStage = stages[activeStep];
+            if (!updatedStage) {
+                console.error('Invalid stage index:', activeStep);
+                return;
+            }
 
-            // Optimistically update the UI first (before waiting for the server response)
+            // Optimistically update UI first
             setCompletedSteps(prev => {
                 const newCompleted = [...prev];
-
-                // Add the current active step to the completed steps
                 if (!newCompleted.includes(activeStep)) {
                     newCompleted.push(activeStep);
                 }
-
                 return newCompleted;
             });
 
-            setCurrentStage(updatedStage); // Update current stage immediately in the UI
-            setActiveStep(activeStep); // Ensure active step is reflected immediately
-
-            // Prepare the headers for the request
-            const Header = {
-                Accept: 'application/json',
-                'Content-Type': 'application/json',
-                Authorization: localStorage.getItem('Token') || '',
-                org: localStorage.getItem('org') || ''
-            };
-
-            setUpdatingStage(true); // Show loading state
+            setCurrentStage(updatedStage);
+            setActiveStep(activeStep);
+            setUpdatingStage(true);
 
             try {
-                // Prepare the updated data payload to send to the server
-                const updatedData = {
-                    name: opportunityDetails?.name,
-                    account: opportunityDetails?.account?.id,
-                    amount: opportunityDetails?.amount,
-                    currency: opportunityDetails?.currency,
-                    stage: updatedStage,
-                    teams: opportunityDetails?.teams,
-                    lead_source: opportunityDetails?.lead_source,
-                    probability: opportunityDetails?.probability,
-                    description: opportunityDetails?.description,
-                    assigned_to: opportunityDetails?.assigned_to,
-                    contact_name: opportunityDetails?.contact_name,
-                    due_date: opportunityDetails?.closed_on,
-                    tags: opportunityDetails?.tags,
-                    opportunity_attachment: opportunityDetails?.opportunity_attachment,
+                const Header = {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    Authorization: localStorage.getItem('Token') || '',
+                    org: localStorage.getItem('org') || ''
                 };
 
-                // Make the PUT request to update the opportunity
+                // Ensure URL ends with trailing slash
+                const url = `${OpportunityUrl}/${state.opportunityId}/stage/`;
+                
                 const updateResponse = await fetchData(
-                    `${OpportunityUrl}/${state.opportunityId}/`,
-                    'PUT',
-                    JSON.stringify(updatedData),
+                    url,
+                    'POST',
+                    JSON.stringify({ stage: updatedStage }),
                     Header
                 );
 
                 if (updateResponse.error) {
-                    console.error('Error updating opportunity:', updateResponse);
-                    // If there's an error, you might want to reset the stage or show an error message
+                    console.error('Error updating opportunity stage:', updateResponse);
                 }
             } catch (error) {
                 console.error('Error occurred during the update:', error);
             } finally {
-                // Always hide the loading state regardless of success or failure
                 setUpdatingStage(false);
             }
         }
