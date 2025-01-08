@@ -216,6 +216,7 @@ class OrgProfileCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         org = Org.objects.create(**validated_data)
         generate_default_access_models(org)
+        return org
 
 
 class ShowOrganizationListSerializer(serializers.ModelSerializer):
