@@ -256,9 +256,9 @@ class OpportunityDetailView(APIView):
 
             opportunity_object.assigned_to.clear()
             if params.get("assigned_to"):
-                assinged_to_list = params.get("assigned_to")
+                assigned_to_list = list(map(lambda details: details.get('id', None), params.get("assigned_to")))
                 profiles = Profile.objects.filter(
-                    id__in=assinged_to_list, org=request.profile.org, is_active=True
+                    id__in=assigned_to_list, org=request.profile.org, is_active=True
                 )
                 opportunity_object.assigned_to.add(*profiles)
 
@@ -272,15 +272,15 @@ class OpportunityDetailView(APIView):
                 attachment.attachment = self.request.FILES.get("opportunity_attachment")
                 attachment.save()
 
-            assigned_to_list = list(
-                opportunity_object.assigned_to.all().values_list("id", flat=True)
-            )
-            recipients = list(set(assigned_to_list) - set(previous_assigned_to_users))
+            # assigned_to_list = list(
+            #     opportunity_object.assigned_to.all().values_list("id", flat=True)
+            # )
+            # recipients = list(set(assigned_to_list) - set(previous_assigned_to_users))
             
-            send_email_to_assigned_user.delay(
-                recipients,
-                opportunity_object.id,
-            )
+            # send_email_to_assigned_user.delay(
+            #     recipients,
+            #     opportunity_object.id,
+            # )
             return Response(
                 {"error": False, "message": "Opportunity Updated Successfully"},
                 status=status.HTTP_200_OK,
