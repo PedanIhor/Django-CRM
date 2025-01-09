@@ -281,7 +281,7 @@ class LeadDetailView(APIView):
     model = Lead
     # authentication_classes = (CustomDualAuthentication,)
     permission_classes = (crm_permissions(
-        get="get_lead", put="edit_lead", delete="delete_lead"),)
+        get="get_leads", put="edit_leads", delete="delete_leads"),)
 
     def get_object(self, pk):
         return get_object_or_404(Lead, id=pk)

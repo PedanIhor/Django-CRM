@@ -1,4 +1,6 @@
 import React, { ChangeEvent, useEffect, useState } from 'react'
+import { Check, Close } from '@mui/icons-material';
+import { styled } from '@mui/material/styles';
 import {
     Card,
     Link,
@@ -19,7 +21,14 @@ import {
     IconButton,
     Grid,
     Popover,
-    ListItemIcon
+    ListItemIcon,
+    Stepper,
+    Step,
+    StepLabel,
+    StepButton,
+    StepIconProps,
+    CircularProgress,
+    StepConnector
 } from '@mui/material'
 import { FaEllipsisV, FaPaperclip, FaPlus, FaRegAddressCard, FaStar, FaTimes } from 'react-icons/fa'
 import { CustomAppBar } from '../../components/CustomAppBar'
@@ -36,6 +45,21 @@ export const formatDate = (dateString: any) => {
     const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' }
     return new Date(dateString).toLocaleDateString(undefined, options)
 }
+
+// interface UserDetails {
+//     id: string;
+//     user_details: {
+//         email: string;
+//         id: string;
+//         profile_pic: string;
+//     };
+//     // Add other user properties as needed
+// }
+
+// interface ContactDetails {
+//     id: string;
+//     // Add other contact properties as needed
+// }
 
 type response = {
     created_by: {
@@ -85,6 +109,70 @@ type response = {
     created_from_site: boolean;
     id: string;
 };
+
+const CustomStepConnector = styled(StepConnector)({
+    '& .MuiStepConnector-line': {
+        height: 4, // The height of the lines between steps
+        marginLeft: 'auto',
+        marginRight: 'auto',
+        marginTop: '5%',
+        width: '60%', // Reducing the line width by 30%
+    },
+});
+
+
+const CustomStepIcon = (props: StepIconProps & { stageName?: string }) => {
+    const { active, completed, stageName, className } = props;
+    
+    // Debug logging without activeStep
+    console.log('CustomStepIcon props:', {
+        stageName,
+        normalizedStageName: stageName?.trim().toLowerCase(),
+        active,
+        completed
+    });
+
+    const normalizedStageName = stageName?.trim().toLowerCase();
+
+    const iconStyle = {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: 36,
+        height: 36,
+        borderRadius: '50%',
+        color: 'white',
+        backgroundColor: completed
+            ? normalizedStageName === 'converted'
+                ? 'green'
+                : normalizedStageName === 'closed'
+                    ? 'red'
+                    : '#1976d2'
+            : active
+                ? normalizedStageName === 'closed'
+                    ? 'red'  // Active Closed step should be red
+                    : '#1976d2'  // Other active steps are blue
+                : '#ccc',  // Inactive steps are gray
+    };
+
+    const icon = completed ? (
+        normalizedStageName === 'closed' ? (
+            <Close fontSize="small" />
+        ) : (
+            <Check fontSize="small" />
+        )
+    ) : active ? (  // Show icon for active steps too
+        normalizedStageName === 'closed' ? (
+            <Close fontSize="small" />
+        ) : (
+            <Check fontSize="small" />
+        )
+    ) : null;
+
+    return <div className={className} style={iconStyle}>{icon}</div>;
+};
+
+
 function LeadDetails(props: any) {
     const { state } = useLocation()
     const navigate = useNavigate();
@@ -101,7 +189,7 @@ function LeadDetails(props: any) {
     const [tags, setTags] = useState([])
     const [countries, setCountries] = useState<string[][]>([])
     const [source, setSource] = useState([])
-    const [status, setStatus] = useState([])
+    const [status, setStatus] = useState<string[]>([])
     const [industries, setIndustries] = useState([])
     const [contacts, setContacts] = useState([])
     const [users, setUsers] = useState([])
@@ -113,10 +201,43 @@ function LeadDetails(props: any) {
     const [inputValue, setInputValue] = useState<string>('');
     const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
     const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
+    const [completedSteps, setCompletedSteps] = useState<number[]>([]);
+    const [currentStatus, setCurrentStatus] = useState('')
+    const [activeStep, setActiveStep] = useState(0);
+    const [updatingStage, setUpdatingStage] = useState(false);
 
     useEffect(() => {
         getLeadDetails(state.leadId)
     }, [state.leadId])
+    useEffect(() => {
+        if (status.length > 0 && currentStatus) {
+            const normalizedCurrentStatus = currentStatus.trim().toLowerCase();
+            
+            // If status is recycled, treat it as assigned (completed first step only)
+            if (normalizedCurrentStatus === 'recycled') {
+                setCompletedSteps([0]); // Only first step (Assigned) is completed
+                setActiveStep(0);
+                return;
+            }
+
+            // Normal status handling for non-recycled cases
+            const statusIndex = status.findIndex(
+                stage => stage.trim().toLowerCase() === normalizedCurrentStatus
+            );
+
+            if (statusIndex === -1) {
+                console.error(`Could not find status "${currentStatus}" in status array:`, status);
+                return;
+            }
+
+            const initialCompletedSteps = Array.from(
+                { length: statusIndex + 1 },
+                (_, i) => i
+            );
+            setCompletedSteps(initialCompletedSteps);
+            setActiveStep(statusIndex);
+        }
+    }, [status, currentStatus]);
 
     const getLeadDetails = (id: any) => {
         const Header = {
@@ -127,6 +248,9 @@ function LeadDetails(props: any) {
         }
         fetchData(`${LeadUrl}/${id}/`, 'GET', null as any, Header)
             .then((res) => {
+                console.log(res, 'lead res')
+                // console.log(res.status)
+                console.log(res.lead_obj.status)
                 if (!res.error) {
                     setLeadDetails(res?.lead_obj)
                     setUsers(res?.users)
@@ -134,12 +258,14 @@ function LeadDetails(props: any) {
                     setTags(res?.tags)
                     setCountries(res?.countries)
                     setIndustries(res?.industries)
-                    setStatus(res?.status)
+                    setStatus(res?.status?.map((status: [string, string]) => status[1]) || []);
                     setSource(res?.source)
                     setUsers(res?.users)
                     setContacts(res?.contacts)
                     setTeams(res?.teams)
                     setComments(res?.comments)
+                    setCurrentStatus(res?.lead_obj?.status)
+
                 }
             })
             .catch((err) => {
@@ -269,6 +395,94 @@ function LeadDetails(props: any) {
         }
     }
 
+    const handleStageUpdate = async () => {
+        if (activeStep > -1) {
+            const currentStage = status[activeStep];
+            if (!currentStage) {
+                console.error('Invalid stage index:', activeStep);
+                return;
+            }
+    
+            const updatedStage = currentStage.trim().toLowerCase();
+    
+            // Optimistically update UI first
+            const previousStatus = currentStatus;
+            const previousCompletedSteps = [...completedSteps];
+    
+            // Update UI immediately
+            setCurrentStatus(updatedStage);
+            setCompletedSteps(prev => {
+                const newCompleted = [...prev];
+                if (!newCompleted.includes(activeStep)) {
+                    newCompleted.push(activeStep);
+                }
+                return newCompleted;
+            });
+    
+            setUpdatingStage(true);
+    
+            try {
+                const Header = {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    Authorization: localStorage.getItem('Token') || '',
+                    org: localStorage.getItem('org') || ''
+                };
+    
+                const updateResponse = await fetchData(
+                    `${LeadUrl}/${state.leadId}/status/`,
+                    'POST',
+                    JSON.stringify({ status: updatedStage }),
+                    Header
+                );
+    
+                if (updateResponse.error) {
+                    // Revert UI changes if the API call fails
+                    console.error('Error updating lead status:', updateResponse);
+                    setCurrentStatus(previousStatus);
+                    setCompletedSteps(previousCompletedSteps);
+                }
+            } catch (error) {
+                // Revert UI changes if there's an error
+                console.error('Error occurred during status update:', error);
+                setCurrentStatus(previousStatus);
+                setCompletedSteps(previousCompletedSteps);
+            } finally {
+                setUpdatingStage(false);
+            }
+        }
+    };
+
+
+    
+
+    const renderStages = () => {
+        const normalizedCurrentStatus = currentStatus.trim().toLowerCase();
+        
+        return status.filter((stage) => {
+            const normalizedStage = stage.trim().toLowerCase();
+            
+            // Always exclude Recycled
+            if (normalizedStage === 'recycled') {
+                return false;
+            }
+            
+            // Special handling for Converted and Closed
+            if (normalizedStage === 'converted') {
+                // Only hide Converted if Closed is the current status
+                return normalizedCurrentStatus !== 'closed';
+            }
+            
+            if (normalizedStage === 'closed') {
+                // Only hide Closed if Converted is the current status
+                return normalizedCurrentStatus !== 'converted';
+            }
+            
+            // Keep all other stages
+            return true;
+        });
+    };
+    
 
     const handleClickFile = (event: React.MouseEvent<HTMLButtonElement>, pic: any) => {
         setSelectedFile(pic)
@@ -297,7 +511,101 @@ function LeadDetails(props: any) {
         <Box sx={{ mt: '60px' }}>
             <div>
                 <CustomAppBar backbtnHandle={backbtnHandle} module={module} backBtn={backBtn} crntPage={crntPage} editHandle={editHandle} />
-                <Box sx={{ mt: '110px', p: '20px', display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
+                <Box
+                    sx={{
+                        mr: '20px',
+                        ml: '20px',
+                        mt: '120px',
+                        p: '20px',
+                        borderRadius: '10px',
+                        border: '1px solid #80808038',
+                        backgroundColor: 'white',
+                    }}
+                >
+                    <Typography
+                        sx={{
+                            mb: 3,
+                            textAlign: 'center',
+                            fontWeight: 500,
+                            fontSize: '1.25rem',
+                        }}
+                    >
+                        Lead Status
+                    </Typography>
+                    <Stepper
+                        nonLinear
+                        activeStep={activeStep}
+                        alternativeLabel
+                        connector={<CustomStepConnector />}
+                    >
+                        {renderStages().map((stage, index) => {
+                            const originalIndex = status.findIndex(s => s === stage);
+                            
+                            // More detailed logging
+                            console.log('Step rendering:', {
+                                stage,
+                                normalizedStage: stage.trim().toLowerCase(),
+                                index,
+                                originalIndex,
+                                activeStep,
+                                isActive: originalIndex === activeStep,
+                                currentStatus: currentStatus.trim().toLowerCase()
+                            });
+                            
+                            return (
+                                <Step 
+                                    key={stage} 
+                                    completed={completedSteps.includes(originalIndex)}
+                                    active={originalIndex === activeStep}  // Explicitly set active prop
+                                >
+                                    <StepButton 
+                                        onClick={() => {
+                                            console.log('Setting active step to:', originalIndex);
+                                            setActiveStep(originalIndex);
+                                        }}
+                                    >
+                                        <StepLabel
+                                            StepIconComponent={(props) => (
+                                                <CustomStepIcon {...props} stageName={stage} />
+                                            )}
+                                            sx={{
+                                                '& .MuiStepLabel-label': {
+                                                    color: 'black',
+                                                },
+                                                '& .MuiStepLabel-label.Mui-active': {
+                                                    color: '#1976d2 !important',
+                                                    fontWeight: 600,
+                                                },
+                                                '& .MuiStepLabel-label.Mui-completed': {
+                                                    color: 'black',
+                                                    fontWeight: 600,
+                                                },
+                                                '& .MuiStepLabel-label.Mui-active.Mui-completed': {
+                                                    color: '#1976d2 !important',
+                                                    fontWeight: 600,
+                                                },
+                                            }}
+                                        >
+                                            {stage}
+                                        </StepLabel>
+                                    </StepButton>
+                                </Step>
+                            );
+                        })}
+                    </Stepper>
+                    <Box sx={{ mt: 3, textAlign: 'center' }}>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={handleStageUpdate}
+                            disabled={updatingStage}
+                            sx={{ mt: 2 }}
+                        >
+                            {updatingStage ? <CircularProgress size={24} /> : 'Update Status'}
+                        </Button>
+                    </Box>
+                </Box>
+                <Box sx={{ mt: '0', p: '20px', display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
                     <Box sx={{ width: '65%' }}>
                         <Box sx={{ borderRadius: '10px', border: '1px solid #80808038', backgroundColor: 'white' }}>
                             <div style={{ padding: '20px', borderBottom: '1px solid lightgray', display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
