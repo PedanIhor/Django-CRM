@@ -193,7 +193,7 @@ const OpportunitiesCardView = () => {
   return (
     <Box display="flex" gap={2} sx={{ overflowX: 'auto', padding: 2 }}>
       {STAGE_LIST.map((stage) => (
-        <Box key={stage} flex="1" minWidth="300px">
+        <Box key={stage} flex="1" minWidth="200px">
           <Box
             sx={{
               backgroundColor: STAGE_COLORS[stage],
