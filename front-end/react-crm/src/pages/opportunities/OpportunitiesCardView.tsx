@@ -47,6 +47,14 @@ const initialOpportunities = STAGE_LIST.reduce((acc, stage) => {
   return acc;
 }, {} as Record<OpportunityStage, Opportunity[]>);
 
+// Add this constant for stage mappings
+const STAGE_MAPPINGS = {
+  early_stage: ['QUALIFICATION', 'ID.DECISION MAKERS'],
+  middle_stage: ['NEEDS ANALYSIS', 'PERCEPTION ANALYSIS', 'VALUE PROPOSITION'],
+  late_stage: ['PROPOSAL/PRICE QUOTE', 'NEGOTIATION/REVIEW'],
+  final_stage: ['CLOSED WON', 'CLOSED LOST']
+} as const;
+
 const OpportunitiesCardView = () => {
   const [opportunities, setOpportunities] = useState<Record<OpportunityStage, Opportunity[]>>(initialOpportunities);
   const [paginationInfo, setPaginationInfo] = useState<Record<OpportunityStage, { currentPage: number; totalCount: number }>>(
@@ -60,6 +68,11 @@ const OpportunitiesCardView = () => {
   const [deleteError, setDeleteError] = useState(false);
   const navigate = useNavigate();
 
+  // Add state for exact stages
+  const [exactStages, setExactStages] = useState<Record<OpportunityStage, string | null>>(
+    Object.fromEntries(STAGE_LIST.map((stage) => [stage, null])) as Record<OpportunityStage, string | null>
+  );
+
   // Fetch opportunities for a specific stage
   const fetchOpportunities = async (stage: OpportunityStage, page = 1) => {
     try {
@@ -70,8 +83,9 @@ const OpportunitiesCardView = () => {
         org: localStorage.getItem('org'),
       };
       
+      const exactStage = exactStages[stage] || 'null';
       const response = await fetchData(
-        `${OpportunityCardViewUrl}/?stage=${stage}&page=${page}`,
+        `${OpportunityCardViewUrl}/?stage=${stage}&exactStage=${exactStage}&page=${page}`,
         'GET',
         null as any,
         Header
@@ -98,6 +112,13 @@ const OpportunitiesCardView = () => {
   useEffect(() => {
     STAGE_LIST.forEach((stage) => fetchOpportunities(stage, 1));
   }, []);
+
+  // Add useEffect to watch exactStages changes
+  useEffect(() => {
+    STAGE_LIST.forEach((stage) => {
+      fetchOpportunities(stage, 1);
+    });
+  }, [exactStages]); // This will trigger whenever exactStages changes
 
   // Add these handlers
   const handleMenuOpen = (event: React.MouseEvent<HTMLButtonElement>, id: string) => {
@@ -190,10 +211,19 @@ const OpportunitiesCardView = () => {
     }
   };
 
+  // Modify handleStageFilterChange to only update the state
+  const handleStageFilterChange = (stage: OpportunityStage, exactStage: string | null) => {
+    setExactStages(prev => ({
+      ...prev,
+      [stage]: exactStage
+    }));
+    // Remove the fetchOpportunities call from here since useEffect will handle it
+  };
+
   return (
     <Box display="flex" gap={2} sx={{ overflowX: 'auto', padding: 2 }}>
       {STAGE_LIST.map((stage) => (
-        <Box key={stage} flex="1" minWidth="200px">
+        <Box key={stage} flex="1" minWidth="300px">
           <Box
             sx={{
               backgroundColor: STAGE_COLORS[stage],
@@ -216,6 +246,52 @@ const OpportunitiesCardView = () => {
             <IconButton size="small" onClick={() => handleNextPage(stage)}>
               <ChevronRight />
             </IconButton>
+          </Box>
+          <Box sx={{ mb: 2, mt: 1 }}>
+            <Box sx={{ 
+              display: 'flex', 
+              flexWrap: 'wrap', 
+              gap: 1,
+              justifyContent: 'center'
+            }}>
+              <Box
+                onClick={() => handleStageFilterChange(stage, null)}
+                sx={{
+                  cursor: 'pointer',
+                  padding: '4px 8px',
+                  borderRadius: '16px',
+                  fontSize: '12px',
+                  backgroundColor: exactStages[stage] === null ? STAGE_COLORS[stage] : 'transparent',
+                  border: `1px solid ${STAGE_COLORS[stage]}`,
+                  color: exactStages[stage] === null ? 'white' : 'inherit',
+                  '&:hover': {
+                    opacity: 0.8
+                  }
+                }}
+              >
+                All
+              </Box>
+              {STAGE_MAPPINGS[stage].map((exactStage) => (
+                <Box
+                  key={exactStage}
+                  onClick={() => handleStageFilterChange(stage, exactStage)}
+                  sx={{
+                    cursor: 'pointer',
+                    padding: '4px 8px',
+                    borderRadius: '16px',
+                    fontSize: '12px',
+                    backgroundColor: exactStages[stage] === exactStage ? STAGE_COLORS[stage] : 'transparent',
+                    border: `1px solid ${STAGE_COLORS[stage]}`,
+                    color: exactStages[stage] === exactStage ? 'white' : 'inherit',
+                    '&:hover': {
+                      opacity: 0.8
+                    }
+                  }}
+                >
+                  {exactStage}
+                </Box>
+              ))}
+            </Box>
           </Box>
           <Box>
             {(opportunities[stage] || []).map((opportunity) => (

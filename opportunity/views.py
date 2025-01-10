@@ -587,6 +587,8 @@ class OpportunityCardView(APIView):
 
     def get(self, request, *args, **kwargs):
         stage = request.query_params.get('stage')
+        exact_stage = request.query_params.get('exactStage')
+        
         if not stage:
             return Response({"error": "Stage is required"}, status=400)
 
@@ -601,10 +603,18 @@ class OpportunityCardView(APIView):
         if stage not in STAGE_MAPPINGS:
             return Response({"error": "Invalid stage"}, status=400)
 
-        opportunities = Opportunity.objects.filter(
-            stage__in=STAGE_MAPPINGS[stage],
-            org=request.profile.org
-        ).prefetch_related(
+        # Base query
+        query = Opportunity.objects.filter(org=request.profile.org)
+        
+        # Apply stage filtering
+        if exact_stage and exact_stage != 'null':
+            if exact_stage not in STAGE_MAPPINGS[stage]:
+                return Response({"error": "Invalid exact stage"}, status=400)
+            query = query.filter(stage=exact_stage)
+        else:
+            query = query.filter(stage__in=STAGE_MAPPINGS[stage])
+
+        opportunities = query.prefetch_related(
             Prefetch(
                 "assigned_to",
                 queryset=Profile.objects.select_related("user"),
