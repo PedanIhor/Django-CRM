@@ -241,8 +241,8 @@ export function AddUsers() {
                                                 <RequiredTextField
                                                     required
                                                     name='email'
-                                                    value={formData.email}
-                                                    onChange={handleChange}
+                                                    defaultValue={formData.email}
+                                                    onBlur={handleChange}
                                                     style={{ width: '70%' }}
                                                     size='small'
                                                     error={!!profileErrors?.email?.[0] || !!userErrors?.email?.[0]}
@@ -283,8 +283,8 @@ export function AddUsers() {
                                                     <RequiredTextField
                                                         name='phone'
                                                         id='outlined-error-helper-text'
-                                                        value={formData.phone}
-                                                        onChange={handleChange}
+                                                        defaultValue={formData.phone}
+                                                        onBlur={handleChange}
                                                         required
                                                         style={{ width: '70%' }}
                                                         size='small'
@@ -299,8 +299,8 @@ export function AddUsers() {
                                                     <RequiredTextField
                                                         required
                                                         name='alternate_phone'
-                                                        value={formData.alternate_phone}
-                                                        onChange={handleChange}
+                                                        defaultValue={formData.alternate_phone}
+                                                        onBlur={handleChange}
                                                         style={{ width: '70%' }}
                                                         size='small'
                                                         error={!!profileErrors?.alternate_phone?.[0] || !!userErrors?.alternate_phone?.[0]}
@@ -459,8 +459,8 @@ export function AddUsers() {
                                                 <TextField
                                                     required
                                                     name='address_line'
-                                                    value={formData.address_line}
-                                                    onChange={handleChange}
+                                                    defaultValue={formData.address_line}
+                                                    onBlur={handleChange}
                                                     style={{ width: '70%' }}
                                                     size='small'
                                                     error={!!profileErrors?.address_line?.[0] || !!userErrors?.address_line?.[0]}
@@ -472,8 +472,8 @@ export function AddUsers() {
                                                 <TextField
                                                     required
                                                     name='street'
-                                                    value={formData.street}
-                                                    onChange={handleChange}
+                                                    defaultValue={formData.street}
+                                                    onBlur={handleChange}
                                                     style={{ width: '70%' }}
                                                     size='small'
                                                     error={!!profileErrors?.street?.[0] || !!userErrors?.street?.[0]}
@@ -487,8 +487,8 @@ export function AddUsers() {
                                                 <TextField
                                                     required
                                                     name='city'
-                                                    value={formData.city}
-                                                    onChange={handleChange}
+                                                    defaultValue={formData.city}
+                                                    onBlur={handleChange}
                                                     style={{ width: '70%' }}
                                                     size='small'
                                                     error={!!profileErrors?.city?.[0] || !!userErrors?.city?.[0]}
@@ -500,8 +500,8 @@ export function AddUsers() {
                                                 <TextField
                                                     required
                                                     name='state'
-                                                    value={formData.state}
-                                                    onChange={handleChange}
+                                                    defaultValue={formData.state}
+                                                    onBlur={handleChange}
                                                     style={{ width: '70%' }}
                                                     size='small'
                                                     error={!!profileErrors?.state?.[0] || !!userErrors?.state?.[0]}
@@ -515,8 +515,8 @@ export function AddUsers() {
                                                 <TextField
                                                     required
                                                     name='pincode'
-                                                    value={formData.pincode}
-                                                    onChange={handleChange}
+                                                    defaultValue={formData.pincode}
+                                                    onBlur={handleChange}
                                                     style={{ width: '70%' }}
                                                     size='small'
                                                     error={!!profileErrors?.pincode?.[0] || !!userErrors?.pincode?.[0]}
