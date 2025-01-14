@@ -68,18 +68,7 @@ class Account(BaseModel):
     tags = models.ManyToManyField(Tags, blank=True)
     status = models.CharField(
         choices=ACCOUNT_STATUS_CHOICE, max_length=64, default="open"
-    )
-    lead = models.ForeignKey(
-        "leads.Lead", related_name="account_leads", on_delete=models.SET_NULL, null=True
-    )
-    contact_name = models.CharField(
-        pgettext_lazy("Name of Contact", "Contact Name"), max_length=120
-    )
-    contacts = models.ManyToManyField(
-        "contacts.Contact", related_name="account_contacts"
-    )
-    assigned_to = models.ManyToManyField(Profile, related_name="account_assigned_users")
-    teams = models.ManyToManyField(Teams, related_name="account_teams")
+    )    
     org = models.ForeignKey(
         Org,
         on_delete=models.SET_NULL,

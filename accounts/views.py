@@ -155,7 +155,7 @@ class AccountsListView(APIView, LimitOffsetPagination):
     def post(self, request, *args, **kwargs):
         data = request.data
         serializer = AccountCreateSerializer(
-            data=data, request_obj=request, account=True
+            data=data, request_obj=request
         )
         # Save Account
         if serializer.is_valid():
@@ -232,7 +232,7 @@ class AccountDetailView(APIView):
                 status=status.HTTP_403_FORBIDDEN,
             )
         serializer = AccountCreateSerializer(
-            account_object, data=data, request_obj=request, account=True
+            account_object, data=data, request_obj=request
         )
 
         if serializer.is_valid():

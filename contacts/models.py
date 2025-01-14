@@ -44,6 +44,9 @@ class Contact(BaseModel):
     teams = models.ManyToManyField(Teams, related_name="contact_teams")
     org = models.ForeignKey(Org, on_delete=models.SET_NULL, null=True, blank=True)
     country = models.CharField(max_length=3, choices=COUNTRIES, blank=True, null=True)
+    accounts = models.ManyToManyField(
+        "accounts.Account", related_name="contact_accounts"
+    )
 
     class Meta:
         verbose_name = "Contact"
