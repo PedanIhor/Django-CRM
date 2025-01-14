@@ -290,8 +290,8 @@ function AddContacts() {
                         <TextField
                           name='salutation'
                           className="custom-textfield"
-                          value={formData.salutation}
-                          onChange={handleChange}
+                          defaultValue={formData.salutation}
+                          onBlur={handleChange}
                           style={{ width: '70%' }}
                           size='small'
                           error={!!errors?.salutation?.[0]}
@@ -302,8 +302,8 @@ function AddContacts() {
                         <div className='fieldTitle'>First Name</div>
                         <RequiredTextField
                           name='first_name'
-                          value={formData.first_name}
-                          onChange={handleChange}
+                          defaultValue={formData.first_name}
+                          onBlur={handleChange}
                           style={{ width: '70%' }}
                           size='small'
                           required
@@ -317,8 +317,8 @@ function AddContacts() {
                         <div className='fieldTitle'>Last Name</div>
                         <RequiredTextField
                           name='last_name'
-                          value={formData.last_name}
-                          onChange={handleChange}
+                          defaultValue={formData.last_name}
+                          onBlur={handleChange}
                           style={{ width: '70%' }}
                           size='small'
                           required
@@ -330,8 +330,8 @@ function AddContacts() {
                         <div className='fieldTitle'>Organization</div>
                         <RequiredTextField
                           name='organization'
-                          value={formData.organization}
-                          onChange={handleChange}
+                          defaultValue={formData.organization}
+                          onBlur={handleChange}
                           style={{ width: '70%' }}
                           size='small'
                           required
@@ -345,8 +345,8 @@ function AddContacts() {
                         <div className='fieldTitle'>Primary Email</div>
                         <RequiredTextField
                           name='primary_email'
-                          value={formData.primary_email}
-                          onChange={handleChange}
+                          defaultValue={formData.primary_email}
+                          onBlur={handleChange}
                           required
                           style={{ width: '70%' }}
                           size='small'
@@ -358,8 +358,8 @@ function AddContacts() {
                         <div className='fieldTitle'>Secondary Email</div>
                         <TextField
                           name='secondary_email'
-                          value={formData.secondary_email}
-                          onChange={handleChange}
+                          defaultValue={formData.secondary_email}
+                          onBlur={handleChange}
                           style={{ width: '70%' }}
                           size='small'
                           error={!!errors?.secondary_email?.[0]}
@@ -374,8 +374,8 @@ function AddContacts() {
                         <RequiredTextField
                           name='department'
                           id='outlined-error-helper-text'
-                          value={formData.department}
-                          onChange={handleChange}
+                          defaultValue={formData.department}
+                          onBlur={handleChange}
                           required
                           style={{ width: '70%' }}
                           size='small'
@@ -387,8 +387,8 @@ function AddContacts() {
                         <div className='fieldTitle'>Title</div>
                         <TextField
                           name='title'
-                          value={formData.title}
-                          onChange={handleChange}
+                          defaultValue={formData.title}
+                          onBlur={handleChange}
                           required
                           style={{ width: '70%' }}
                           size='small'
@@ -403,8 +403,8 @@ function AddContacts() {
                         <Tooltip title="Number must starts with +91">
                           <RequiredTextField
                             name='mobile_number'
-                            value={formData.mobile_number}
-                            onChange={handleChange}
+                            defaultValue={formData.mobile_number}
+                            onBlur={handleChange}
                             required
                             style={{ width: '70%' }}
                             size='small'
@@ -419,8 +419,8 @@ function AddContacts() {
                           <RequiredTextField
                             required
                             name='secondary_number'
-                            value={formData.secondary_number}
-                            onChange={handleChange}
+                            defaultValue={formData.secondary_number}
+                            onBlur={handleChange}
                             style={{ width: '70%' }}
                             size='small'
                             error={!!errors?.secondary_number?.[0]}
@@ -435,8 +435,8 @@ function AddContacts() {
                         <RequiredTextField
                           required
                           name='language'
-                          value={formData.language}
-                          onChange={handleChange}
+                          defaultValue={formData.language}
+                          onBlur={handleChange}
                           style={{ width: '70%' }}
                           size='small'
                           error={!!errors?.language?.[0]}
@@ -486,8 +486,8 @@ function AddContacts() {
                         <RequiredTextField
                           required
                           name='address_line'
-                          value={formData.address_line}
-                          onChange={handleChange}
+                          defaultValue={formData.address_line}
+                          onBlur={handleChange}
                           style={{ width: '70%' }}
                           size='small'
                           error={!!errors?.address_line?.[0]}
@@ -498,8 +498,8 @@ function AddContacts() {
                         <div className='fieldTitle'>Street</div>
                         <TextField
                           name='street'
-                          value={formData.street}
-                          onChange={handleChange}
+                          defaultValue={formData.street}
+                          onBlur={handleChange}
                           style={{ width: '70%' }}
                           size='small'
                           required
@@ -513,8 +513,8 @@ function AddContacts() {
                         <div className='fieldTitle'>City</div>
                         <TextField
                           name='city'
-                          value={formData.city}
-                          onChange={handleChange}
+                          defaultValue={formData.city}
+                          onBlur={handleChange}
                           style={{ width: '70%' }}
                           size='small'
                           required
@@ -526,8 +526,8 @@ function AddContacts() {
                         <div className='fieldTitle'>State</div>
                         <TextField
                           name='state'
-                          value={formData.state}
-                          onChange={handleChange}
+                          defaultValue={formData.state}
+                          onBlur={handleChange}
                           style={{ width: '70%' }}
                           size='small'
                           required
@@ -541,8 +541,8 @@ function AddContacts() {
                         <div className='fieldTitle'>Postcode</div>
                         <TextField
                           name='postcode'
-                          value={formData.postcode}
-                          onChange={handleChange}
+                          defaultValue={formData.postcode}
+                          onBlur={handleChange}
                           style={{ width: '70%' }}
                           size='small'
                           required

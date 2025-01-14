@@ -279,8 +279,8 @@ export function AddOpportunity() {
                                                 <div className='fieldTitle'>Name</div>
                                                 <RequiredTextField
                                                     name='name'
-                                                    value={formData.name}
-                                                    onChange={handleChange}
+                                                    defaultValue={formData.name}
+                                                    onBlur={handleChange}
                                                     style={{ width: '70%' }}
                                                     size='small'
                                                     helperText={errors?.name?.[0] ? errors?.name[0] : ''}
@@ -292,8 +292,8 @@ export function AddOpportunity() {
                                                 <TextField
                                                     type={'number'}
                                                     name='amount'
-                                                    value={formData.amount}
-                                                    onChange={handleChange}
+                                                    defaultValue={formData.amount}
+                                                    onBlur={handleChange}
                                                     style={{ width: '70%' }}
                                                     size='small'
                                                     helperText={errors?.amount?.[0] ? errors?.amount[0] : ''}
@@ -441,8 +441,8 @@ export function AddOpportunity() {
                                                 <TextField
                                                     type={'number'}
                                                     name='probability'
-                                                    value={formData.probability}
-                                                    onChange={handleChange}
+                                                    defaultValue={formData.probability}
+                                                    onBlur={handleChange}
                                                     style={{ width: '70%' }}
                                                     size='small'
                                                     helperText={errors?.probability?.[0] ? errors?.probability[0] : ''}
