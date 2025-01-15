@@ -373,8 +373,8 @@ export function AddLeads() {
                         <div className='fieldTitle'>Lead Name</div>
                         <TextField
                           name='account_name'
-                          defaultValue={formData.account_name}
-                          onBlur={handleChange}
+                          value={formData.account_name}
+                          onChange={handleChange}
                           style={{ width: '70%' }}
                           size='small'
                           helperText={errors?.account_name?.[0] ? errors?.account_name[0] : ''}
@@ -386,8 +386,8 @@ export function AddLeads() {
                         <TextField
                           type={'number'}
                           name='opportunity_amount'
-                          defaultValue={formData.opportunity_amount}
-                          onBlur={handleChange}
+                          value={formData.opportunity_amount}
+                          onChange={handleChange}
                           style={{ width: '70%' }}
                           size='small'
                           helperText={errors?.opportunity_amount?.[0] ? errors?.opportunity_amount[0] : ''}
@@ -400,8 +400,8 @@ export function AddLeads() {
                         <div className='fieldTitle'>Website</div>
                         <TextField
                           name='website'
-                          defaultValue={formData.website}
-                          onBlur={handleChange}
+                          value={formData.website}
+                          onChange={handleChange}
                           style={{ width: '70%' }}
                           size='small'
                           helperText={errors?.website?.[0] ? errors?.website[0] : ''}
@@ -594,8 +594,8 @@ export function AddLeads() {
                         <div className='fieldTitle'>SkypeID</div>
                         <TextField
                           name='skype_ID'
-                          defaultValue={formData.skype_ID}
-                          onBlur={handleChange}
+                          value={formData.skype_ID}
+                          onChange={handleChange}
                           style={{ width: '70%' }}
                           size='small'
                           helperText={errors?.skype_ID?.[0] ? errors?.skype_ID[0] : ''}
@@ -717,8 +717,8 @@ export function AddLeads() {
                         <div className='fieldTitle'>Probability</div>
                         <TextField
                           name='probability'
-                          defaultValue={formData.probability}
-                          onBlur={handleChange}
+                          value={formData.probability}
+                          onChange={handleChange}
                           InputProps={{
                             endAdornment: (
                               <InputAdornment position='end'>
@@ -808,8 +808,8 @@ export function AddLeads() {
                         <RequiredTextField
                           name='first_name'
                           required
-                          defaultValue={formData.first_name}
-                          onBlur={handleChange}
+                          value={formData.first_name}
+                          onChange={handleChange}
                           style={{ width: '70%' }}
                           size='small'
                           helperText={errors?.first_name?.[0] ? errors?.first_name[0] : ''}
@@ -821,8 +821,8 @@ export function AddLeads() {
                         <RequiredTextField
                           name='last_name'
                           required
-                          defaultValue={formData.last_name}
-                          onBlur={handleChange}
+                          value={formData.last_name}
+                          onChange={handleChange}
                           style={{ width: '70%' }}
                           size='small'
                           helperText={errors?.last_name?.[0] ? errors?.last_name[0] : ''}
@@ -835,8 +835,8 @@ export function AddLeads() {
                         <div className='fieldTitle'>Job Title</div>
                         <RequiredTextField
                           name='title'
-                          defaultValue={formData.title}
-                          onBlur={handleChange}
+                          value={formData.title}
+                          onChange={handleChange}
                           style={{ width: '70%' }}
                           size='small'
                           helperText={errors?.title?.[0] ? errors?.title[0] : ''}
@@ -848,8 +848,8 @@ export function AddLeads() {
                         <Tooltip title="Number must starts with +91">
                           <TextField
                             name='phone'
-                            defaultValue={formData.phone}
-                            onBlur={handleChange}
+                            value={formData.phone}
+                            onChange={handleChange}
                             style={{ width: '70%' }}
                             size='small'
                             helperText={errors?.phone?.[0] ? errors?.phone[0] : ''}
@@ -865,8 +865,8 @@ export function AddLeads() {
                       <TextField
                         name='email'
                         type='email'
-                        defaultValue={formData.email}
-                        onBlur={handleChange}
+                        value={formData.email}
+                        onChange={handleChange}
                         style={{ width: '70%' }}
                         size='small'
                         helperText={errors?.email?.[0] ? errors?.email[0] : ''}
@@ -898,8 +898,8 @@ export function AddLeads() {
                         >Address Lane</div>
                         <TextField
                           name='address_line'
-                          defaultValue={formData.address_line}
-                          onBlur={handleChange}
+                          value={formData.address_line}
+                          onChange={handleChange}
                           style={{ width: '70%' }}
                           size='small'
                           helperText={errors?.address_line?.[0] ? errors?.address_line[0] : ''}
@@ -910,8 +910,8 @@ export function AddLeads() {
                         <div className='fieldTitle'>City</div>
                         <TextField
                           name='city'
-                          defaultValue={formData.city}
-                          onBlur={handleChange}
+                          value={formData.city}
+                          onChange={handleChange}
                           style={{ width: '70%' }}
                           size='small'
                           helperText={errors?.city?.[0] ? errors?.city[0] : ''}
@@ -924,8 +924,8 @@ export function AddLeads() {
                         <div className='fieldTitle'>Street</div>
                         <TextField
                           name='street'
-                          defaultValue={formData.street}
-                          onBlur={handleChange}
+                          value={formData.street}
+                          onChange={handleChange}
                           style={{ width: '70%' }}
                           size='small'
                           helperText={errors?.street?.[0] ? errors?.street[0] : ''}
@@ -936,8 +936,8 @@ export function AddLeads() {
                         <div className='fieldTitle'>State</div>
                         <TextField
                           name='state'
-                          defaultValue={formData.state}
-                          onBlur={handleChange}
+                          value={formData.state}
+                          onChange={handleChange}
                           style={{ width: '70%' }}
                           size='small'
                           helperText={errors?.state?.[0] ? errors?.state[0] : ''}
@@ -950,8 +950,8 @@ export function AddLeads() {
                         <div className='fieldTitle'>Pincode</div>
                         <TextField
                           name='postcode'
-                          defaultValue={formData.postcode}
-                          onBlur={handleChange}
+                          value={formData.postcode}
+                          onChange={handleChange}
                           style={{ width: '70%' }}
                           size='small'
                           helperText={errors?.postcode?.[0] ? errors?.postcode[0] : ''}
