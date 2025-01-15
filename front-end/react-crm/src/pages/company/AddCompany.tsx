@@ -107,8 +107,8 @@ function AddCompany() {
                                                 <div className='fieldTitle'>Name</div>
                                                 <RequiredTextField
                                                     name='name'
-                                                    defaultValue={formData.name}
-                                                    onBlur={handleChange}
+                                                    value={formData.name}
+                                                    onChange={handleChange}
                                                     style={{ width: '70%' }}
                                                     size='small'
                                                     helperText={errors?.name?.[0] ? errors?.name[0] : ''}

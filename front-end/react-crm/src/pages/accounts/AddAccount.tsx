@@ -269,8 +269,8 @@ export function AddAccount() {
                                                 <div className='fieldTitle'>Name</div>
                                                 <RequiredTextField
                                                     name='name'
-                                                    defaultValue={formData.name}
-                                                    onBlur={handleChange}
+                                                    value={formData.name}
+                                                    onChange={handleChange}
                                                     style={{ width: '70%' }}
                                                     size='small'
                                                     helperText={errors?.name?.[0] ? errors?.name[0] : ''}
@@ -281,8 +281,8 @@ export function AddAccount() {
                                                 <div className='fieldTitle'>Website</div>
                                                 <TextField
                                                     name='website'
-                                                    defaultValue={formData.website}
-                                                    onBlur={handleChange}
+                                                    value={formData.website}
+                                                    onChange={handleChange}
                                                     style={{ width: '70%' }}
                                                     size='small'
                                                     helperText={errors?.website?.[0] ? errors?.website[0] : ''}
@@ -296,8 +296,8 @@ export function AddAccount() {
                                                 <RequiredTextField
                                                     name='phone'
                                                     type='text'
-                                                    defaultValue={formData.phone}
-                                                    onBlur={handleChange}
+                                                    value={formData.phone}
+                                                    onChange={handleChange}
                                                     style={{ width: '70%' }}
                                                     size='small'
                                                     helperText={errors?.phone?.[0] ? errors?.phone[0] : ''}
@@ -308,8 +308,8 @@ export function AddAccount() {
                                                 <div className='fieldTitle'>Email Address</div>
                                                 <RequiredTextField
                                                     name='email'
-                                                    defaultValue={formData.email}
-                                                    onBlur={handleChange}
+                                                    value={formData.email}
+                                                    onChange={handleChange}
                                                     style={{ width: '70%' }}
                                                     size='small'
                                                     helperText={errors?.email?.[0] ? errors?.email[0] : ''}
@@ -607,8 +607,8 @@ export function AddAccount() {
                                                 <div className='fieldTitle'>Billing Address Line</div>
                                                 <TextField
                                                     name='billing_address_line'
-                                                    defaultValue={formData.billing_address_line}
-                                                    onBlur={handleChange}
+                                                    value={formData.billing_address_line}
+                                                    onChange={handleChange}
                                                     style={{ width: '70%' }}
                                                     size='small'
                                                     helperText={errors?.billing_address_line?.[0] ? errors?.billing_address_line[0] : ''}
@@ -619,8 +619,8 @@ export function AddAccount() {
                                                 <div className='fieldTitle'>Billing Street</div>
                                                 <TextField
                                                     name='billing_street'
-                                                    defaultValue={formData.billing_street}
-                                                    onBlur={handleChange}
+                                                    value={formData.billing_street}
+                                                    onChange={handleChange}
                                                     style={{ width: '70%' }}
                                                     size='small'
                                                     helperText={errors?.billing_street?.[0] ? errors?.billing_street[0] : ''}
@@ -633,8 +633,8 @@ export function AddAccount() {
                                                 <div className='fieldTitle'>Billing City</div>
                                                 <TextField
                                                     name='billing_city'
-                                                    defaultValue={formData.billing_city}
-                                                    onBlur={handleChange}
+                                                    value={formData.billing_city}
+                                                    onChange={handleChange}
                                                     style={{ width: '70%' }}
                                                     size='small'
                                                     helperText={errors?.billing_city?.[0] ? errors?.billing_city[0] : ''}
@@ -645,8 +645,8 @@ export function AddAccount() {
                                                 <div className='fieldTitle'>Billing State</div>
                                                 <TextField
                                                     name='billing_state'
-                                                    defaultValue={formData.billing_state}
-                                                    onBlur={handleChange}
+                                                    value={formData.billing_state}
+                                                    onChange={handleChange}
                                                     style={{ width: '70%' }}
                                                     size='small'
                                                     helperText={errors?.billing_state?.[0] ? errors?.billing_state[0] : ''}
@@ -659,8 +659,8 @@ export function AddAccount() {
                                                 <div className='fieldTitle'>Billing Postcode</div>
                                                 <TextField
                                                     name='billing_postcode'
-                                                    defaultValue={formData.billing_postcode}
-                                                    onBlur={handleChange}
+                                                    value={formData.billing_postcode}
+                                                    onChange={handleChange}
                                                     style={{ width: '70%' }}
                                                     size='small'
                                                     helperText={errors?.billing_postcode?.[0] ? errors?.billing_postcode[0] : ''}
