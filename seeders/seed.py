@@ -2,7 +2,7 @@ import random
 from faker import Faker
 from common.models import Org, Profile, User, Address, Role
 from contacts.models import Contact
-from leads.models import Lead, Company
+from leads.models import Lead
 from opportunity.models import Opportunity
 from accounts.models import Account
 from teams.models import Teams
@@ -126,10 +126,6 @@ def seed_database():
             status = "converted" if i < num_converted else random.choice(
                 ['assigned', 'in process', 'recycled', 'closed']
             )
-            company = Company.objects.create(
-                name=faker.company(),
-                org=org
-            )
             lead = Lead.objects.create(
                 title=faker.catch_phrase(),  # Lead title as a generic headline
                 status=status,
@@ -141,7 +137,7 @@ def seed_database():
                 country=random.choice(['US', 'NL', 'GB']),
                 opportunity_amount=random.randint(6, 100) * 500,  # Multiple of 500, minimum 3000
                 org=org,
-                company=company,
+                company=faker.company(),
                 created_by=random.choice(profiles).user  # Created by a random profile in the org
             )
             lead.assigned_to.set(random.sample(profiles, random.randint(1, 2)))
@@ -154,7 +150,7 @@ def seed_database():
         # Create opportunities based on converted leads
         for lead in converted_leads[:len(leads) // 3]:  # Ensure exactly 1/3 of the total leads
             account = Account.objects.create(
-                name=lead.company.name,
+                name=lead.company,
                 email=faker.email(),
                 phone=faker.phone_number(),
                 billing_city=faker.city(),

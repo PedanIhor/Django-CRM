@@ -44,7 +44,7 @@ class GetProfileAndOrg(object):
         return self.get_response(request)
 
     def process_request(self, request):
-        try :
+        try:
             request.profile = None
             user_id = None
             # here I am getting the the jwt token passing in header

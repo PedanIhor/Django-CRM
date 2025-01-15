@@ -153,7 +153,6 @@ export default function Accounts() {
     const [contacts, setContacts] = useState([])
     const [status, setStatus] = useState([])
     const [source, setSource] = useState([])
-    const [companies, setCompanies] = useState([])
     const [tags, setTags] = useState([])
     const [users, setUsers] = useState([])
     const [countries, setCountries] = useState([])

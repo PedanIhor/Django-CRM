@@ -7,10 +7,6 @@ import { fetchData } from './FetchData';
 import { ProfileUrl } from '../services/ApiUrls';
 import { Header1 } from './FetchData';
 import OrganizationModal from '../pages/organization/OrganizationModal';
-import Company from '../pages/company/Company';
-import AddCompany from '../pages/company/AddCompany';
-import CompanyDetails from '../pages/company/CompanyDetails';
-import EditCompany from '../pages/company/EditCompany';
 import Leads from '../pages/leads/Leads';
 import AddContacts from '../pages/contacts/AddContacts';
 import { EditLead } from '../pages/leads/EditLead';
@@ -129,8 +125,6 @@ export default function Sidebar(props: any) {
             setScreen('opportunities')
         } else if (location.pathname.split('/')[2] === 'accounts') {
             setScreen('accounts')
-        } else if (location.pathname.split('/')[2] === 'companies') {
-            setScreen('companies')
         } else if (location.pathname.split('/')[2] === 'users') {
             setScreen('users')
         } else if (location.pathname.split('/')[2] === 'cases') {
@@ -145,7 +139,7 @@ export default function Sidebar(props: any) {
     //     userProfile()
     // }, [])
 
-    const navList = ['leads', 'contacts', 'opportunities', 'accounts', 'companies', 'users', 'cases', 'settings']
+    const navList = ['leads', 'contacts', 'opportunities', 'accounts', 'users', 'cases', 'settings']
     const navIcons = (text: any, screen: any): React.ReactNode => {
         switch (text) {
             case 'leads':
@@ -156,8 +150,6 @@ export default function Sidebar(props: any) {
                 return screen === 'opportunities' ? <FaHandshake fill='#3e79f7' /> : <FaHandshake />
             case 'accounts':
                 return screen === 'accounts' ? <FaBuilding fill='#3e79f7' /> : <FaBuilding />
-            case 'companies':
-                return screen === 'companies' ? <FaIndustry fill='#3e79f7' /> : <FaIndustry />
             // case 'analytics':
             //     return screen === 'analytics' ? <FaChartLine fill='#3e79f7' /> : <FaChartLine />
             case 'users':
@@ -336,10 +328,6 @@ export default function Sidebar(props: any) {
                             <Route path='/app/leads/add-leads' element={<AddLeads />} />
                             <Route path='/app/leads/edit-lead' element={<EditLead />} />
                             <Route path='/app/leads/lead-details' element={<LeadDetails />} />
-                            <Route path='/app/companies' element={<Company />} />
-                            <Route path='/app/companies/add-company' element={<AddCompany />} />
-                            <Route path='/app/companies/edit-company' element={<EditCompany />} />
-                            <Route path='/app/companies/company-details' element={<CompanyDetails />} />
                             <Route path='/app/contacts' element={<Contacts />} />
                             <Route path='/app/contacts/add-contacts' element={<AddContacts />} />
                             <Route path='/app/contacts/contact-details' element={<ContactDetails />} />

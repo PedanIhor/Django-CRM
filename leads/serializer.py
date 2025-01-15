@@ -10,7 +10,7 @@ from common.serializer import (
     UserSerializer,
 )
 from contacts.serializer import ContactSerializer
-from leads.models import Company, Lead
+from leads.models import Lead
 from teams.serializer import TeamsSerializer
 
 
@@ -18,17 +18,6 @@ class TagsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tags
         fields = ("id", "name", "slug")
-
-
-class CompanySwaggerSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Company
-        fields = ("name",)
-
-class CompanySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Company
-        fields = ("id", "name", "org")
 
 
 class LeadSerializer(serializers.ModelSerializer):
