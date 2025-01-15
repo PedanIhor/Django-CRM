@@ -223,7 +223,7 @@ class AccountDetailView(APIView):
         account_object = self.get_object(pk=pk)
         if account_object.org != request.profile.org:
             return Response(
-                {"error": True, "errors": "User company doesnot match with header...."},
+                {"error": True, "errors": "User organization doesnot match with header...."},
                 status=status.HTTP_403_FORBIDDEN,
             )
         serializer = AccountCreateSerializer(
@@ -315,7 +315,7 @@ class AccountDetailView(APIView):
         self.object = self.get_object(pk)
         if self.object.org != request.profile.org:
             return Response(
-                {"error": True, "errors": "User company doesnot match with header...."},
+                {"error": True, "errors": "User organization doesnot match with header...."},
                 status=status.HTTP_403_FORBIDDEN,
             )
         if self.request.profile.role != "ADMIN" and not self.request.profile.is_admin:
@@ -338,7 +338,7 @@ class AccountDetailView(APIView):
         self.account = self.get_object(pk=pk)
         if self.account.org != request.profile.org:
             return Response(
-                {"error": True, "errors": "User company doesnot match with header...."},
+                {"error": True, "errors": "User organization doesnot match with header...."},
                 status=status.HTTP_404_NOT_FOUND,
             )
         context = {}
@@ -441,7 +441,7 @@ class AccountDetailView(APIView):
             return Response(
                 {
                     "error": True,
-                    "errors": "User company does not match with header....",
+                    "errors": "User organization does not match with header....",
                 },
                 status=status.HTTP_403_FORBIDDEN,
             )

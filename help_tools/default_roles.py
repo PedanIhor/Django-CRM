@@ -1,7 +1,7 @@
 from common.models import Org, Role, Permission, Module
 
 default_modules_names = [
-    "Leads", "Contacts", "Opportunities", "Accounts", "Companies", "Users", "Cases", "Settings", "Roles"
+    "Leads", "Contacts", "Opportunities", "Accounts", "Users", "Cases", "Settings", "Roles"
 ]
 permission_types = [
     "list", "get", "add", "edit", "delete"
@@ -15,7 +15,6 @@ roles_permissions_names = {
         "list_contacts", "add_contacts", "get_contacts", "edit_contacts", "delete_contacts",
         "list_opportunities", "add_opportunities", "get_opportunities", "edit_opportunities", "delete_opportunities", "update_opportunity_status"
         "list_accounts", "add_accounts", "get_accounts", "edit_accounts", "delete_accounts",
-        "list_companies", "add_companies", "get_companies", "edit_companies", "delete_companies",
         "list_users", "add_users", "get_users", "edit_users", "delete_users",
         "list_cases", "add_cases", "get_cases", "edit_cases", "delete_cases",
         "list_settings", "add_settings", "get_settings", "edit_settings", "delete_settings",

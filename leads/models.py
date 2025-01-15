@@ -18,19 +18,6 @@ from contacts.models import Contact
 from teams.models import Teams
 
 
-class Company(BaseModel):
-    name = models.CharField(max_length=100, blank=True, null=True)
-    org = models.ForeignKey(Org, on_delete=models.SET_NULL, null=True, blank=True)
-
-    class Meta:
-        verbose_name = "Company"
-        verbose_name_plural = "Companies"
-        db_table = "company"
-        ordering = ("-created_at",)
-
-    def __str__(self):
-        return f"{self.name}"
-
 class Lead(BaseModel):
     title = models.CharField(
         pgettext_lazy("Treatment Pronouns for the customer", "Title"), max_length=64
@@ -68,13 +55,7 @@ class Lead(BaseModel):
     org = models.ForeignKey(
         Org, on_delete=models.SET_NULL, null=True, blank=True, related_name="lead_org"
     )
-    company = models.ForeignKey(
-        Company,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="lead_company",
-    )
+    company = models.CharField(max_length=100, null=True, blank=True)
     skype_ID = models.CharField(max_length=100, null=True, blank=True)
     industry = models.CharField(
         _("Industry Type"), max_length=255, choices=INDCHOICES, blank=True, null=True

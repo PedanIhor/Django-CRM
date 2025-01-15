@@ -21,15 +21,13 @@ from common.serializer import (
     ProfileSerializer,
 )
 from .forms import LeadListForm
-from .models import Company, Lead
+from .models import Lead
 from common.utils import COUNTRIES, INDCHOICES, LEAD_SOURCE, LEAD_STATUS
 from contacts.models import Contact
 from leads import swagger_params1
 from leads.forms import LeadListForm
-from leads.models import Company, Lead
+from leads.models import Lead
 from leads.serializer import (
-    CompanySerializer,
-    CompanySwaggerSerializer,
     LeadCardViewSerializer,
     LeadCreateSerializer,
     LeadSerializer,
@@ -142,9 +140,6 @@ class LeadListView(APIView, LimitOffsetPagination):
         context["contacts"] = contacts
         context["status"] = LEAD_STATUS
         context["source"] = LEAD_SOURCE
-        context["companies"] = CompanySerializer(
-            Company.objects.filter(org=self.request.profile.org), many=True
-        ).data
         context["tags"] = TagsSerializer(Tags.objects.all(), many=True).data
 
         users = Profile.objects.filter(is_active=True, org=self.request.profile.org).values(
@@ -388,7 +383,7 @@ class LeadDetailView(APIView):
         self.lead_obj = self.get_object(pk)
         if self.lead_obj.org != request.profile.org:
             return Response(
-                {"error": True, "errors": "User company doesnot match with header...."},
+                {"error": True, "errors": "User organization doesnot match with header...."},
                 status=status.HTTP_403_FORBIDDEN,
             )
         if self.request.profile.role.name != "ADMIN" and not self.request.user.is_superuser:
@@ -441,29 +436,19 @@ class LeadDetailView(APIView):
     def put(self, request, pk, **kwargs):
         params = request.data.copy()  # Make a mutable copy
         self.lead_obj = self.get_object(pk)
-        
-        # Handle empty string company field
-        if 'company' in params:
-            if not params['company']:
-                params['company'] = None
-            else:
-                try:
-                    company = Company.objects.get(
-                        id=params['company'],
-                        org=request.profile.org
-                    )
-                    params['company'] = company.id
-                except Company.DoesNotExist:
-                    return Response(
-                        {"error": True, "errors": "Company does not exist"},
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
+        if self.lead_obj.org != request.profile.org:
+            return Response(
+                {
+                    "error": True,
+                    "errors": "User organization does not match with header....",
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
         # Just send the user ID for created_by
         user = self.lead_obj.created_by or request.profile.user
         params['created_by'] = str(user.id)  # Convert UUID to string
 
-        print("DEBUG - Modified params:", params)  # Debug line
         serializer = LeadSerializer(self.lead_obj, data=params)
         if not serializer.is_valid():
             print("Serializer errors:", serializer.errors)
@@ -800,97 +785,6 @@ class CreateLeadFromSite(APIView):
         )
 
 
-class CompaniesView(APIView):
-
-    permission_classes = (IsAuthenticated,)
-
-    @extend_schema(tags=["Company"], parameters=swagger_params1.organization_params)
-    def get(self, request, *args, **kwargs):
-        try:
-            companies = Company.objects.filter(org=request.profile.org)
-            serializer = CompanySerializer(companies, many=True)
-            return Response(
-                {"error": False, "data": serializer.data},
-                status=status.HTTP_200_OK,
-            )
-        except:
-            return Response(
-                {"error": True, "message": "Organization is missing"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-    @extend_schema(
-        tags=["Company"], description="Company Create", parameters=swagger_params1.organization_params, request=CompanySwaggerSerializer
-    )
-    def post(self, request, *args, **kwargs):
-        request.data['org'] = request.profile.org.id
-        print(request.data)
-        company = CompanySerializer(data=request.data)
-        if Company.objects.filter(**request.data).exists():
-            return Response(
-                {"error": True, "message": "This data already exists"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        if company.is_valid():
-            company.save()
-            return Response(
-                {"error": False, "message": "Company created successfully"},
-                status=status.HTTP_200_OK,
-            )
-        else:
-            return Response(
-                {"error": True, "message": company.errors},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-
-class CompanyDetail(APIView):
-
-    permission_classes = (IsAuthenticated,)
-
-    def get_object(self, pk):
-        try:
-            return Company.objects.get(
-                pk=pk
-            )
-        except Company.DoesNotExist:
-            raise Http404
-
-    @extend_schema(tags=["Company"], parameters=swagger_params1.organization_params)
-    def get(self, request, pk, format=None):
-        company = self.get_object(pk)
-        serializer = CompanySerializer(company)
-        return Response(
-            {"error": False, "data": serializer.data},
-            status=status.HTTP_200_OK,
-        )
-
-    @extend_schema(tags=["Company"], description="Company Update", parameters=swagger_params1.organization_params, request=CompanySerializer)
-    def put(self, request, pk, format=None):
-        company = self.get_object(pk)
-        serializer = CompanySerializer(company, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(
-                {"error": False, "data": serializer.data,
-                    'message': 'Updated Successfully'},
-                status=status.HTTP_200_OK,
-            )
-        return Response(
-            {"error": True, 'message': serializer.errors},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-
-    @extend_schema(tags=["Company"], parameters=swagger_params1.organization_params)
-    def delete(self, request, pk, format=None):
-        company = self.get_object(pk)
-        company.delete()
-        return Response(
-            {"error": False, 'message': 'Deleted successfully'},
-            status=status.HTTP_200_OK,
-        )
-
-
 class LeadStatusUpdate(APIView):
     permission_classes = (crm_permissions(post="update_lead_status"),)
 
@@ -902,7 +796,7 @@ class LeadStatusUpdate(APIView):
         lead = get_object_or_404(Lead, pk=pk)
         if lead.org != request.profile.org:
             return Response(
-                {"error": True, "errors": "User company does not match with header...."},
+                {"error": True, "errors": "User organization does not match with header...."},
                 status=status.HTTP_403_FORBIDDEN,
             )
         assigned_ids = [
