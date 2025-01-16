@@ -310,7 +310,7 @@ export default function Accounts() {
             navigate('/app/accounts/add-account', {
                 state: {
                     detail: false,
-                    contacts: contacts || [], status: status || [], tags: tags || [], users: users || [], countries: countries || [], teams: teams || [], leads: leads || []
+                    contacts: contacts || [], status: status || [], tags: tags || [], users: users || [], countries: countries || [], teams: teams || [], leads: leads || [], industries: industries || [],
                 }
             })
         }

@@ -17,12 +17,15 @@ import {
   IconButton,
   Select,
   Divider,
+  Button,
 } from '@mui/material';
+import { useQuill } from 'react-quilljs';
+import 'quill/dist/quill.snow.css';
 import '../../styles/style.css';
 import { AccountsUrl } from '../../services/ApiUrls';
 import { fetchData } from '../../components/FetchData';
 import { CustomAppBar } from '../../components/CustomAppBar';
-import { FaFileUpload, FaPlus, FaTimes, FaUpload } from 'react-icons/fa';
+import { FaFileUpload, FaPlus, FaTimes, FaUpload, FaTimesCircle, FaCheckCircle } from 'react-icons/fa';
 import {
   CustomPopupIcon,
   RequiredSelect,
@@ -32,51 +35,57 @@ import { FiChevronDown } from '@react-icons/all-files/fi/FiChevronDown';
 import { FiChevronUp } from '@react-icons/all-files/fi/FiChevronUp';
 
 type FormErrors = {
-  name?: string[];
-  phone?: string[];
-  email?: string[];
-  billing_address_line?: string[];
-  billing_street?: string[];
-  billing_city?: string[];
-  billing_state?: string[];
-  billing_postcode?: string[];
-  billing_country?: string[];
-  contact_name?: string[];
-  teams?: string[];
-  assigned_to?: string[];
-  tags?: string[];
-  account_attachment?: string[];
-  website?: string[];
-  status?: string[];
-  lead?: string[];
-  contacts?: string[];
-  file?: string[];
+  name?: string[],
+  phone?: string[],
+  email?: string[],
+  billing_address_line?: string[],
+  billing_street?: string[],
+  billing_city?: string[],
+  billing_state?: string[],
+  billing_postcode?: string[],
+  billing_country?: string[],
+  contact_name?: string[],
+  teams?: string[],
+  assigned_to?: string[],
+  tags?: string[],
+  account_attachment?: string[],
+  website?: string[],
+  status?: string[],
+  lead?: string[],
+  contacts?: string[],
+  file?: string[],
+  industry?: string[],
+  description?: string[],
 };
 interface FormData {
-  name: string;
-  phone: string;
-  email: string;
-  billing_address_line: string;
-  billing_street: string;
-  billing_city: string;
-  billing_state: string;
-  billing_postcode: string;
-  billing_country: string;
-  contact_name: string;
-  teams: string[];
-  assigned_to: string[];
-  tags: string[];
-  account_attachment: string | null;
-  website: string;
-  status: string;
-  lead: string;
-  contacts: [];
-  file?: string | null;
+  name: string,
+  phone: string,
+  email: string,
+  billing_address_line: string,
+  billing_street: string,
+  billing_city: string,
+  billing_state: string,
+  billing_postcode: string,
+  billing_country: string,
+  contact_name: string,
+  teams: string[],
+  assigned_to: string[],
+  tags: string[],
+  account_attachment: string | null,
+  website: string,
+  status: string,
+  lead: string,
+  contacts: [],
+  file?: string | null,
+  industry: string,
+  description: string,
 }
 
 export function AddAccount() {
   const navigate = useNavigate();
   const { state } = useLocation();
+  const { quill, quillRef } = useQuill();
+  const initialContentRef = useRef(null);
   const autocompleteRef = useRef<any>(null);
   const [error, setError] = useState(false);
   const [selectedContacts, setSelectedContacts] = useState<any[]>([]);
@@ -110,6 +119,8 @@ export function AddAccount() {
     lead: '',
     contacts: [],
     file: null,
+    industry: '',
+    description: '',
   });
 
   const handleChange2 = (title: any, val: any) => {
@@ -154,11 +165,20 @@ export function AddAccount() {
   const backbtnHandle = () => {
     navigate('/app/accounts');
   };
+
+  const resetQuillToInitialState = () => {
+    // Reset the Quill editor to its initial state
+    setFormData({ ...formData, description: '' })
+    if (quill && initialContentRef.current !== null) {
+      quill.clipboard.dangerouslyPasteHTML(initialContentRef.current);
+    }
+  };
+
   const handleSubmit = (e: any) => {
     e.preventDefault();
-    submitForm();
+    submitForm(quillRef.current.firstChild.innerText);
   };
-  const submitForm = () => {
+  const submitForm = (description: string) => {
     const Header = {
       Accept: 'application/json',
       'Content-Type': 'application/json',
@@ -185,6 +205,8 @@ export function AddAccount() {
       status: formData.status,
       lead: formData.lead,
       contacts: formData.contacts,
+      industry: formData.industry,
+      description,
     };
     fetchData(`${AccountsUrl}/`, 'POST', JSON.stringify(data), Header)
       .then((res: any) => {
@@ -198,7 +220,7 @@ export function AddAccount() {
           setErrors(res?.errors);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   };
   const resetForm = () => {
     setFormData({
@@ -221,6 +243,8 @@ export function AddAccount() {
       lead: '',
       contacts: [],
       file: null,
+      industry: '',
+      description: '',
     });
     setErrors({});
     setSelectedContacts([]);
@@ -287,8 +311,8 @@ export function AddAccount() {
                         <div className="fieldTitle">Name</div>
                         <RequiredTextField
                           name="name"
-                          defaultValue={formData.name}
-                          onBlur={handleChange}
+                          value={formData.name}
+                          onChange={handleChange}
                           style={{ width: '70%' }}
                           size="small"
                           helperText={errors?.name?.[0] ? errors?.name[0] : ''}
@@ -299,8 +323,8 @@ export function AddAccount() {
                         <div className="fieldTitle">Website</div>
                         <TextField
                           name="website"
-                          defaultValue={formData.website}
-                          onBlur={handleChange}
+                          value={formData.website}
+                          onChange={handleChange}
                           style={{ width: '70%' }}
                           size="small"
                           helperText={
@@ -316,8 +340,8 @@ export function AddAccount() {
                         <RequiredTextField
                           name="phone"
                           type="text"
-                          defaultValue={formData.phone}
-                          onBlur={handleChange}
+                          value={formData.phone}
+                          onChange={handleChange}
                           style={{ width: '70%' }}
                           size="small"
                           helperText={
@@ -330,8 +354,8 @@ export function AddAccount() {
                         <div className="fieldTitle">Email Address</div>
                         <RequiredTextField
                           name="email"
-                          defaultValue={formData.email}
-                          onBlur={handleChange}
+                          value={formData.email}
+                          onChange={handleChange}
                           style={{ width: '70%' }}
                           size="small"
                           helperText={
@@ -503,7 +527,24 @@ export function AddAccount() {
                         </FormControl>
                       </div>
                       <div className="fieldSubContainer">
-                        <div className="fieldTitle"></div>
+                        <div className="fieldTitle">Industry</div>
+                        <FormControl sx={{ width: '70%' }}>
+                          <Select
+                            name="industry"
+                            value={formData.industry}
+                            onChange={handleChange}
+                            error={!!errors?.industry?.[0]}
+                          >
+                            {state?.industries?.length ? state?.industries.map((option: any) => (
+                              <MenuItem key={option[0]} value={option[0]}>
+                                {option[1]}
+                              </MenuItem>
+                            )) : ''}
+                          </Select>
+                          <FormHelperText>
+                            {errors?.industry?.[0] ? errors?.industry[0] : ''}
+                          </FormHelperText>
+                        </FormControl>
                       </div>
                     </div>
                   </Box>
@@ -535,8 +576,8 @@ export function AddAccount() {
                         <div className="fieldTitle">Billing Address Line</div>
                         <RequiredTextField
                           name="billing_address_line"
-                          defaultValue={formData.billing_address_line}
-                          onBlur={handleChange}
+                          value={formData.billing_address_line}
+                          onChange={handleChange}
                           style={{ width: '70%' }}
                           size="small"
                           helperText={
@@ -551,8 +592,8 @@ export function AddAccount() {
                         <div className="fieldTitle">Billing Street</div>
                         <RequiredTextField
                           name="billing_street"
-                          defaultValue={formData.billing_street}
-                          onBlur={handleChange}
+                          value={formData.billing_street}
+                          onChange={handleChange}
                           style={{ width: '70%' }}
                           size="small"
                           helperText={
@@ -569,8 +610,8 @@ export function AddAccount() {
                         <div className="fieldTitle">Billing City</div>
                         <RequiredTextField
                           name="billing_city"
-                          defaultValue={formData.billing_city}
-                          onBlur={handleChange}
+                          value={formData.billing_city}
+                          onChange={handleChange}
                           style={{ width: '70%' }}
                           size="small"
                           helperText={
@@ -585,8 +626,8 @@ export function AddAccount() {
                         <div className="fieldTitle">Billing State</div>
                         <RequiredTextField
                           name="billing_state"
-                          defaultValue={formData.billing_state}
-                          onBlur={handleChange}
+                          value={formData.billing_state}
+                          onChange={handleChange}
                           style={{ width: '70%' }}
                           size="small"
                           helperText={
@@ -603,8 +644,8 @@ export function AddAccount() {
                         <div className="fieldTitle">Billing Postcode</div>
                         <RequiredTextField
                           name="billing_postcode"
-                          defaultValue={formData.billing_postcode}
-                          onBlur={handleChange}
+                          value={formData.billing_postcode}
+                          onChange={handleChange}
                           style={{ width: '70%' }}
                           size="small"
                           helperText={
@@ -658,6 +699,51 @@ export function AddAccount() {
                         </FormControl>
                       </div>
                     </div>
+                  </Box>
+                </AccordionDetails>
+              </Accordion>
+            </div>
+            <div className='leadContainer'>
+              <Accordion defaultExpanded style={{ width: '98%' }}>
+                <AccordionSummary expandIcon={<FiChevronDown style={{ fontSize: '25px' }} />}>
+                  <Typography className='accordion-header'>Description</Typography>
+                </AccordionSummary>
+                <Divider className='divider' />
+                <AccordionDetails>
+                  <Box
+                    sx={{ width: '100%', mb: 1 }}
+                    component='form'
+                    noValidate
+                    autoComplete='off'
+                  >
+                    <div className='DescriptionDetail'>
+                      <div className='descriptionTitle'>Description</div>
+                      <div style={{ width: '100%', marginBottom: '3%' }}>
+                        <div ref={quillRef} />
+                      </div>
+                    </div>
+                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', mt: 1.5 }}>
+                      <Button
+                        className='header-button'
+                        onClick={resetQuillToInitialState}
+                        size='small'
+                        variant='contained'
+                        startIcon={<FaTimesCircle style={{ fill: 'white', width: '16px', marginLeft: '2px' }} />}
+                        sx={{ backgroundColor: '#2b5075', ':hover': { backgroundColor: '#1e3750' } }}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        className='header-button'
+                        onClick={() => setFormData({ ...formData, description: quillRef.current.firstChild.innerHTML })}
+                        variant='contained'
+                        size='small'
+                        startIcon={<FaCheckCircle style={{ fill: 'white', width: '16px', marginLeft: '2px' }} />}
+                        sx={{ ml: 1 }}
+                      >
+                        Save
+                      </Button>
+                    </Box>
                   </Box>
                 </AccordionDetails>
               </Accordion>
