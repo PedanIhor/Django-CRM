@@ -62,10 +62,10 @@ class AccountsListView(APIView, LimitOffsetPagination):
     model = Account
     serializer_class = AccountReadSerializer
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs): 
         params = self.request.query_params
         queryset = self.model.objects.filter(org=self.request.profile.org).order_by("-id")
-        if self.request.profile.role != "ADMIN" and not self.request.profile.is_admin:
+        if self.request.profile.role.name != "ADMIN" and not self.request.profile.is_admin:
             queryset = queryset.filter(
                 Q(created_by=self.request.profile.user) | Q(assigned_to=self.request.profile)
             ).distinct()
@@ -99,6 +99,7 @@ class AccountsListView(APIView, LimitOffsetPagination):
         context["page_number"] = page_number
         context["active_accounts"] = {
             "offset": offset,
+            "total_count": queryset_open.count(),
             "open_accounts": accounts_open,
         }
 
@@ -122,6 +123,7 @@ class AccountsListView(APIView, LimitOffsetPagination):
         context["contacts"] = contacts
         context["closed_accounts"] = {
             "offset": offset,
+            "total_count": queryset_close.count(),
             "close_accounts": accounts_close,
         }
         context["teams"] = TeamsSerializer(

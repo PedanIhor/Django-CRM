@@ -184,9 +184,29 @@ export default function Accounts() {
     const [closedTotalPages, setClosedTotalPages] = useState<number>(0);
     const [closedLoading, setClosedLoading] = useState(true);
 
+    // Add at the top with other state declarations
+    const [totalOpenAccounts, setTotalOpenAccounts] = useState(0);
+    const [totalClosedAccounts, setTotalClosedAccounts] = useState(0);
+
     useEffect(() => {
         getAccounts()
     }, [openCurrentPage, openRecordsPerPage, closedCurrentPage, closedRecordsPerPage]);
+
+    // Keep this first useEffect as is
+    useEffect(() => {
+        getAccounts()
+    }, [openCurrentPage, openRecordsPerPage, closedCurrentPage, closedRecordsPerPage]);
+
+    // Update this second useEffect
+    useEffect(() => {
+        if (totalOpenAccounts > 0 || totalClosedAccounts > 0) {
+            const openPages = Math.max(Math.ceil(totalOpenAccounts / openRecordsPerPage), 1);
+            const closedPages = Math.max(Math.ceil(totalClosedAccounts / closedRecordsPerPage), 1);
+
+            setOpenTotalPages(openPages);
+            setClosedTotalPages(closedPages);
+        }
+    }, [totalOpenAccounts, totalClosedAccounts, openRecordsPerPage, closedRecordsPerPage]);
 
     const handleChangeTab = (e: SyntheticEvent, val: any) => {
         setTab(val)
@@ -198,52 +218,90 @@ export default function Accounts() {
             'Content-Type': 'application/json',
             Authorization: localStorage.getItem('Token'),
             org: localStorage.getItem('org')
-          }
+        }
         try {
             const openOffset = (openCurrentPage - 1) * openRecordsPerPage;
             const closeOffset = (closedCurrentPage - 1) * closedRecordsPerPage;
-            await fetchData(`${AccountsUrl}/?offset=${tab === "open" ? openOffset : closeOffset}&limit=${tab === "open" ? openRecordsPerPage : closedRecordsPerPage}`, 'GET', null as any, Header)
-                .then((res: any) => {
-                    if (!res.error) {
-                        // console.log(res, 'accounts')
-                        setOpenAccounts(res?.active_accounts?.open_accounts)
-                        // setOpenAccountsCount(res?.active_accounts?.active_users_count)
-                        // setOpenAccountsOffset(res?.active_accounts?.offset)
-                        setClosedAccounts(res?.closed_accounts?.close_accounts)
-                        // setClosedAccountsCount(res?.closed_accounts?.close_accounts_count)
-                        // setClosedAccountsOffset(res?.closed_accounts?.offset)
-                        setContacts(res?.contacts)
-                        setIndustries(res?.industries)
-                        setUsers(res?.users)
-                        setStatus(res?.status)
-                        setCountries(res?.countries)
-                        setLeads(res?.leads)
-                        setTags(res?.tags)
-                        setTeams(res?.teams)
-                        setLoading(false)
-                    }
-                })
-        }
-        catch (error) {
-            console.error('Error fetching data:', error);
-        }
+            const response = await fetchData(
+                `${AccountsUrl}/?offset=${tab === "open" ? openOffset : closeOffset}&limit=${tab === "open" ? openRecordsPerPage : closedRecordsPerPage}`,
+                'GET',
+                null as any,
+                Header
+            );
 
+            if (!response.error) {
+                // Get all accounts first
+                const openAccounts = response?.active_accounts?.open_accounts || [];
+                const closedAccounts = response?.closed_accounts?.close_accounts || [];
+
+                // Store the total counts first
+                const totalOpen = response?.active_accounts?.total_count || openAccounts.length;
+                const totalClosed = response?.closed_accounts?.total_count || closedAccounts.length;
+
+                console.log(totalOpen, 'totalOpen');
+                console.log(totalClosed, 'totalClosed');
+
+                // Update total counts
+                setTotalOpenAccounts(totalOpen);
+                setTotalClosedAccounts(totalClosed);
+
+                // Calculate pages based on the totals
+                const openPages = Math.max(Math.ceil(totalOpen / openRecordsPerPage), 1);
+                const closedPages = Math.max(Math.ceil(totalClosed / closedRecordsPerPage), 1);
+
+                // Set the accounts data
+                setOpenAccounts(openAccounts);
+                setClosedAccounts(closedAccounts);
+
+                // Update total pages
+                setOpenTotalPages(openPages);
+                setClosedTotalPages(closedPages);
+
+                // Set other data
+                setContacts(response?.contacts)
+                setIndustries(response?.industries)
+                setUsers(response?.users)
+                setStatus(response?.status)
+                setCountries(response?.countries)
+                setLeads(response?.leads)
+                setTags(response?.tags)
+                setTeams(response?.teams)
+            }
+
+            setLoading(false)
+            setOpenLoading(false)
+            setClosedLoading(false)
+        } catch (error) {
+            console.error('Error fetching data:', error);
+            setLoading(false)
+            setOpenLoading(false)
+            setClosedLoading(false)
+        }
     }
 
     const accountDetail = (accountId: any) => {
         navigate(`/app/accounts/account-details`, { state: { accountId, detail: true, contacts: contacts || [], status: status || [], tags: tags || [], users: users || [], countries: countries || [], teams: teams || [], leads: leads || [] } })
     }
     const handleRecordsPerPage = (event: React.ChangeEvent<HTMLSelectElement>) => {
-        if (tab == 'open') {
-            setOpenLoading(true)
-            setOpenRecordsPerPage(parseInt(event.target.value));
-            setOpenCurrentPage(1);
-        } else {
-            setClosedLoading(true)
-            setClosedRecordsPerPage(parseInt(event.target.value));
-            setClosedCurrentPage(1);
-        }
+        const newRecordsPerPage = parseInt(event.target.value);
 
+        if (tab === 'open') {
+            setOpenLoading(true);
+            setOpenRecordsPerPage(newRecordsPerPage);
+            setOpenCurrentPage(1);
+
+            // Recalculate pages immediately
+            const openPages = Math.max(Math.ceil(totalOpenAccounts / newRecordsPerPage), 1);
+            setOpenTotalPages(openPages);
+        } else {
+            setClosedLoading(true);
+            setClosedRecordsPerPage(newRecordsPerPage);
+            setClosedCurrentPage(1);
+
+            // Recalculate pages immediately
+            const closedPages = Math.max(Math.ceil(totalClosedAccounts / newRecordsPerPage), 1);
+            setClosedTotalPages(closedPages);
+        }
     };
     const handlePreviousPage = () => {
         if (tab == 'open') {
@@ -291,7 +349,7 @@ export default function Accounts() {
             'Content-Type': 'application/json',
             Authorization: localStorage.getItem('Token'),
             org: localStorage.getItem('org')
-          }
+        }
         fetchData(`${AccountsUrl}/${id}/`, 'delete', null as any, Header)
             .then((data) => {
                 if (!data.error) {
@@ -334,7 +392,7 @@ export default function Accounts() {
             'Content-Type': 'application/json',
             Authorization: localStorage.getItem('Token'),
             org: localStorage.getItem('org')
-          }
+        }
         fetchData(`${AccountsUrl}/${selectedId}/`, 'DELETE', null as any, Header)
             .then((res: any) => {
                 console.log('delete:', res);
@@ -401,7 +459,7 @@ export default function Accounts() {
             'Content-Type': 'application/json',
             Authorization: localStorage.getItem('Token'),
             org: localStorage.getItem('org')
-          }
+        }
         fetchData(`${AccountsUrl}/${id}/`, 'GET', null as any, Header)
             .then((res) => {
                 console.log(res, 'resDetail');
