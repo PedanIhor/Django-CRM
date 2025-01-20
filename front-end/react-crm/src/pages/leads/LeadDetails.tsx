@@ -61,6 +61,13 @@ export const formatDate = (dateString: any) => {
 //     // Add other contact properties as needed
 // }
 
+type Contact = {
+    id: string;
+    first_name: string;
+    last_name: string;
+    // add other contact properties as needed
+}
+
 type response = {
     created_by: {
         email: string;
@@ -88,7 +95,7 @@ type response = {
     description: string | '';
     teams: string;
     assigned_to: string;
-    contacts: string;
+    contacts: Contact[];
     status: string;
     source: string;
     address_line: string;
@@ -266,6 +273,23 @@ function LeadDetails(props: any) {
                     setComments(res?.comments)
                     setCurrentStatus(res?.lead_obj?.status)
 
+                    // Format contacts for the dropdown
+                    const formattedContacts = res.contacts.map((contact: any) => ({
+                        value: contact.id,
+                        label: `${contact.first_name} ${contact.last_name}`,
+                        ...contact  // Keep all other contact data
+                    }));
+
+                    // Set both all contacts and the selected ones
+                    setContacts(formattedContacts);
+                    setLeadDetails({
+                        ...res.lead_obj,
+                        contacts: res.lead_obj.contacts.map((contact: any) => ({
+                            value: contact.id,
+                            label: `${contact.first_name} ${contact.last_name}`,
+                            ...contact
+                        }))
+                    });
                 }
             })
             .catch((err) => {
@@ -319,7 +343,6 @@ function LeadDetails(props: any) {
     }
 
     const editHandle = () => {
-        // navigate('/contacts/edit-contacts', { state: { value: contactDetails, address: newAddress } })
         let country: string[] | undefined;
         for (country of countries) {
             if (Array.isArray(country) && country.includes(leadDetails?.country || '')) {
@@ -327,6 +350,21 @@ function LeadDetails(props: any) {
                 break;
             }
         }
+
+        // Format all available contacts
+        const formattedContacts = contacts.map((contact: Contact) => ({
+            value: contact.id,
+            label: `${contact.first_name} ${contact.last_name}`,
+            ...contact
+        }));
+
+        // Format selected contacts
+        const selectedContacts = leadDetails?.contacts?.map((contact: Contact) => ({
+            value: contact.id,
+            label: `${contact.first_name} ${contact.last_name}`,
+            ...contact
+        })) || [];
+
         navigate('/app/leads/edit-lead', {
             state: {
                 value: {
@@ -342,7 +380,7 @@ function LeadDetails(props: any) {
                     description: leadDetails?.description,
                     teams: leadDetails?.teams,
                     assigned_to: leadDetails?.assigned_to,
-                    contacts: leadDetails?.contacts,
+                    contacts: selectedContacts,
                     status: leadDetails?.status,
                     source: leadDetails?.source,
                     address_line: leadDetails?.address_line,
@@ -360,10 +398,9 @@ function LeadDetails(props: any) {
                     close_date: leadDetails?.close_date,
                     organization: leadDetails?.organization,
                     created_from_site: leadDetails?.created_from_site,
-                }, id: state?.leadId, tags, countries, source, status, industries, users, contacts, teams, comments
+                }, id: state?.leadId, tags, countries, source, status, industries, users, contacts: formattedContacts, teams, comments
             }
-        }
-        )
+        });
     }
 
     const handleAttachmentClick = () => {
