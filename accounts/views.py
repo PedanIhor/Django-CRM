@@ -199,13 +199,6 @@ class AccountsListView(APIView, LimitOffsetPagination):
                 attachment.attachment = request.FILES.get("account_attachment")
                 attachment.save()
 
-            recipients = list(
-                account_object.assigned_to.all().values_list("id", flat=True)
-            )
-            send_email_to_assigned_user.delay(
-                recipients,
-                account_object.id,
-            )
             return Response(
                 {"error": False, "message": "Account Created Successfully"},
                 status=status.HTTP_200_OK,

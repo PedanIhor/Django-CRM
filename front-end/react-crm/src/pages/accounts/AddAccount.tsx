@@ -213,7 +213,7 @@ export function AddAccount() {
         // console.log('Form data:', res);
         if (!res.error) {
           resetForm();
-          navigate('/app/accounts');
+          navigate('/app/accounts', { state: { successMessage: 'Account added successfully!' } });
         }
         if (res.error) {
           setError(true);
