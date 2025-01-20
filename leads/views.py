@@ -436,22 +436,12 @@ class LeadDetailView(APIView):
     def put(self, request, pk, **kwargs):
         params = request.data.copy()  # Make a mutable copy
         self.lead_obj = self.get_object(pk)
-        if self.lead_obj.org != request.profile.org:
-            return Response(
-                {
-                    "error": True,
-                    "errors": "User organization does not match with header....",
-                },
-                status=status.HTTP_403_FORBIDDEN,
-            )
 
         # Just send the user ID for created_by
         user = self.lead_obj.created_by or request.profile.user
         params['created_by'] = str(user.id)  # Convert UUID to string
 
         serializer = LeadSerializer(self.lead_obj, data=params)
-        if not serializer.is_valid():
-            print("Serializer errors:", serializer.errors)
         if serializer.is_valid():
             lead_obj = serializer.save()
             previous_assigned_to_users = list(
