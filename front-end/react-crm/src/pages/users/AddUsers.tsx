@@ -766,7 +766,7 @@ export function AddUsers() {
                                                     aria-label='minimum height'
                                                     name='description'
                                                     minRows={8}
-                                                    // defaultValue={state.editData && state.editData.description ? state.editData.description : ''}
+                                                    // value={state.editData && state.editData.description ? state.editData.description : ''}
                                                     // onChange={onChange} 
                                                     style={{ width: '70%', padding: '5px' }}
                                                     placeholder='Add Description'

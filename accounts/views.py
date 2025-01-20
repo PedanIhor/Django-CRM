@@ -62,10 +62,10 @@ class AccountsListView(APIView, LimitOffsetPagination):
     model = Account
     serializer_class = AccountReadSerializer
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs): 
         params = self.request.query_params
         queryset = self.model.objects.filter(org=self.request.profile.org).order_by("-id")
-        if self.request.profile.role != "ADMIN" and not self.request.profile.is_admin:
+        if self.request.profile.role.name != "ADMIN" and not self.request.profile.is_admin:
             queryset = queryset.filter(
                 Q(created_by=self.request.profile.user) | Q(assigned_to=self.request.profile)
             ).distinct()
@@ -99,6 +99,7 @@ class AccountsListView(APIView, LimitOffsetPagination):
         context["page_number"] = page_number
         context["active_accounts"] = {
             "offset": offset,
+            "total_count": queryset_open.count(),
             "open_accounts": accounts_open,
         }
 
@@ -122,6 +123,7 @@ class AccountsListView(APIView, LimitOffsetPagination):
         context["contacts"] = contacts
         context["closed_accounts"] = {
             "offset": offset,
+            "total_count": queryset_close.count(),
             "close_accounts": accounts_close,
         }
         context["teams"] = TeamsSerializer(
@@ -155,7 +157,7 @@ class AccountsListView(APIView, LimitOffsetPagination):
     def post(self, request, *args, **kwargs):
         data = request.data
         serializer = AccountCreateSerializer(
-            data=data, request_obj=request, account=True
+            data=data, request_obj=request
         )
         # Save Account
         if serializer.is_valid():
@@ -197,13 +199,6 @@ class AccountsListView(APIView, LimitOffsetPagination):
                 attachment.attachment = request.FILES.get("account_attachment")
                 attachment.save()
 
-            recipients = list(
-                account_object.assigned_to.all().values_list("id", flat=True)
-            )
-            send_email_to_assigned_user.delay(
-                recipients,
-                account_object.id,
-            )
             return Response(
                 {"error": False, "message": "Account Created Successfully"},
                 status=status.HTTP_200_OK,
@@ -232,7 +227,7 @@ class AccountDetailView(APIView):
                 status=status.HTTP_403_FORBIDDEN,
             )
         serializer = AccountCreateSerializer(
-            account_object, data=data, request_obj=request, account=True
+            account_object, data=data, request_obj=request
         )
 
         if serializer.is_valid():

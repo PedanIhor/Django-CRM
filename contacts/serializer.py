@@ -69,25 +69,6 @@ class CreateContactSerializer(serializers.ModelSerializer):
         if request_obj:
             self.org = request_obj.profile.org
 
-    def validate_first_name(self, first_name):
-        if self.instance:
-            if (
-                Contact.objects.filter(first_name__iexact=first_name, org=self.org)
-                .exclude(id=self.instance.id)
-                .exists()
-            ):
-                raise serializers.ValidationError(
-                    "Contact already exists with this name"
-                )
-
-        else:
-            if Contact.objects.filter(
-                first_name__iexact=first_name, org=self.org
-            ).exists():
-                raise serializers.ValidationError(
-                    "Contact already exists with this name"
-                )
-        return first_name
 
     class Meta:
         model = Contact

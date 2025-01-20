@@ -1,5 +1,4 @@
 from rest_framework import serializers
-
 from accounts.models import Account, AccountEmail, Tags, AccountEmailLog
 from common.serializer import (
     AttachmentsSerializer,
@@ -7,10 +6,6 @@ from common.serializer import (
     ProfileSerializer,
     UserSerializer
 )
-from contacts.serializer import ContactSerializer
-from leads.serializer import LeadSerializer
-from teams.serializer import TeamsSerializer
-
 
 class TagsSerailizer(serializers.ModelSerializer):
     class Meta:
@@ -20,12 +15,8 @@ class TagsSerailizer(serializers.ModelSerializer):
 
 class AccountSerializer(serializers.ModelSerializer):
     created_by = UserSerializer()
-    lead = LeadSerializer()
     org = OrganizationSerializer()
     tags = TagsSerailizer(read_only=True, many=True)
-    assigned_to = ProfileSerializer(read_only=True, many=True)
-    contacts = ContactSerializer(read_only=True, many=True)
-    teams = TeamsSerializer(read_only=True, many=True)
     account_attachment = AttachmentsSerializer(read_only=True, many=True)
 
     class Meta:
@@ -51,11 +42,6 @@ class AccountSerializer(serializers.ModelSerializer):
             "is_active",
             "tags",
             "status",
-            "lead",
-            "contact_name",
-            "contacts",
-            "assigned_to",
-            "teams",
             "org",
         )
 
@@ -113,26 +99,22 @@ class AccountWriteSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Account
-        fields = ["name","phone", "email", "billing_address_line","billing_street","billing_city", "billing_state", "billing_postcode","billing_country","contacts", "teams", "assigned_to","tags","account_attachment", "website", "status","lead"]
+        fields = ["name","phone", "email", "billing_address_line","billing_street","billing_city", "billing_state", "billing_postcode","billing_country", "tags","account_attachment", "website", "status"]
 
 
 class AccountCreateSerializer(serializers.ModelSerializer):
-    def __init__(self, *args, **kwargs):
-        account_view = kwargs.pop("account", False)
+    name = serializers.CharField(required=True)
+    email = serializers.EmailField(required=True)
+    phone = serializers.CharField(required=True)  # Adjust type if needed, e.g., PhoneNumberField
+    billing_address_line = serializers.CharField(required=True)
+    billing_street = serializers.CharField(required=True)
+    billing_city = serializers.CharField(required=True)
+    billing_state = serializers.CharField(required=True)
+    billing_postcode = serializers.CharField(required=True)
+    billing_country = serializers.CharField(required=True)
+    def __init__(self, *args, **kwargs):        
         request_obj = kwargs.pop("request_obj", None)
         super().__init__(*args, **kwargs)
-        self.fields["status"].required = False
-        if account_view:
-            self.fields["billing_address_line"].required = True
-            self.fields["billing_street"].required = True
-            self.fields["billing_city"].required = True
-            self.fields["billing_state"].required = True
-            self.fields["billing_postcode"].required = True
-            self.fields["billing_country"].required = True
-
-        if self.instance:
-            self.fields["lead"].required = False
-        self.fields["lead"].required = False
         self.org = request_obj.profile.org
 
     def validate_name(self, name):
@@ -164,8 +146,6 @@ class AccountCreateSerializer(serializers.ModelSerializer):
             "billing_state",
             "billing_postcode",
             "billing_country",
-            "lead",
-            "contact_name",
         )
 
 class AccountDetailEditSwaggerSerializer(serializers.Serializer):

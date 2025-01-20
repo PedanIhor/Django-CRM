@@ -8,6 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
+from django.db.models import Prefetch
 
 from accounts.models import Account, Tags
 from accounts.serializer import AccountSerializer, TagsSerailizer
@@ -28,6 +29,8 @@ from opportunity.models import Opportunity
 from opportunity.serializer import *
 from opportunity.tasks import send_email_to_assigned_user
 from teams.models import Teams
+from .pagination import OpportunityCardViewPagination
+from .serializer import OpportunityCardViewSerializer
 
 
 class OpportunityListView(APIView, LimitOffsetPagination):
@@ -256,9 +259,9 @@ class OpportunityDetailView(APIView):
 
             opportunity_object.assigned_to.clear()
             if params.get("assigned_to"):
-                assinged_to_list = params.get("assigned_to")
+                assigned_to_list = list(map(lambda details: details.get('id', None), params.get("assigned_to")))
                 profiles = Profile.objects.filter(
-                    id__in=assinged_to_list, org=request.profile.org, is_active=True
+                    id__in=assigned_to_list, org=request.profile.org, is_active=True
                 )
                 opportunity_object.assigned_to.add(*profiles)
 
@@ -272,15 +275,15 @@ class OpportunityDetailView(APIView):
                 attachment.attachment = self.request.FILES.get("opportunity_attachment")
                 attachment.save()
 
-            assigned_to_list = list(
-                opportunity_object.assigned_to.all().values_list("id", flat=True)
-            )
-            recipients = list(set(assigned_to_list) - set(previous_assigned_to_users))
+            # assigned_to_list = list(
+            #     opportunity_object.assigned_to.all().values_list("id", flat=True)
+            # )
+            # recipients = list(set(assigned_to_list) - set(previous_assigned_to_users))
             
-            send_email_to_assigned_user.delay(
-                recipients,
-                opportunity_object.id,
-            )
+            # send_email_to_assigned_user.delay(
+            #     recipients,
+            #     opportunity_object.id,
+            # )
             return Response(
                 {"error": False, "message": "Opportunity Updated Successfully"},
                 status=status.HTTP_200_OK,
@@ -577,3 +580,51 @@ class OpportunityUpdateStageView(APIView):
         serializer.save()
         return Response({"error": False, "message": "Stage updated!"},
                         status=status.HTTP_200_OK)
+
+
+class OpportunityCardView(APIView):
+    pagination_class = OpportunityCardViewPagination
+
+    def get(self, request, *args, **kwargs):
+        stage = request.query_params.get('stage')
+        exact_stage = request.query_params.get('exactStage')
+        
+        if not stage:
+            return Response({"error": "Stage is required"}, status=400)
+
+        # Define stage mappings
+        STAGE_MAPPINGS = {
+            'early_stage': ['QUALIFICATION', 'ID.DECISION MAKERS'],
+            'middle_stage': ['NEEDS ANALYSIS', 'PERCEPTION ANALYSIS', 'VALUE PROPOSITION'],
+            'late_stage': ['PROPOSAL/PRICE QUOTE', 'NEGOTIATION/REVIEW'],
+            'final_stage': ['CLOSED WON', 'CLOSED LOST']
+        }
+
+        if stage not in STAGE_MAPPINGS:
+            return Response({"error": "Invalid stage"}, status=400)
+
+        # Base query
+        query = Opportunity.objects.filter(org=request.profile.org)
+        
+        # Apply stage filtering
+        if exact_stage and exact_stage != 'null':
+            if exact_stage not in STAGE_MAPPINGS[stage]:
+                return Response({"error": "Invalid exact stage"}, status=400)
+            query = query.filter(stage=exact_stage)
+        else:
+            query = query.filter(stage__in=STAGE_MAPPINGS[stage])
+
+        opportunities = query.prefetch_related(
+            Prefetch(
+                "assigned_to",
+                queryset=Profile.objects.select_related("user"),
+                to_attr="assigned_profiles"
+            )
+        )
+
+        paginator = self.pagination_class()
+        page = paginator.paginate_queryset(opportunities, request)
+        if page is not None:
+            serializer = OpportunityCardViewSerializer(page, many=True)
+            return paginator.get_paginated_response(serializer.data)
+        return Response({"detail": "No opportunities found for this stage"}, status=404)

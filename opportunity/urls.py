@@ -6,6 +6,7 @@ app_name = "api_opportunities"
 
 urlpatterns = [
     path("", views.OpportunityListView.as_view()),
+    path("card-view/", views.OpportunityCardView.as_view()),
     path("<str:pk>/", views.OpportunityDetailView.as_view()),
     path("<str:pk>/stage/", views.OpportunityUpdateStageView.as_view()),
     path("comment/<str:pk>/", views.OpportunityCommentView.as_view()),

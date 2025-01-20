@@ -496,13 +496,16 @@ class OrgProfileCreateView(APIView):
         if serializer.is_valid():
             org_obj = serializer.save()
 
-            # now creating the profile
-            profile_obj = self.model2.objects.create(
-                user=request.user, org=org_obj)
-            # now the current user is the admin of the newly created organisation
-            profile_obj.is_organization_admin = True
-            profile_obj.role = Role.objects.filter(pk='ADMIN').first()
-            profile_obj.save()
+            profile_obj = Profile.objects.filter(user__id=request.user.id, org__id=org_obj.id).first()
+            if not profile_obj:
+                # now creating the profile
+                profile_obj = self.model2.objects.create(
+                    user=request.user, org=org_obj)
+
+                # now the current user is the admin of the newly created organisation
+                profile_obj.is_organization_admin = True
+                profile_obj.role = Role.objects.filter(name='ADMIN', org=org_obj).first()
+                profile_obj.save()
 
             return Response(
                 {
