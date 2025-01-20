@@ -201,7 +201,7 @@ class OpportunityDetailView(APIView):
         opportunity_object = self.get_object(pk=pk)
         if opportunity_object.org != request.profile.org:
             return Response(
-                {"error": True, "errors": "User company doesnot match with header...."},
+                {"error": True, "errors": "User organization doesnot match with header...."},
                 status=status.HTTP_403_FORBIDDEN,
             )
         if self.request.profile.role != "ADMIN" and not self.request.user.is_superuser:
@@ -300,7 +300,7 @@ class OpportunityDetailView(APIView):
         self.object = self.get_object(pk)
         if self.object.org != request.profile.org:
             return Response(
-                {"error": True, "errors": "User company doesnot match with header...."},
+                {"error": True, "errors": "User organization doesnot match with header...."},
                 status=status.HTTP_403_FORBIDDEN,
             )
         if self.request.profile.role != "ADMIN" and not self.request.user.is_superuser:
@@ -327,7 +327,7 @@ class OpportunityDetailView(APIView):
         context["opportunity_obj"] = OpportunitySerializer(self.opportunity).data
         if self.opportunity.org != request.profile.org:
             return Response(
-                {"error": True, "errors": "User company doesnot match with header...."},
+                {"error": True, "errors": "User organization doesnot match with header...."},
                 status=status.HTTP_403_FORBIDDEN,
             )
         if self.request.profile.role != "ADMIN" and not self.request.user.is_superuser:
@@ -404,7 +404,7 @@ class OpportunityDetailView(APIView):
         self.opportunity_obj = Opportunity.objects.get(pk=pk)
         if self.opportunity_obj.org != request.profile.org:
             return Response(
-                {"error": True, "errors": "User company doesnot match with header...."},
+                {"error": True, "errors": "User organization doesnot match with header...."},
                 status=status.HTTP_403_FORBIDDEN,
             )
         comment_serializer = CommentSerializer(data=params)
@@ -561,7 +561,7 @@ class OpportunityUpdateStageView(APIView):
 
         if opportunity.org != request.profile.org:
             return Response(
-                {"error": True, "errors": "User company does not match with header...."},
+                {"error": True, "errors": "User organization does not match with header...."},
                 status=status.HTTP_403_FORBIDDEN,
             )
 

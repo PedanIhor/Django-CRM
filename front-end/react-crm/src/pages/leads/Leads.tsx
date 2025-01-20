@@ -90,11 +90,6 @@ const defaultStyle = {
   color: '#616161',
 };
 
-interface Company {
-  id: string;
-  name: string;
-}
-
 interface HeadCell {
   disablePadding: boolean;
   id: any;
@@ -227,7 +222,7 @@ export default function Leads(props: any) {
   const [contacts, setContacts] = useState([]);
   const [status, setStatus] = useState([]);
   const [source, setSource] = useState([]);
-  const [companies, setCompanies] = useState<Company[]>([]);
+  const [companies, setCompanies] = useState<string[]>([]);
   const [tags, setTags] = useState([]);
   const [users, setUsers] = useState([]);
   const [countries, setCountries] = useState([]);
@@ -372,15 +367,6 @@ export default function Leads(props: any) {
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setSelectedTab(newValue);
-  };
-
-  const getCompanyName = (companyId: string): string => {
-    console.log(companyId);
-    console.log(companies);
-    const company = companies?.find((c: Company) => c.id === companyId); // Explicitly type `c`
-    console.log(company);
-
-    return company ? company.name : '---'; // Return a placeholder if the company is not found
   };
 
   const onAddHandle = () => {
@@ -673,7 +659,7 @@ export default function Leads(props: any) {
                               </TableCell>
                               <TableCell>
                                 {' '}
-                                {getCompanyName(item.company)}
+                                {item.company}
                               </TableCell>
                               <TableCell>{item.phone || '---'}</TableCell>
                               <TableCell>{item.email}</TableCell>

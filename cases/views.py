@@ -163,7 +163,7 @@ class CaseDetailView(APIView):
         cases_object = self.get_object(pk=pk)
         if cases_object.org != request.profile.org:
             return Response(
-                {"error": True, "errors": "User company doesnot match with header...."},
+                {"error": True, "errors": "User organization doesnot match with header...."},
                 status=status.HTTP_403_FORBIDDEN,
             )
         if self.request.profile.role != "ADMIN" and not self.request.profile.is_admin:
@@ -247,7 +247,7 @@ class CaseDetailView(APIView):
         self.object = self.get_object(pk)
         if self.object.org != request.profile.org:
             return Response(
-                {"error": True, "errors": "User company doesnot match with header...."},
+                {"error": True, "errors": "User organization doesnot match with header...."},
                 status=status.HTTP_403_FORBIDDEN,
             )
         if self.request.profile.role != "ADMIN" and not self.request.profile.is_admin:
@@ -272,7 +272,7 @@ class CaseDetailView(APIView):
         self.cases = self.get_object(pk=pk)
         if self.cases.org != request.profile.org:
             return Response(
-                {"error": True, "errors": "User company doesnot match with header...."},
+                {"error": True, "errors": "User organization doesnot match with header...."},
                 status=status.HTTP_403_FORBIDDEN,
             )
         context = {}
@@ -340,7 +340,7 @@ class CaseDetailView(APIView):
         self.cases_obj = Case.objects.get(pk=pk)
         if self.cases_obj.org != request.profile.org:
             return Response(
-                {"error": True, "errors": "User company doesnot match with header...."},
+                {"error": True, "errors": "User organization doesnot match with header...."},
                 status=status.HTTP_403_FORBIDDEN,
             )
         context = {}

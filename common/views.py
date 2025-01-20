@@ -260,7 +260,7 @@ class UserDetailView(APIView):
             )
         if profile_obj.org != request.profile.org:
             return Response(
-                {"error": True, "errors": "User company doesnot match with header...."},
+                {"error": True, "errors": "User organization doesnot match with header...."},
                 status=status.HTTP_403_FORBIDDEN,
             )
         assigned_data = Profile.objects.filter(org=request.profile.org, is_active=True).values(
@@ -302,7 +302,7 @@ class UserDetailView(APIView):
 
         if profile.org != request.profile.org:
             return Response(
-                {"error": True, "errors": "User company doesnot match with header...."},
+                {"error": True, "errors": "User organization doesnot match with header...."},
                 status=status.HTTP_403_FORBIDDEN,
             )
         serializer = CreateUserSerializer(
@@ -362,7 +362,7 @@ class UserDetailView(APIView):
 
         if profile.org != request.profile.org:
             return Response(
-                {"error": True, "errors": "User company does not match with header...."},
+                {"error": True, "errors": "User organization does not match with header...."},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
@@ -751,7 +751,7 @@ class DocumentDetailView(APIView):
             )
         if self.object.org != self.request.profile.org:
             return Response(
-                {"error": True, "errors": "User company doesnot match with header...."},
+                {"error": True, "errors": "User organization doesnot match with header...."},
                 status=status.HTTP_403_FORBIDDEN,
             )
         if self.request.profile.role.name != "ADMIN" and not self.request.user.is_superuser:
@@ -794,7 +794,7 @@ class DocumentDetailView(APIView):
             )
         if document.org != self.request.profile.org:
             return Response(
-                {"error": True, "errors": "User company doesnot match with header...."},
+                {"error": True, "errors": "User organization doesnot match with header...."},
                 status=status.HTTP_403_FORBIDDEN,
             )
 
@@ -828,7 +828,7 @@ class DocumentDetailView(APIView):
             )
         if self.object.org != self.request.profile.org:
             return Response(
-                {"error": True, "errors": "User company doesnot match with header...."},
+                {"error": True, "errors": "User organization doesnot match with header...."},
                 status=status.HTTP_403_FORBIDDEN,
             )
         if self.request.profile.role.name != "ADMIN" and not self.request.user.is_superuser:

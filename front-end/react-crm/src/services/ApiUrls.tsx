@@ -12,10 +12,7 @@ export const VerifyEmailUrl = '/api/auth/verify-email'
 // org
 export const OrgUrl = '/api/org'
 // export const OrgUrl = 'auth/create-org'
-// company
 
-export const CompanyUrl = '/api/leads/company'
-export const CompaniesUrl = '/api/leads/companies'
 // Lead
 export const LeadUrl = '/api/leads'
 export const LeadCardViewUrl = '/api/leads/card-view'

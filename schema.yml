@@ -1382,95 +1382,6 @@ paths:
       responses:
         '204':
           description: No response body
-  /api/leads/companies:
-    get:
-      operationId: leads_companies_retrieve
-      tags:
-      - Company
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          description: No response body
-    post:
-      operationId: leads_companies_create
-      description: Company Create
-      tags:
-      - Company
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CompanyRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/CompanyRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/CompanyRequest'
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          description: No response body
-  /api/leads/company/{id}:
-    get:
-      operationId: leads_company_retrieve
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        required: true
-      tags:
-      - Company
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          description: No response body
-    put:
-      operationId: leads_company_update
-      description: Company Create
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        required: true
-      tags:
-      - Company
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CompanyRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/CompanyRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/CompanyRequest'
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          description: No response body
-    delete:
-      operationId: leads_company_destroy
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        required: true
-      tags:
-      - Company
-      security:
-      - jwtAuth: []
-      responses:
-        '204':
-          description: No response body
   /api/leads/create-from-site/:
     post:
       operationId: leads_create_from_site_create
@@ -2208,13 +2119,6 @@ components:
     BlankEnum:
       enum:
       - ''
-    CompanyRequest:
-      type: object
-      properties:
-        name:
-          type: string
-          nullable: true
-          maxLength: 100
     CountryEnum:
       enum:
       - GB

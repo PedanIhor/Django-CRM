@@ -29,7 +29,6 @@ Please [Click Here](http://django-crm.readthedocs.io "Click Here") for latest do
 ## Project Modules
 This project contains the following modules:
 - Contacts
-- Companies
 - Leads
 - Accounts
 - Invoices (todo)

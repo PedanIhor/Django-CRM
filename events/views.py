@@ -299,7 +299,7 @@ class EventDetailView(APIView):
         self.event_obj = self.get_object(pk)
         if self.event_obj.org != request.profile.org:
             return Response(
-                {"error": True, "errors": "User company doesnot match with header...."},
+                {"error": True, "errors": "User organization doesnot match with header...."},
                 status=status.HTTP_403_FORBIDDEN,
             )
         context = self.get_context_data(**kwargs)
@@ -316,7 +316,7 @@ class EventDetailView(APIView):
             return Response(
                 {
                     "error": True,
-                    "errors": "User company does not match with header....",
+                    "errors": "User organization does not match with header....",
                 },
                 status=status.HTTP_403_FORBIDDEN,
             )
@@ -371,7 +371,7 @@ class EventDetailView(APIView):
         self.event_obj = self.get_object(pk)
         if self.event_obj.org != request.profile.org:
             return Response(
-                {"error": True, "errors": "User company doesnot match with header...."},
+                {"error": True, "errors": "User organization doesnot match with header...."},
                 status=status.HTTP_403_FORBIDDEN,
             )
         serializer = EventCreateSerializer(
