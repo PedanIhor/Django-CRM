@@ -39,7 +39,7 @@ import MyContext from '../context/Context';
 import Settings from './Settings';
 import Notifications from '../pages/notifications/Notifications';
 import MailIcon from '@mui/icons-material/Mail';
-
+import Roles from '../pages/roles/Roles';
 
 // declare global {
 //     interface Window {
@@ -130,6 +130,8 @@ export default function Sidebar(props: any) {
             setScreen('users')
         } else if (location.pathname.split('/')[2] === 'cases') {
             setScreen('cases')
+        } else if (location.pathname.split('/')[2] === 'roles') {
+            setScreen('roles')
         } else if (location.pathname.split('/')[2] === 'settings') {
             setScreen('settings');
         } else if (location.pathname.split('/')[2] === 'notifications') {
@@ -359,6 +361,7 @@ export default function Sidebar(props: any) {
                             <Route path='/app/cases/add-case' element={<AddCase />} />
                             <Route path='/app/cases/edit-case' element={<EditCase />} />
                             <Route path='/app/cases/case-details' element={<CaseDetails />} />
+                            <Route path='/app/roles' element={<Roles />} />
                             <Route path="/app/settings" element={<Settings />} />
                             <Route path="/app/notifications" element={<Notifications />} />
                         </Routes>
