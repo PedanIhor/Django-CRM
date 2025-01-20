@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { AppBar, Avatar, Box, Drawer, IconButton, List, ListItem, ListItemIcon, Popover, Toolbar, Tooltip, Typography, Badge } from '@mui/material';
 import { FaAddressBook, FaBars, FaBriefcase, FaBuilding, FaChartLine, FaCog, FaDiceD6, FaHandshake, FaIndustry, FaSignOutAlt, FaTachometerAlt, FaUserFriends, FaUsers } from "react-icons/fa";
+import roleIcon from '../assets/images/sidebar/img_roles.png';
 import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { fetchData } from './FetchData';
 import { ProfileUrl } from '../services/ApiUrls';
@@ -139,7 +140,7 @@ export default function Sidebar(props: any) {
     //     userProfile()
     // }, [])
 
-    const navList = ['leads', 'contacts', 'opportunities', 'accounts', 'users', 'cases', 'settings']
+    const navList = ['leads', 'contacts', 'opportunities', 'accounts', 'users', 'cases', 'roles', 'settings']
     const navIcons = (text: any, screen: any): React.ReactNode => {
         switch (text) {
             case 'leads':
@@ -156,6 +157,16 @@ export default function Sidebar(props: any) {
                 return screen === 'users' ? <FaUserFriends fill='#3e79f7' /> : <FaUserFriends />
             case 'cases':
                 return screen === 'cases' ? <FaBriefcase fill='#3e79f7' /> : <FaBriefcase />
+            case 'roles':
+                return <img 
+                    src={roleIcon} 
+                    alt="roles"
+                    style={{
+                        width: '20px',
+                        height: '20px',
+                        filter: screen === 'roles' ? 'invert(43%) sepia(93%) saturate(1728%) hue-rotate(213deg) brightness(97%) contrast(89%)' : 'none'
+                    }}
+                />
             case 'settings': // New case for Organization Settings
                 return screen === 'settings' ? <FaCog fill='#3e79f7' /> : <FaCog />;
             default: return <FaDiceD6 fill='#3e79f7' />
