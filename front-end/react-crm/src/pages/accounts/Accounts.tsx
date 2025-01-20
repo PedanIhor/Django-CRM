@@ -10,13 +10,14 @@ import { getComparator, stableSort } from '../../components/Sorting';
 import { FaAd, FaEdit, FaTrashAlt } from 'react-icons/fa';
 import { fetchData } from '../../components/FetchData';
 import { AccountsUrl } from '../../services/ApiUrls';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { DeleteModal } from '../../components/DeleteModal';
 import { Tags } from '../../components/Tags';
 import { Spinner } from '../../components/Spinner';
 import styled from '@emotion/styled';
 import '../../styles/style.css';
 import { EnhancedTableHead } from '../../components/EnchancedTableHead';
+import SuccessSnackbar from '../../components/SuccessSnackbar';
 
 interface HeadCell {
     disablePadding: boolean;
@@ -130,6 +131,17 @@ type Item = {
 };
 export default function Accounts() {
     const navigate = useNavigate()
+    const location = useLocation()
+    const [successSnackbarOpen, setSuccessSnackbarOpen] = useState(false)
+    const [successMessage, setSuccessMessage] = useState('')
+
+    useEffect(() => {
+        // Check if there is a success message in the state
+        if (location.state && location.state.successMessage) {            
+            setSuccessMessage(location.state.successMessage)
+            setSuccessSnackbarOpen(true)
+        }
+    }, [])
 
     const [tab, setTab] = useState('open');
     const [loading, setLoading] = useState(true);
@@ -368,7 +380,7 @@ export default function Accounts() {
             navigate('/app/accounts/add-account', {
                 state: {
                     detail: false,
-                    contacts: contacts || [], status: status || [], tags: tags || [], users: users || [], countries: countries || [], teams: teams || [], leads: leads || []
+                    contacts: contacts || [], status: status || [], tags: tags || [], users: users || [], countries: countries || [], teams: teams || [], leads: leads || [], industries: industries || [],
                 }
             })
         }
@@ -761,6 +773,11 @@ export default function Accounts() {
                 modalDialog={modalDialog}
                 modalTitle={modalTitle}
                 DeleteItem={deleteItem}
+            />
+            <SuccessSnackbar 
+                open={successSnackbarOpen} 
+                onClose={() => setSuccessSnackbarOpen(false)} 
+                message={successMessage} 
             />
         </Box>
     )

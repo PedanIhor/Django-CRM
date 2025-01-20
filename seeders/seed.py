@@ -164,8 +164,6 @@ def seed_database():
                 website=faker.url(),
                 description=faker.text(),
                 org=org,
-                lead=lead,
-                contact_name=f"{lead.contacts.first().first_name} {lead.contacts.first().last_name}",
                 created_by=org_admin.user  # Set created_by_id to org admin
             )
 
