@@ -35,8 +35,8 @@ class Lead(BaseModel):
     title = models.CharField(
         pgettext_lazy("Treatment Pronouns for the customer", "Title"), max_length=64
     )
-    first_name = models.CharField(_("First name"), null=True, max_length=255)
-    last_name = models.CharField(_("Last name"), null=True, max_length=255)
+    first_name = models.CharField(_("First name"), null=True, blank=True, max_length=255)
+    last_name = models.CharField(_("Last name"), null=True, blank=True, max_length=255)
     email = models.EmailField(null=True, blank=True)
     phone = PhoneNumberField(null=True, blank=True)
     status = models.CharField(
@@ -56,7 +56,6 @@ class Lead(BaseModel):
     website = models.CharField(_("Website"), max_length=255, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     assigned_to = models.ManyToManyField(Profile, related_name="lead_assigned_users")
-    account_name = models.CharField(max_length=255, null=True, blank=True)
     opportunity_amount = models.DecimalField(
         _("Opportunity Amount"), decimal_places=2, max_digits=12, blank=True, null=True
     )

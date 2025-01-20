@@ -50,6 +50,7 @@ from leads.tasks import (
 from teams.models import Teams
 from teams.serializer import TeamsSerializer
 from common.crm_permissions import crm_permissions
+from contacts.serializer import ContactSerializer
 
 
 class LeadListView(APIView, LimitOffsetPagination):
@@ -368,6 +369,10 @@ class LeadDetailView(APIView):
         ).data
         context["countries"] = COUNTRIES
 
+        context["industries"] = INDCHOICES
+        context["contacts"] = ContactSerializer(Contact.objects.filter(org=self.request.profile.org), many=True).data
+
+
         return context
 
     @extend_schema(tags=["Leads"], parameters=swagger_params1.organization_params, description="Lead Detail")
@@ -379,9 +384,8 @@ class LeadDetailView(APIView):
     @extend_schema(tags=["Leads"], parameters=swagger_params1.organization_params, request=LeadDetailEditSwaggerSerializer)
     def post(self, request, pk, **kwargs):
         params = request.data
-
-        context = {}
-        self.lead_obj = Lead.objects.get(pk=pk)
+        print("Request data:", params)
+        self.lead_obj = self.get_object(pk)
         if self.lead_obj.org != request.profile.org:
             return Response(
                 {"error": True, "errors": "User company doesnot match with header...."},
@@ -435,21 +439,34 @@ class LeadDetailView(APIView):
 
     @extend_schema(tags=["Leads"], parameters=swagger_params1.organization_params, request=LeadCreateSwaggerSerializer)
     def put(self, request, pk, **kwargs):
-        params = request.data
+        params = request.data.copy()  # Make a mutable copy
         self.lead_obj = self.get_object(pk)
-        if self.lead_obj.org != request.profile.org:
-            return Response(
-                {
-                    "error": True,
-                    "errors": "User company does not match with header....",
-                },
-                status=status.HTTP_403_FORBIDDEN,
-            )
-        serializer = LeadCreateSerializer(
-            data=params,
-            instance=self.lead_obj,
-            request_obj=request,
-        )
+        
+        # Handle empty string company field
+        if 'company' in params:
+            if not params['company']:
+                params['company'] = None
+            else:
+                try:
+                    company = Company.objects.get(
+                        id=params['company'],
+                        org=request.profile.org
+                    )
+                    params['company'] = company.id
+                except Company.DoesNotExist:
+                    return Response(
+                        {"error": True, "errors": "Company does not exist"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+        # Just send the user ID for created_by
+        user = self.lead_obj.created_by or request.profile.user
+        params['created_by'] = str(user.id)  # Convert UUID to string
+
+        print("DEBUG - Modified params:", params)  # Debug line
+        serializer = LeadSerializer(self.lead_obj, data=params)
+        if not serializer.is_valid():
+            print("Serializer errors:", serializer.errors)
         if serializer.is_valid():
             lead_obj = serializer.save()
             previous_assigned_to_users = list(
@@ -489,10 +506,18 @@ class LeadDetailView(APIView):
 
             lead_obj.contacts.clear()
             if params.get("contacts"):
-                obj_contact = Contact.objects.filter(
-                    id=params.get("contacts"), org=request.profile.org
+                contacts_list = params.get("contacts")
+                contact_ids = []
+                for contact in contacts_list:
+                    if isinstance(contact, dict):
+                        contact_ids.append(contact['id'])
+                    else:
+                        contact_ids.append(contact)
+                contacts = Contact.objects.filter(
+                    id__in=contact_ids,
+                    org=request.profile.org
                 )
-                lead_obj.contacts.add(obj_contact)
+                lead_obj.contacts.add(*contacts)
 
             lead_obj.teams.clear()
             if params.get("teams"):
@@ -503,59 +528,71 @@ class LeadDetailView(APIView):
 
             lead_obj.assigned_to.clear()
             if params.get("assigned_to"):
-                assinged_to_list = params.get("assigned_to")
+                assigned_to_list = params.get("assigned_to")
+                assigned_to_ids = []
+                for profile in assigned_to_list:
+                    if isinstance(profile, dict):
+                        assigned_to_ids.append(profile['id'])
+                    else:
+                        assigned_to_ids.append(profile)
                 profiles = Profile.objects.filter(
-                    id__in=assinged_to_list, org=request.profile.org
+                    id__in=assigned_to_ids, 
+                    org=request.profile.org
                 )
                 lead_obj.assigned_to.add(*profiles)
 
-            if params.get("status") == "converted":
-                account_object = Account.objects.create(
-                    created_by=request.profile.user,
-                    name=lead_obj.account_name,
-                    email=lead_obj.email,
-                    phone=lead_obj.phone,
-                    description=params.get("description"),
-                    website=params.get("website"),
-                    lead=lead_obj,
-                    org=request.profile.org,
-                )
-                account_object.billing_address_line = lead_obj.address_line
-                account_object.billing_street = lead_obj.street
-                account_object.billing_city = lead_obj.city
-                account_object.billing_state = lead_obj.state
-                account_object.billing_postcode = lead_obj.postcode
-                account_object.billing_country = lead_obj.country
-                comments = Comment.objects.filter(lead=self.lead_obj)
-                if comments.exists():
-                    for comment in comments:
-                        comment.account_id = account_object.id
-                attachments = Attachments.objects.filter(lead=self.lead_obj)
-                if attachments.exists():
-                    for attachment in attachments:
-                        attachment.account_id = account_object.id
-                for tag in lead_obj.tags.all():
-                    account_object.tags.add(tag)
-                if params.get("assigned_to"):
-                    # account_object.assigned_to.add(*params.getlist('assigned_to'))
-                    assigned_to_list = params.get("assigned_to")
-                    recipients = assigned_to_list
-                    # send_email_to_assigned_user.delay(
-                    #     recipients,
-                    #     lead_obj.id,
-                    # )
+            # if params.get("status") == "converted":
+            #     account_object = Account.objects.create(
+            #         created_by=request.profile.user,
+            #         name=lead_obj.title,
+            #         email=lead_obj.contacts.first().email, #lead_obj.email,
+            #         phone=lead_obj.contacts.first().phone, #lead_obj.phone,
+            #         description=params.get("description"),
+            #         website=params.get("website"),
+            #         lead=lead_obj,
+            #         org=request.profile.org,
+            #     )
+            #     account_object.billing_address_line = lead_obj.address_line
+            #     account_object.billing_street = lead_obj.street
+            #     account_object.billing_city = lead_obj.city
+            #     account_object.billing_state = lead_obj.state
+            #     account_object.billing_postcode = lead_obj.postcode
+            #     account_object.billing_country = lead_obj.country
+            #     comments = Comment.objects.filter(lead=self.lead_obj)
+            #     if comments.exists():
+            #         for comment in comments:
+            #             comment.account_id = account_object.id
+            #     attachments = Attachments.objects.filter(lead=self.lead_obj)
+            #     if attachments.exists():
+            #         for attachment in attachments:
+            #             attachment.account_id = account_object.id
+            #     for tag in lead_obj.tags.all():
+            #         account_object.tags.add(tag)
+            #     if params.get("assigned_to"):
+            #         assigned_to_list = params.get("assigned_to")
+            #         assigned_to_ids = []
+            #         for profile in assigned_to_list:
+            #             if isinstance(profile, dict):
+            #                 assigned_to_ids.append(profile['id'])
+            #             else:
+            #                 assigned_to_ids.append(profile)
+            #         profiles = Profile.objects.filter(
+            #             id__in=assigned_to_ids,
+            #             org=request.profile.org
+            #         )
+            #         account_object.assigned_to.add(*profiles)
 
-                for comment in lead_obj.leads_comments.all():
-                    comment.account = account_object
-                    comment.save()
-                account_object.save()
-                return Response(
-                    {
-                        "error": False,
-                        "message": "Lead Converted to Account Successfully",
-                    },
-                    status=status.HTTP_200_OK,
-                )
+            #     for comment in lead_obj.leads_comments.all():
+            #         comment.account = account_object
+            #         comment.save()
+            #     account_object.save()
+            #     return Response(
+            #         {
+            #             "error": False,
+            #             "message": "Lead Converted to Account Successfully",
+            #         },
+            #         status=status.HTTP_200_OK,
+            #     )
             return Response(
                 {"error": False, "message": "Lead updated Successfully"},
                 status=status.HTTP_200_OK,

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from common.models import Profile
+from common.models import Profile, User
 from accounts.models import Account, Tags
 from common.serializer import (
     AttachmentsSerializer,
@@ -34,7 +34,7 @@ class CompanySerializer(serializers.ModelSerializer):
 class LeadSerializer(serializers.ModelSerializer):
     contacts = ContactSerializer(read_only=True, many=True)
     assigned_to = ProfileSerializer(read_only=True, many=True)
-    created_by = UserSerializer()
+    created_by = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
     country = serializers.SerializerMethodField()
     tags = TagsSerializer(read_only=True, many=True)
     lead_attachment = AttachmentsSerializer(read_only=True, many=True)
@@ -68,7 +68,6 @@ class LeadSerializer(serializers.ModelSerializer):
             "lead_attachment",
             "lead_comments",
             "assigned_to",
-            "account_name",
             "opportunity_amount",
             "created_by",
             "created_at",
@@ -87,183 +86,115 @@ class LeadSerializer(serializers.ModelSerializer):
 
 
 class LeadCreateSerializer(serializers.ModelSerializer):
-    probability = serializers.IntegerField(max_value=100)
-    assigned_to = serializers.PrimaryKeyRelatedField(
-        queryset=Profile.objects.all(), many=True, required=True
-    )
+    assigned_to = serializers.ListField(required=False)
+    teams = serializers.ListField(required=False)
+    contacts = serializers.ListField(required=False)
+    tags = serializers.ListField(required=False)
+    org = serializers.CharField(required=False)
+    company = serializers.CharField(required=False, allow_null=True)
 
     def __init__(self, *args, **kwargs):
         request_obj = kwargs.pop("request_obj", None)
-        super().__init__(*args, **kwargs)
-        if self.initial_data and self.initial_data.get("status") == "converted":
-            self.fields["account_name"].required = True
-            self.fields["email"].required = True
-        self.fields["first_name"].required = False
-        self.fields["last_name"].required = False
+        org = kwargs.pop("org", None)
+        super(LeadCreateSerializer, self).__init__(*args, **kwargs)
+        self.org = org
+        self.request_obj = request_obj
+
         self.fields["title"].required = True
-        self.org = request_obj.profile.org
+        self.fields["phone"].required = False
+        self.fields["email"].required = False
+        self.fields["status"].required = False
+        self.fields["source"].required = False
+        self.fields["website"].required = False
+        self.fields["description"].required = False
+        self.fields["opportunity_amount"].required = False
 
-        if self.instance:
-            if self.instance.created_from_site:
-                prev_choices = self.fields["source"]._get_choices()
-                prev_choices = prev_choices + [("micropyramid", "Micropyramid")]
-                self.fields["source"]._set_choices(prev_choices)
-
-    def validate_assigned_to(self, assigned_to):
-        if not assigned_to or len(assigned_to) == 0:
-            raise serializers.ValidationError("The lead must be assigned to a least one person before saving")
-        return assigned_to
-
-    def create(self, validated_data):
-        assigned_to = validated_data.pop("assigned_to", [])
-        lead = super().create(validated_data)  # Create the lead instance
-        
-        # Assign users to the lead
-        lead.assigned_to.set(assigned_to)
-
-        return lead
-
-    def validate_account_name(self, account_name):
-        if self.instance:
-            if (
-                Account.objects.filter(name__iexact=account_name, org=self.org)
-                .exclude(id=self.instance.id)
-                .exists()
-            ):
-                raise serializers.ValidationError(
-                    "Account already exists with this name"
-                )
-        else:
-            if Account.objects.filter(name__iexact=account_name, org=self.org).exists():
-                raise serializers.ValidationError(
-                    "Account already exists with this name"
-                )
-        return account_name
-
-    def validate_title(self, title):
-        if self.instance:
-            if (
-                Lead.objects.filter(title__iexact=title, org=self.org)
-                .exclude(id=self.instance.id)
-                .exists()
-            ):
-                raise serializers.ValidationError("Lead already exists with this title")
-        else:
-            if Lead.objects.filter(title__iexact=title, org=self.org).exists():
-                raise serializers.ValidationError("Lead already exists with this title")
-        return title
+    def validate_org(self, org):
+        if org:
+            org = str(org)
+            return org
+        return None
 
     class Meta:
         model = Lead
         fields = (
-            "first_name",
-            "last_name",
-            "account_name",
             "title",
+            "account_name",
             "phone",
             "email",
             "status",
             "source",
             "website",
             "description",
-            "address_line",
-            # "contacts",
-            "street",
-            "city",
-            "state",
-            "postcode",
             "opportunity_amount",
-            "country",
-            "org",
-            "skype_ID",
-            "industry",
-            "company",
             "organization",
             "probability",
             "close_date",
-            "assigned_to",  
+            "assigned_to",
+            "contacts",
+            "teams",
+            "tags",
+            "company",
+            "industry",
+            "skype_ID",
+            "org",
         )
 
-# class LeadCreateSerializer(serializers.ModelSerializer):
-#     probability = serializers.IntegerField(max_value=100)
+    def create(self, validated_data):
+        # ... create method if you have one ...
+        pass
 
-#     def __init__(self, *args, **kwargs):
-#         request_obj = kwargs.pop("request_obj", None)
-#         super().__init__(*args, **kwargs)
-#         if self.initial_data and self.initial_data.get("status") == "converted":
-#             self.fields["account_name"].required = True
-#             self.fields["email"].required = True
-#         self.fields["first_name"].required = False
-#         self.fields["last_name"].required = False
-#         self.fields["title"].required = True
-#         self.org = request_obj.profile.org
+    def update(self, instance, validated_data):
+        instance.title = validated_data.get('title', instance.title)
+        instance.account_name = validated_data.get('account_name', instance.account_name)
+        instance.phone = validated_data.get('phone', instance.phone)
+        instance.email = validated_data.get('email', instance.email)
+        instance.status = validated_data.get('status', instance.status)
+        instance.source = validated_data.get('source', instance.source)
+        instance.website = validated_data.get('website', instance.website)
+        instance.description = validated_data.get('description', instance.description)
+        instance.opportunity_amount = validated_data.get('opportunity_amount', instance.opportunity_amount)
+        instance.skype_ID = validated_data.get('skype_ID', instance.skype_ID)
+        instance.industry = validated_data.get('industry', instance.industry)
+        instance.probability = validated_data.get('probability', instance.probability)
 
-#         if self.instance:
-#             if self.instance.created_from_site:
-#                 prev_choices = self.fields["source"]._get_choices()
-#                 prev_choices = prev_choices + [("micropyramid", "Micropyramid")]
-#                 self.fields["source"]._set_choices(prev_choices)
+        # Handle company field
+        company_name = validated_data.get('company')
+        if company_name is None:
+            instance.company = None
+        else:
+            try:
+                company = Company.objects.filter(name=company_name).first()
+                instance.company = company
+            except Exception:
+                instance.company = None
 
-#     def validate_account_name(self, account_name):
-#         if self.instance:
-#             if (
-#                 Account.objects.filter(name__iexact=account_name, org=self.org)
-#                 .exclude(id=self.instance.id)
-#                 .exists()
-#             ):
-#                 raise serializers.ValidationError(
-#                     "Account already exists with this name"
-#                 )
-#         else:
-#             if Account.objects.filter(name__iexact=account_name, org=self.org).exists():
-#                 raise serializers.ValidationError(
-#                     "Account already exists with this name"
-#                 )
-#         return account_name
+        # Handle assigned_to - extract IDs from the profile objects
+        if 'assigned_to' in validated_data:
+            assigned_to_ids = []
+            for profile in validated_data['assigned_to']:
+                if isinstance(profile, dict):
+                    assigned_to_ids.append(profile.get('id'))
+                else:
+                    assigned_to_ids.append(profile)
+            instance.assigned_to.set(assigned_to_ids)
 
-#     def validate_title(self, title):
-#         if self.instance:
-#             if (
-#                 Lead.objects.filter(title__iexact=title, org=self.org)
-#                 .exclude(id=self.instance.id)
-#                 .exists()
-#             ):
-#                 raise serializers.ValidationError("Lead already exists with this title")
-#         else:
-#             if Lead.objects.filter(title__iexact=title, org=self.org).exists():
-#                 raise serializers.ValidationError("Lead already exists with this title")
-#         return title
+        # Handle other many-to-many relationships
+        if 'contacts' in validated_data:
+            contact_ids = [c.get('id') if isinstance(c, dict) else c for c in validated_data['contacts']]
+            instance.contacts.set(contact_ids)
+        
+        if 'teams' in validated_data:
+            team_ids = [t.get('id') if isinstance(t, dict) else t for t in validated_data['teams']]
+            instance.teams.set(team_ids)
+        
+        if 'tags' in validated_data:
+            tag_ids = [t.get('id') if isinstance(t, dict) else t for t in validated_data['tags']]
+            instance.tags.set(tag_ids)
 
-#     class Meta:
-#         model = Lead
-#         fields = (
-#             "first_name",
-#             "last_name",
-#             "account_name",
-#             "title",
-#             "phone",
-#             "email",
-#             "status",
-#             "source",
-#             "website",
-#             "description",
-#             "address_line",
-#             # "contacts",
-#             "street",
-#             "city",
-#             "state",
-#             "postcode",
-#             "opportunity_amount",
-#             "country",
-#             "org",
-#             "skype_ID",
-#             "industry",
-#             "company",
-#             "organization",
-#             "probability",
-#             "close_date",
-#             # "lead_attachment",
-#         )
+        instance.save()
+        return instance
+
 
 class LeadCreateSwaggerSerializer(serializers.ModelSerializer):
     class Meta:

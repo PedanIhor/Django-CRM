@@ -113,16 +113,9 @@ def create_lead_from_file(validated_rows, invalid_rows, user_id, source, company
                 try:
                     lead = Lead()
                     lead.title = row.get("title", "")[:64]
-                    lead.first_name = row.get("first name", "")[:255]
-                    lead.last_name = row.get("last name", "")[:255]
                     lead.website = row.get("website", "")[:255]
                     lead.email = row.get("email", "")
                     lead.phone = row.get("phone", "")
-                    lead.address_line = row.get("address", "")[:255]
-                    lead.city = row.get("city", "")[:255]
-                    lead.state = row.get("state", "")[:255]
-                    lead.postcode = row.get("postcode", "")[:64]
-                    lead.country = row.get("country", "")[:3]
                     lead.description = row.get("description", "")
                     lead.status = row.get("status", "")
                     lead.account_name = row.get("account_name", "")[:255]

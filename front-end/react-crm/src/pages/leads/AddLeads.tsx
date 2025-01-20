@@ -370,15 +370,15 @@ export function AddLeads() {
                   >
                     <div className='fieldContainer'>
                       <div className='fieldSubContainer'>
-                        <div className='fieldTitle'>Lead Name</div>
+                        <div className='fieldTitle'>Lead Title</div>
                         <TextField
-                          name='account_name'
-                          value={formData.account_name}
+                          name='title'
+                          value={formData.title}
                           onChange={handleChange}
                           style={{ width: '70%' }}
                           size='small'
-                          helperText={errors?.account_name?.[0] ? errors?.account_name[0] : ''}
-                          error={!!errors?.account_name?.[0]}
+                          helperText={errors?.title?.[0] ? errors?.title[0] : ''}
+                          error={!!errors?.title?.[0]}
                         />
                       </div>
                       <div className='fieldSubContainer'>
