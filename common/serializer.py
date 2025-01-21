@@ -617,3 +617,40 @@ class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notification
         fields = ['id', 'message', 'created_at', 'is_read']
+
+class RolePermissionUpdateItemSerializer(serializers.Serializer):
+    role_id = serializers.UUIDField()
+    permissions = serializers.ListField(child=serializers.CharField())
+
+class RolePermissionsUpdateSerializer(serializers.Serializer):
+    role_permissions = serializers.ListField(child=RolePermissionUpdateItemSerializer())
+    
+    def validate_role_permissions(self, value):
+        org_id = self.context.get('org_id')
+        if not org_id:
+            raise serializers.ValidationError("Organization ID is required")
+            
+        for item in value:
+            # Validate role exists and belongs to org
+            try:
+                role = Role.objects.get(id=item['role_id'], org_id=org_id)
+            except Role.DoesNotExist:
+                raise serializers.ValidationError(
+                    f"Role with id {item['role_id']} does not exist in this organization"
+                )
+            
+            # Validate permissions exist and belong to org
+            for perm_name in item['permissions']:
+                if not Permission.objects.filter(
+                    name=perm_name,
+                    org_id=org_id
+                ).exists():
+                    raise serializers.ValidationError(
+                        f"Permission {perm_name} does not exist in this organization"
+                    )
+        
+        return value
+
+class RolePermissionsMatrixSerializer(serializers.Serializer):
+    roles = RoleSerializer(many=True)
+    permissions = PermissionSerializer(many=True)

@@ -30,6 +30,7 @@ from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.decorators import action
 
 from accounts.models import Account, Contact, Tags
 from accounts.serializer import AccountSerializer
@@ -1310,3 +1311,82 @@ class RolesViewSet(help_views.OrgViewSet):
             include_permissions = include_permissions.lower() in ['true', '1', 't']
         role_serializer = RoleSerializer(self.get_queryset(), many=True, include_permissions=include_permissions)
         return Response(role_serializer.data)
+
+    @extend_schema(
+        description="Update role permissions",
+        request=RolePermissionsUpdateSerializer,
+        responses={200: RoleSerializer}
+    )
+    @action(detail=False, methods=['post'])
+    def update_permissions(self, request):
+        """
+        Update permissions for multiple roles at once
+        Expected format:
+        {
+            "role_permissions": [
+                {
+                    "role_id": "uuid",
+                    "permissions": ["permission_name1", "permission_name2"]
+                }
+            ]
+        }
+        """
+        serializer = RolePermissionsUpdateSerializer(
+            data=request.data,
+            context={'org_id': request.profile.org.id}
+        )
+        
+        if serializer.is_valid():
+            role_permissions = serializer.validated_data['role_permissions']
+            
+            for role_data in role_permissions:
+                role = Role.objects.get(
+                    id=role_data['role_id'],
+                    org=request.profile.org
+                )
+                permissions = Permission.objects.filter(
+                    name__in=role_data['permissions'],
+                    org=request.profile.org
+                )
+                role.permissions.set(permissions)
+            
+            # Return updated roles with their permissions
+            roles = Role.objects.filter(org=request.profile.org)
+            response_serializer = RoleSerializer(
+                roles, 
+                many=True,
+                context=self.get_serializer_context(),
+                include_permissions=True
+            )
+            return Response(response_serializer.data)
+        
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    @extend_schema(
+        description="Get roles with their permissions and all available permissions",
+        responses={200: RolePermissionsMatrixSerializer}
+    )
+    @action(detail=False, methods=['get'])
+    def permissions_matrix(self, request):
+        """Get all roles and permissions in a matrix format"""
+        roles = Role.objects.filter(org=request.profile.org)
+        permissions = Permission.objects.filter(org=request.profile.org)
+        
+        response_data = {
+            'roles': RoleSerializer(
+                roles,
+                many=True,
+                context=self.get_serializer_context(),
+                include_permissions=True
+            ).data,
+            'permissions': PermissionSerializer(
+                permissions,
+                many=True,
+                context=self.get_serializer_context()
+            ).data
+        }
+        
+        return Response(response_data)
