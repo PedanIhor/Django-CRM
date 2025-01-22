@@ -1,5 +1,4 @@
-import React from 'react'
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Box, Button, Stack, Container, Paper, TableContainer, Table, TableRow, TableCell, TableBody, IconButton } from '@mui/material'
 import { CustomToolbar } from '../../styles/CssStyled';
 import { FiPlus } from "@react-icons/all-files/fi/FiPlus";
@@ -8,14 +7,15 @@ import { EnhancedTableHead } from '../../components/EnchancedTableHead';
 import { fetchData } from '../../components/FetchData';
 import { RolesUrl } from '../../services/ApiUrls';
 
- export default function Roles() {
+export default function Roles() {
 
     interface HeadCell {
         disablePadding: boolean;
         id: any;
         label: string;
         numeric: boolean;
-      }
+        align?: 'left' | 'right' | 'center';
+    }
     const headCells: readonly HeadCell[] = [
         {
           id: 'name',
@@ -27,7 +27,8 @@ import { RolesUrl } from '../../services/ApiUrls';
           id: '',
           numeric: true,
           disablePadding: false,
-          label: 'Action'
+          label: 'Actions',
+          align: 'right'
         }
     ]
 
@@ -65,11 +66,11 @@ import { RolesUrl } from '../../services/ApiUrls';
         // Show Popup
     }
 
-    const onEditRole = () => {
+    const onEditRole = (id: any) => {
         // Show Popup
     }
 
-    const onDeleteRole = () => {
+    const onDeleteRole = (id: any) => {
         // Delete Role
     }
 
@@ -77,6 +78,47 @@ import { RolesUrl } from '../../services/ApiUrls';
         const isAsc = orderBy === property && order === 'asc'
         setOrder(isAsc ? 'desc' : 'asc')
         setOrderBy(property)
+    }
+
+
+    const actionsButtons = (id: any) => {
+        return (
+            <>
+                <IconButton>
+                    <FaEdit
+                        onClick={() => onEditRole(id)}
+                        style={{ fill: '#1A3353', cursor: 'pointer', width: '18px', height: '18px' }}
+                    />
+                </IconButton>
+                <IconButton>
+                    <FaTrashAlt 
+                        onClick={() => onDeleteRole(id)} 
+                        style={{ fill: '#1A3353', cursor: 'pointer', width: '18px', height: '18px' }} 
+                    />
+                </IconButton>
+            </>
+        )
+    }
+
+    const itemRole = (role: any, index: any) => {
+        return (<TableRow key={index} sx={{
+            border: 0,
+            '&:nth-of-type(even)': {
+                backgroundColor: 'whitesmoke'
+            },
+            color: 'rgb(26, 51, 83)'
+        }}>
+            <TableCell sx={{ borderBottom: 'none' }}>
+                <div style={{ display: 'flex' }}>
+                    {role.name}
+                </div>
+            </TableCell>
+            <TableCell sx={{ display: 'flex', justifyContent: 'flex-end', borderBottom: 'none'}}>
+                <div style={{ minHeight: '30px' }}>
+                    {role.name !== 'ADMIN' && actionsButtons(role.id)}
+                </div>
+            </TableCell>
+        </TableRow>)
     }
 
     return (
@@ -112,29 +154,7 @@ import { RolesUrl } from '../../services/ApiUrls';
                                 />
                                 <TableBody>
                                     {roles?.map((role: any, index: any) => (
-                                        <TableRow key={index}>
-                                            <TableCell>
-                                                <div style={{ display: 'flex' }}>
-                                                    {role.name}
-                                                </div>
-                                            </TableCell>
-                                            {role.name === 'ADMIN' ? null :
-                                                <TableCell className='tableCell'>
-                                                    <IconButton>
-                                                        <FaEdit
-                                                            // onClick={() => EditItem(role.id)}
-                                                            style={{ fill: '#1A3353', cursor: 'pointer', width: '18px' }}
-                                                        />
-                                                    </IconButton>
-                                                    <IconButton>
-                                                        <FaTrashAlt 
-                                                        // onClick={() => onDeleteRole(role?.id)} 
-                                                            style={{ fill: '#1A3353', cursor: 'pointer', width: '15px' }} 
-                                                        />
-                                                        </IconButton>
-                                                </TableCell>
-                                            }
-                                        </TableRow>
+                                        itemRole(role, index)
                                     ))}
                                 </TableBody>
                             </Table>
@@ -145,3 +165,127 @@ import { RolesUrl } from '../../services/ApiUrls';
         </Box>
     );
 };
+
+
+
+
+{/*
+                        <TableContainer>
+                            <Table>
+                                <EnhancedTableHead
+                                    numSelected={selected.length}
+                                    order={order}
+                                    orderBy={orderBy}
+                                    onSelectAllClick={handleSelectAllClick}
+                                    onRequestSort={handleRequestSort}
+                                    rowCount={activeUsers?.length}
+                                    numSelectedId={selectedId}
+                                    isSelectedId={isSelectedId}
+                                    headCells={headCells}
+                                />
+                                {tab === 'active' ?
+                                    <TableBody>
+                                        {
+                                            activeUsers?.length > 0
+                                                ? stableSort(activeUsers, getComparator(order, orderBy)).map((item: any, index: any) => {
+                                                        const labelId = `enhanced-table-checkbox-${index}`
+                                                        const rowIndex = selectedId.indexOf(item.id);
+                                                        return (
+                                                            <TableRow
+                                                                tabIndex={-1}
+                                                                key={index}
+                                                                sx={{
+                                                                    border: 0,
+                                                                    '&:nth-of-type(even)': {
+                                                                        backgroundColor: 'whitesmoke'
+                                                                    },
+                                                                    color: 'rgb(26, 51, 83)',
+                                                                    textTransform: 'capitalize'
+                                                                }}
+                                                            >
+                                                                <TableCell
+                                                                    className='tableCell-link'
+                                                                    onClick={() => userDetail(item.id)}
+                                                                >
+                                                                    {item?.user_details?.email ? item.user_details.email : '---'}
+                                                                </TableCell>
+                                                                <TableCell className='tableCell'>
+                                                                    <div style={{ display: 'flex' }}>
+                                                                        {item?.phone ? item.phone : '---'}
+                                                                    </div>
+                                                                </TableCell>
+                                                                <TableCell className='tableCell'>
+                                                                    {item?.role.name ? item.role.name : '---'}
+                                                                </TableCell>
+                                                                <TableCell className='tableCell'>
+                                                                    <IconButton>
+                                                                        <FaEdit
+                                                                            onClick={() => EditItem(item.id)}
+                                                                            style={{ fill: '#1A3353', cursor: 'pointer', width: '18px' }}
+                                                                        />
+                                                                    </IconButton>
+                                                                    <IconButton>
+                                                                        <FaTrashAlt onClick={() => deleteRow(item?.id)} style={{ fill: '#1A3353', cursor: 'pointer', width: '15px' }} />
+                                                                    </IconButton>
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        )
+                                                    })
+                                                : <TableRow> <TableCell colSpan={8} sx={{ border: 0 }}><Spinner /></TableCell> </TableRow>
+                                        }
+                                    </TableBody> :
+                                    <TableBody>
+                                        {
+                                            inactiveUsers?.length > 0
+                                                ? stableSort(inactiveUsers, getComparator(order, orderBy)).map((item: any, index: any) => {
+                                                        const labelId = `enhanced-table-checkbox-${index}`
+                                                        const rowIndex = selectedId.indexOf(item.id);
+                                                        return (
+                                                            <TableRow
+                                                                tabIndex={-1}
+                                                                key={index}
+                                                                sx={{
+                                                                    border: 0,
+                                                                    '&:nth-of-type(even)': {
+                                                                        backgroundColor: 'whitesmoke'
+                                                                    },
+                                                                    color: 'rgb(26, 51, 83)',
+                                                                    textTransform: 'capitalize'
+                                                                }}
+                                                            >
+                                                                <TableCell
+                                                                    className='tableCell-link'
+                                                                    onClick={() => userDetail(item.id)}
+                                                                >
+                                                                    {item?.user_details?.email ? item.user_details.email : '---'}
+                                                                </TableCell>
+                                                                <TableCell className='tableCell'>
+                                                                    <div style={{ display: 'flex' }}>
+                                                                        {item?.phone ? item.phone : '---'}
+                                                                    </div>
+                                                                </TableCell>
+                                                                <TableCell className='tableCell'>
+                                                                    {item?.role.name ? item.role.name : '---'}
+                                                                </TableCell>
+                                                                <TableCell className='tableCell'>
+                                                                    <IconButton>
+                                                                        <FaEdit
+                                                                            onClick={() => EditItem(item.id)}
+                                                                            style={{ fill: '#1A3353', cursor: 'pointer', width: '18px' }}
+                                                                        />
+                                                                    </IconButton>
+                                                                    <IconButton>
+                                                                        <FaTrashAlt onClick={() => deleteRow(item?.id)} style={{ fill: '#1A3353', cursor: 'pointer', width: '15px' }} />
+                                                                    </IconButton>
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        )
+                                                    })
+                                                : <TableRow> <TableCell colSpan={8} sx={{ border: 0 }}><Spinner /></TableCell> </TableRow>
+                                        }
+                                    </TableBody>
+                                }
+                            </Table>
+                        </TableContainer>
+                        */}
+                        
