@@ -72,6 +72,26 @@ export default function Roles() {
 
     const onDeleteRole = (id: any) => {
         // Delete Role
+        deleteRole(id)
+    }
+
+    const deleteRole = async (id: any) => {
+        const Header = {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            Authorization: localStorage.getItem('Token'),
+            org: localStorage.getItem('org')
+        }
+        try {
+            await fetchData(`${RolesUrl}/${id}/`, 'DELETE', null as any, Header)
+                .then((res: any) => {
+                    if (!res.error) {
+                        getRoles()
+                    }
+                })
+        } catch (error) {
+            console.error('Error deleting data:', error);
+        }
     }
 
     const handleRequestSort = (event: any, property: any) => {
