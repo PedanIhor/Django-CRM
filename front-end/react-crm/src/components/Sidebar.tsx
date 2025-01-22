@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { AppBar, Avatar, Box, Drawer, IconButton, List, ListItem, ListItemIcon, Popover, Toolbar, Tooltip, Typography, Badge } from '@mui/material';
-import { FaAddressBook, FaBars, FaBriefcase, FaBuilding, FaChartLine, FaCog, FaDiceD6, FaHandshake, FaIndustry, FaSignOutAlt, FaTachometerAlt, FaUserFriends, FaUsers } from "react-icons/fa";
+import { FaAddressBook, FaBars, FaBriefcase, FaBuilding, FaChartLine, FaCog, FaDiceD6, FaHandshake, FaIndustry, FaSignOutAlt, FaTachometerAlt, FaUserFriends, FaUsers, FaShieldAlt } from "react-icons/fa";
 import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { fetchData } from './FetchData';
 import { ProfileUrl } from '../services/ApiUrls';
@@ -33,18 +32,11 @@ import { EditCase } from '../pages/cases/EditCase';
 import { CaseDetails } from '../pages/cases/CaseDetails';
 import logo from '../assets/images/auth/img_logo.png';
 import { StyledListItemButton, StyledListItemText } from '../styles/CssStyled';
-// import MyContext, { MyContextData } from '../context/Context';
 import MyContext from '../context/Context';
 import Settings from './Settings';
 import Notifications from '../pages/notifications/Notifications';
 import MailIcon from '@mui/icons-material/Mail';
-
-
-// declare global {
-//     interface Window {
-//         drawer: any;
-//     }
-// }
+import PermissionsMatrix from '../pages/permissions/PermissionsMatrix';
 
 export default function Sidebar(props: any) {
     const navigate = useNavigate()
@@ -53,11 +45,10 @@ export default function Sidebar(props: any) {
     const [drawerWidth, setDrawerWidth] = useState(200)
     const [headerWidth, setHeaderWidth] = useState(drawerWidth)
     const [userDetail, setUserDetail] = useState('')
-    // user role for conditionally rendering the contents of the page
     const [userRole, setUserRole] = useState('')
     const [organizationModal, setOrganizationModal] = useState(false)
     const organizationModalClose = () => { setOrganizationModal(false) }
-    const [unreadCount, setUnreadCount] = useState(0); // State to store unread notifications count
+    const [unreadCount, setUnreadCount] = useState(0);
 
     const userProfile = () => {
         fetchData(`${ProfileUrl}/`, 'GET', null as any, Header1)
@@ -72,7 +63,6 @@ export default function Sidebar(props: any) {
             })
     }
 
-    // Fetch unread notifications count when the component mounts
     const fetchUnreadNotificationsCount = () => {
         const Header = {
             Accept: 'application/json',
@@ -81,11 +71,11 @@ export default function Sidebar(props: any) {
             org: localStorage.getItem('org')
         }
 
-        fetchData('/api/notifications/unread/', 'GET', null as any, Header) // Replace with your actual endpoint for unread notifications
+        fetchData('/api/notifications/unread/', 'GET', null as any, Header)
             .then((res: any) => {
                 console.log(res);
                 if (res?.unread_count) {
-                    setUnreadCount(res.unread_count);  // Set unread notifications count
+                    setUnreadCount(res.unread_count);
                 }
             })
             .catch((error) => {
@@ -94,29 +84,14 @@ export default function Sidebar(props: any) {
     };
 
     useEffect(() => {
-        fetchUnreadNotificationsCount(); // Fetch unread notifications count
+        fetchUnreadNotificationsCount();
     }, [])
 
     useEffect(() => {
         toggleScreen()
     }, [navigate])
 
-    // useEffect(() => {
-    // navigate('/leads')
-    // if (localStorage.getItem('Token') && localStorage.getItem('org')) {
-    //     // setScreen('contacts')
-    //     navigate('/contacts')
-    // }
-    // if (!localStorage.getItem('Token')) {
-    //     navigate('/login')
-    // }
-    // if (!localStorage.getItem('org')) {
-    //     navigate('/organization')
-    // }
-    // toggleScreen()
-    // }, [])
     const toggleScreen = () => {
-        // console.log(location.pathname.split('/'), 'll')
         if (location.pathname.split('/')[1] === '' || location.pathname.split('/')[1] === undefined || location.pathname.split('/')[2] === 'leads') {
             setScreen('leads')
         } else if (location.pathname.split('/')[2] === 'contacts') {
@@ -135,11 +110,8 @@ export default function Sidebar(props: any) {
             setScreen('notifications');
         }
     }
-    // useEffect(() => {
-    //     userProfile()
-    // }, [])
 
-    const navList = ['leads', 'contacts', 'opportunities', 'accounts', 'users', 'cases', 'settings']
+    const navList = ['leads', 'contacts', 'opportunities', 'accounts', 'users', 'cases', 'settings', 'permissions']
     const navIcons = (text: any, screen: any): React.ReactNode => {
         switch (text) {
             case 'leads':
@@ -150,18 +122,17 @@ export default function Sidebar(props: any) {
                 return screen === 'opportunities' ? <FaHandshake fill='#3e79f7' /> : <FaHandshake />
             case 'accounts':
                 return screen === 'accounts' ? <FaBuilding fill='#3e79f7' /> : <FaBuilding />
-            // case 'analytics':
-            //     return screen === 'analytics' ? <FaChartLine fill='#3e79f7' /> : <FaChartLine />
             case 'users':
                 return screen === 'users' ? <FaUserFriends fill='#3e79f7' /> : <FaUserFriends />
             case 'cases':
                 return screen === 'cases' ? <FaBriefcase fill='#3e79f7' /> : <FaBriefcase />
-            case 'settings': // New case for Organization Settings
-                return screen === 'settings' ? <FaCog fill='#3e79f7' /> : <FaCog />;
+            case 'settings':
+                return screen === 'settings' ? <FaCog fill='#3e79f7' /> : <FaCog />
+            case 'permissions':
+                return screen === 'permissions' ? <FaShieldAlt fill='#3e79f7' /> : <FaShieldAlt />
             default: return <FaDiceD6 fill='#3e79f7' />
         }
     }
-
 
     const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
 
@@ -175,12 +146,11 @@ export default function Sidebar(props: any) {
     };
 
     const handleBadgeClick = () => {
-        navigate('app/notifications'); // Navigate to the notification list page when badge is clicked
+        navigate('app/notifications');
     };
 
     const open = Boolean(anchorEl);
     const id = open ? 'simple-popover' : undefined;
-    // console.log(screen, 'sidebar');
     const context = { drawerWidth: drawerWidth, screen: screen }
     return (
         <>
@@ -193,8 +163,6 @@ export default function Sidebar(props: any) {
                         display: 'flex',
                         flexDirection: 'row',
                         justifyContent: 'space-between',
-                        // boxShadow: 'none',
-                        // borderBottom: `0.5px solid #0000001f`
                         boxShadow: '1px'
                     }}
                 >
@@ -220,21 +188,11 @@ export default function Sidebar(props: any) {
                                 badgeContent={unreadCount > 0 ? unreadCount : null}
                                 color="primary"
                             >
-                                {/* <MailIcon
-                                onClick={handleBadgeClick} // Attach the click handler
-                                sx={{
-                                    width: 24,
-                                    height: 24,
-                                    backgroundColor: 'gray',
-                                    borderRadius: '50%'
-                                }}
-                            /> */}
                                 <MailIcon color={unreadCount > 0 ? 'secondary' : 'action'} />
                             </Badge>
                         </IconButton>
                         <IconButton onClick={handleClick} sx={{ mr: 3 }}>
                             <Avatar
-                                // src='hj'
                                 sx={{ height: '27px', width: '27px' }}
                             />
                         </IconButton>
@@ -269,11 +227,6 @@ export default function Sidebar(props: any) {
                                     </StyledListItemButton>
                                 </ListItem>
                             </List>
-                            {/* <Tooltip title='logout' sx={{ ml: '15px' }}>
-                                <IconButton
-                                    >
-                                </IconButton>
-                            </Tooltip> */}
                         </Popover>
                     </Box>
                 </AppBar>
@@ -310,20 +263,9 @@ export default function Sidebar(props: any) {
 
                 </Drawer>
                 <MyContext.Provider value={context}>
-
-                    {/* <Box sx={{ width: drawerWidth === 60 ? '1380px' : '1240px', ml: drawerWidth === 60 ? '60px' : '200px', overflowX: 'hidden' }}> */}
                     <Box sx={{ width: 'auto', ml: drawerWidth === 60 ? '60px' : '200px', overflowX: 'hidden' }}>
-                        {/* {location.pathname.split('/')[1] === '' && <Contacts />}
-                {location.pathname.split('/')[1] === 'contacts' && <Contacts />}
-                {location.pathname.split('/')[2] === 'add-leads' && <AddLeads />} */}
-                        {/* {location.pathname === 'leads' && <LeadList />}
-                        {screen === 'contacts' && <Contacts />} */}
-                        {/* <Routes>
-                            <Route index element={<Navigate to="/contacts" replace />} />
-                            </Routes> */}
                         <Routes>
                             <Route index element={<Leads />} />
-                            {/* <Route path='/' element={<Contacts />} /> */}
                             <Route path='/app/leads' element={<Leads />} />
                             <Route path='/app/leads/add-leads' element={<AddLeads />} />
                             <Route path='/app/leads/edit-lead' element={<EditLead />} />
@@ -350,6 +292,7 @@ export default function Sidebar(props: any) {
                             <Route path='/app/cases/case-details' element={<CaseDetails />} />
                             <Route path="/app/settings" element={<Settings />} />
                             <Route path="/app/notifications" element={<Notifications />} />
+                            <Route path="/app/permissions" element={<PermissionsMatrix />} />
                         </Routes>
                     </Box>
                 </MyContext.Provider>
