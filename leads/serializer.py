@@ -67,7 +67,6 @@ class LeadSerializer(serializers.ModelSerializer):
             "teams",
             "skype_ID",
             "industry",
-            "company",
             "organization",
             "probability",
             "close_date",
@@ -80,7 +79,6 @@ class LeadCreateSerializer(serializers.ModelSerializer):
     contacts = serializers.ListField(required=False)
     tags = serializers.ListField(required=False)
     org = serializers.CharField(required=False)
-    company = serializers.CharField(required=False, allow_null=True)
 
     def __init__(self, *args, **kwargs):
         request_obj = kwargs.pop("request_obj", None)
@@ -108,7 +106,6 @@ class LeadCreateSerializer(serializers.ModelSerializer):
         model = Lead
         fields = (
             "title",
-            "account_name",
             "phone",
             "email",
             "status",
@@ -123,15 +120,14 @@ class LeadCreateSerializer(serializers.ModelSerializer):
             "contacts",
             "teams",
             "tags",
-            "company",
             "industry",
             "skype_ID",
             "org",
         )
 
-    def create(self, validated_data):
-        # ... create method if you have one ...
-        pass
+    # def create(self, validated_data):
+    #     # ... create method if you have one ...
+    #     pass
 
     def update(self, instance, validated_data):
         instance.title = validated_data.get('title', instance.title)

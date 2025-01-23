@@ -30,6 +30,7 @@ from common.models import (
     Module
 )
 from help_tools.default_roles import generate_default_access_models
+from leads.models import Lead
 
 
 class ModuleSerializer(serializers.ModelSerializer):
@@ -614,6 +615,9 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         return user
     
 class NotificationSerializer(serializers.ModelSerializer):
+    lead = serializers.PrimaryKeyRelatedField(queryset=Lead.objects.all())
+    
     class Meta:
         model = Notification
-        fields = ['id', 'message', 'created_at', 'is_read']
+        fields = ['id', 'message', 'created_at', 'is_read', 'lead']
+        

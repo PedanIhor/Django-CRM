@@ -26,6 +26,7 @@ from common.utils import COUNTRIES, ROLES
 from common.base import BaseModel
 
 
+
 def img_url(self, filename):
     hash_ = int(time.time())
     return "%s/%s/%s" % ("profile_pics", hash_, filename)
@@ -260,9 +261,11 @@ class Profile(BaseModel):
         }
     
 class Notification(BaseModel):
+    
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE)
     message = models.TextField()
     is_read = models.BooleanField(default=False)
+    lead = models.ForeignKey(Lead, on_delete=models.CASCADE)
 
     class Meta:
         verbose_name = "Notification"
@@ -271,6 +274,7 @@ class Notification(BaseModel):
         ordering = ("-created_at",)
 
     def __str__(self):
+        from leads.models import Lead
         return f"Notification for {self.user.username}"
 
 
