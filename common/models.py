@@ -265,8 +265,8 @@ class Notification(BaseModel):
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE)
     message = models.TextField()
     is_read = models.BooleanField(default=False)
-    lead = models.ForeignKey(Lead, on_delete=models.CASCADE)
-
+    lead = models.ForeignKey('leads.Lead', on_delete=models.CASCADE, null=True)
+    
     class Meta:
         verbose_name = "Notification"
         verbose_name_plural = "Notifications"
