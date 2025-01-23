@@ -1,13 +1,19 @@
 import React, { useState, useEffect } from 'react'
-import { Box, Button, Stack, Container, Paper, TableContainer, Table, TableRow, TableCell, TableBody, IconButton } from '@mui/material'
+import { Box, Button, Stack, Container, Paper, TableContainer, Table, TableRow, TableCell, TableBody, IconButton, Popover, TextField } from '@mui/material'
 import { CustomToolbar } from '../../styles/CssStyled';
 import { FiPlus } from "@react-icons/all-files/fi/FiPlus";
 import { FaEdit, FaTrashAlt } from 'react-icons/fa';
 import { EnhancedTableHead } from '../../components/EnchancedTableHead';
 import { fetchData } from '../../components/FetchData';
-import { RolesUrl } from '../../services/ApiUrls';
+import { RolesUrl, SERVER } from '../../services/ApiUrls';
 
 export default function Roles() {
+
+    interface Role {
+        id: string;
+        name: string;
+        permissions: any[];
+    }
 
     interface HeadCell {
         disablePadding: boolean;
@@ -37,7 +43,14 @@ export default function Roles() {
     const [orderBy, setOrderBy] = useState('Website')
 
 
-    const [roles, setRoles] = useState([])
+    const [roles, setRoles] = useState<Role[]>([])
+
+
+    const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
+    const isPopoverOpen = Boolean(anchorEl);
+    const [editingRoleId, setEditingRoleId] = useState<string | null>(null);
+    const popoverId = isPopoverOpen ? 'simple-popover' : undefined;
+    const [roleName, setRoleName] = useState('');
 
     const getRoles = async () => {
         const Header = {
@@ -47,7 +60,7 @@ export default function Roles() {
             org: localStorage.getItem('org')
           }
         try {
-            await fetchData(`${RolesUrl}/`, 'GET', null as any, Header)
+            await fetchData(`${RolesUrl}/?include_permissions=true`, 'GET', null as any, Header)
                 .then((res: any) => {
                     if (!res.error) {
                         setRoles(res)
@@ -57,22 +70,55 @@ export default function Roles() {
             console.error('Error fetching data:', error);
         }
     }
-    
-    useEffect(() => {
-        getRoles()
-    }, [])
-    
-    const onAddRole = () => {
-        // Show Popup
+
+    const addRole = async (name: string) => {
+        const Header = {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            Authorization: localStorage.getItem('Token'),
+            org: localStorage.getItem('org')
+        }
+
+        const data = {
+            name: name,
+            permissions: []
+        }
+
+        try {
+            await fetchData(`${RolesUrl}/`, 'POST', JSON.stringify(data), Header)
+                .then((res: any) => {
+                    if (!res.error) {
+                        getRoles()
+                    }
+                })
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        }
     }
 
-    const onEditRole = (id: any) => {
-        // Show Popup
-    }
+    const updateRole = async (role: any, newName: string) => {
+        const Header = {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            Authorization: localStorage.getItem('Token'),
+            org: localStorage.getItem('org')
+        }
 
-    const onDeleteRole = (id: any) => {
-        // Delete Role
-        deleteRole(id)
+        const data = {
+            name: newName,
+            permissions: role.permissions
+        }
+
+        try {
+            await fetchData(`${RolesUrl}/${role.id}/`, 'PATCH', JSON.stringify(data), Header)
+                .then((res: any) => {
+                    if (!res.error) {
+                        getRoles()
+                    }
+                })
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        }
     }
 
     const deleteRole = async (id: any) => {
@@ -83,16 +129,52 @@ export default function Roles() {
             org: localStorage.getItem('org')
         }
         try {
-            await fetchData(`${RolesUrl}/${id}/`, 'DELETE', null as any, Header)
-                .then((res: any) => {
-                    if (!res.error) {
-                        getRoles()
-                    }
-                })
+            console.log('Attempting to delete role:', id);
+            const response = await fetch(`${SERVER}${RolesUrl}/${id}/`, {
+                method: 'DELETE',
+                headers: Header as any,
+                body: null as any
+              })
+            
+            console.log('Delete response:', response);
+            await getRoles();
+            console.log('Roles refreshed');
         } catch (error) {
             console.error('Error deleting data:', error);
         }
     }
+    
+    useEffect(() => {
+        getRoles()
+    }, [])
+    
+    const onAddRole = (event: React.MouseEvent<HTMLButtonElement>) => {
+        // Show Popup
+        setEditingRoleId(null);
+        setRoleName('');
+        setAnchorEl(event.currentTarget);
+    }
+
+    const onEditRole = (event: React.MouseEvent<HTMLButtonElement>, role: any) => {
+        // Show Popup
+        setEditingRoleId(role.id)
+        setRoleName(role.name)
+        setAnchorEl(event.currentTarget);
+    }
+
+    const onDeleteRole = (id: any) => {
+        // Delete Role
+        deleteRole(id)
+    }
+
+    const handlePopoverClose = () => {
+        setAnchorEl(null);
+
+        setTimeout(() => {
+            setEditingRoleId(null);
+            setRoleName('');
+        }, 300);
+    };
 
     const handleRequestSort = (event: any, property: any) => {
         const isAsc = orderBy === property && order === 'asc'
@@ -100,19 +182,16 @@ export default function Roles() {
         setOrderBy(property)
     }
 
-
-    const actionsButtons = (id: any) => {
+    const actionsButtons = (role: any) => {
         return (
             <>
-                <IconButton>
+                <IconButton onClick={(event) => onEditRole(event, role)}>
                     <FaEdit
-                        onClick={() => onEditRole(id)}
                         style={{ fill: '#1A3353', cursor: 'pointer', width: '18px', height: '18px' }}
                     />
                 </IconButton>
-                <IconButton>
+                <IconButton onClick={() => onDeleteRole(role.id)} >
                     <FaTrashAlt 
-                        onClick={() => onDeleteRole(id)} 
                         style={{ fill: '#1A3353', cursor: 'pointer', width: '18px', height: '18px' }} 
                     />
                 </IconButton>
@@ -135,10 +214,63 @@ export default function Roles() {
             </TableCell>
             <TableCell sx={{ display: 'flex', justifyContent: 'flex-end', borderBottom: 'none'}}>
                 <div style={{ minHeight: '30px' }}>
-                    {role.name !== 'ADMIN' && actionsButtons(role.id)}
+                    {role.name !== 'ADMIN' && actionsButtons(role)}
                 </div>
             </TableCell>
         </TableRow>)
+    }
+
+    const rolePopover = () => {
+        return <Popover
+            anchorOrigin={{
+                vertical: 'bottom',
+                horizontal: 'left',
+            }}
+            transformOrigin={{
+                vertical: 'top',
+                horizontal: 'right',
+            }}
+            id={popoverId}
+            open={isPopoverOpen}
+            anchorEl={anchorEl}
+            onClose={handlePopoverClose}
+        >
+            <Box sx={{ p: 3, width: 300 }}>
+            <Stack spacing={2}>
+                <TextField
+                    fullWidth
+                    label="Role Name"
+                    variant="outlined"
+                    size="small"
+                    value={roleName}
+                    onChange={(e) => setRoleName(e.target.value)}
+                />
+                <Stack direction="row" spacing={2} justifyContent="flex-end">
+                    <Button 
+                        variant="outlined" 
+                        onClick={handlePopoverClose}
+                    >
+                        Cancel
+                    </Button>
+                    <Button 
+                        variant="contained"
+                        onClick={() => {
+                            if (editingRoleId === null) {
+                                addRole(roleName)
+                            } else {
+                                const roleToUpdate = roles.find(role => role.id === editingRoleId);
+                                updateRole(roleToUpdate, roleName)
+                            }
+                            setRoleName('');
+                            handlePopoverClose();
+                        }}
+                    >
+                        {editingRoleId === null ? 'ADD' : 'UPDATE'}
+                    </Button>
+                </Stack>
+            </Stack>
+        </Box>
+        </Popover>
     }
 
     return (
@@ -182,130 +314,7 @@ export default function Roles() {
                     </Paper>
                 </Box>
             </Container>
+            { rolePopover() }
         </Box>
     );
 };
-
-
-
-
-{/*
-                        <TableContainer>
-                            <Table>
-                                <EnhancedTableHead
-                                    numSelected={selected.length}
-                                    order={order}
-                                    orderBy={orderBy}
-                                    onSelectAllClick={handleSelectAllClick}
-                                    onRequestSort={handleRequestSort}
-                                    rowCount={activeUsers?.length}
-                                    numSelectedId={selectedId}
-                                    isSelectedId={isSelectedId}
-                                    headCells={headCells}
-                                />
-                                {tab === 'active' ?
-                                    <TableBody>
-                                        {
-                                            activeUsers?.length > 0
-                                                ? stableSort(activeUsers, getComparator(order, orderBy)).map((item: any, index: any) => {
-                                                        const labelId = `enhanced-table-checkbox-${index}`
-                                                        const rowIndex = selectedId.indexOf(item.id);
-                                                        return (
-                                                            <TableRow
-                                                                tabIndex={-1}
-                                                                key={index}
-                                                                sx={{
-                                                                    border: 0,
-                                                                    '&:nth-of-type(even)': {
-                                                                        backgroundColor: 'whitesmoke'
-                                                                    },
-                                                                    color: 'rgb(26, 51, 83)',
-                                                                    textTransform: 'capitalize'
-                                                                }}
-                                                            >
-                                                                <TableCell
-                                                                    className='tableCell-link'
-                                                                    onClick={() => userDetail(item.id)}
-                                                                >
-                                                                    {item?.user_details?.email ? item.user_details.email : '---'}
-                                                                </TableCell>
-                                                                <TableCell className='tableCell'>
-                                                                    <div style={{ display: 'flex' }}>
-                                                                        {item?.phone ? item.phone : '---'}
-                                                                    </div>
-                                                                </TableCell>
-                                                                <TableCell className='tableCell'>
-                                                                    {item?.role.name ? item.role.name : '---'}
-                                                                </TableCell>
-                                                                <TableCell className='tableCell'>
-                                                                    <IconButton>
-                                                                        <FaEdit
-                                                                            onClick={() => EditItem(item.id)}
-                                                                            style={{ fill: '#1A3353', cursor: 'pointer', width: '18px' }}
-                                                                        />
-                                                                    </IconButton>
-                                                                    <IconButton>
-                                                                        <FaTrashAlt onClick={() => deleteRow(item?.id)} style={{ fill: '#1A3353', cursor: 'pointer', width: '15px' }} />
-                                                                    </IconButton>
-                                                                </TableCell>
-                                                            </TableRow>
-                                                        )
-                                                    })
-                                                : <TableRow> <TableCell colSpan={8} sx={{ border: 0 }}><Spinner /></TableCell> </TableRow>
-                                        }
-                                    </TableBody> :
-                                    <TableBody>
-                                        {
-                                            inactiveUsers?.length > 0
-                                                ? stableSort(inactiveUsers, getComparator(order, orderBy)).map((item: any, index: any) => {
-                                                        const labelId = `enhanced-table-checkbox-${index}`
-                                                        const rowIndex = selectedId.indexOf(item.id);
-                                                        return (
-                                                            <TableRow
-                                                                tabIndex={-1}
-                                                                key={index}
-                                                                sx={{
-                                                                    border: 0,
-                                                                    '&:nth-of-type(even)': {
-                                                                        backgroundColor: 'whitesmoke'
-                                                                    },
-                                                                    color: 'rgb(26, 51, 83)',
-                                                                    textTransform: 'capitalize'
-                                                                }}
-                                                            >
-                                                                <TableCell
-                                                                    className='tableCell-link'
-                                                                    onClick={() => userDetail(item.id)}
-                                                                >
-                                                                    {item?.user_details?.email ? item.user_details.email : '---'}
-                                                                </TableCell>
-                                                                <TableCell className='tableCell'>
-                                                                    <div style={{ display: 'flex' }}>
-                                                                        {item?.phone ? item.phone : '---'}
-                                                                    </div>
-                                                                </TableCell>
-                                                                <TableCell className='tableCell'>
-                                                                    {item?.role.name ? item.role.name : '---'}
-                                                                </TableCell>
-                                                                <TableCell className='tableCell'>
-                                                                    <IconButton>
-                                                                        <FaEdit
-                                                                            onClick={() => EditItem(item.id)}
-                                                                            style={{ fill: '#1A3353', cursor: 'pointer', width: '18px' }}
-                                                                        />
-                                                                    </IconButton>
-                                                                    <IconButton>
-                                                                        <FaTrashAlt onClick={() => deleteRow(item?.id)} style={{ fill: '#1A3353', cursor: 'pointer', width: '15px' }} />
-                                                                    </IconButton>
-                                                                </TableCell>
-                                                            </TableRow>
-                                                        )
-                                                    })
-                                                : <TableRow> <TableCell colSpan={8} sx={{ border: 0 }}><Spinner /></TableCell> </TableRow>
-                                        }
-                                    </TableBody>
-                                }
-                            </Table>
-                        </TableContainer>
-                        */}
-                        
