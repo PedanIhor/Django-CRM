@@ -47,11 +47,12 @@ class ModuleSerializer(serializers.ModelSerializer):
 class PermissionSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=100)
     module_id = serializers.PrimaryKeyRelatedField(queryset=Module.objects.all())
+    module_name = serializers.CharField(source='module.name', read_only=True)
 
     class Meta:
         model = Permission
         fields = [
-            "name", "module_id"
+            "name", "module_id", "module_name"
         ]
 
     def create(self, validated_data):
