@@ -46,6 +46,10 @@ def seed_database():
             )
             if i == 0:
                 role = Role.objects.filter(org=org).filter(name="ADMIN").first()
+            elif i in [1,2]:
+                role = Role.objects.filter(org=org).filter(name="SALES_MANAGER").first()
+            elif i in [3,4,5,6,7,8,9,10]:
+                role = Role.objects.filter(org=org).filter(name="SALES_REPRESENTATIVE").first()
             else:
                 role = Role.objects.filter(org=org).filter(name="EMPLOYEE").first()
             profile = Profile.objects.create(

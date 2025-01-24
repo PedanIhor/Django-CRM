@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { AppBar, Avatar, Box, Drawer, IconButton, List, ListItem, ListItemIcon, Popover, Toolbar, Tooltip, Typography, Badge } from '@mui/material';
 import { FaAddressBook, FaBars, FaBriefcase, FaBuilding, FaChartLine, FaCog, FaDiceD6, FaHandshake, FaIndustry, FaSignOutAlt, FaTachometerAlt, FaUserFriends, FaUsers } from "react-icons/fa";
+import roleIcon from '../assets/images/sidebar/img_roles.png';
 import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { fetchData } from './FetchData';
 import { ProfileUrl } from '../services/ApiUrls';
@@ -38,7 +39,7 @@ import MyContext from '../context/Context';
 import Settings from './Settings';
 import Notifications from '../pages/notifications/Notifications';
 import MailIcon from '@mui/icons-material/Mail';
-
+import Roles from '../pages/roles/Roles';
 
 // declare global {
 //     interface Window {
@@ -133,6 +134,8 @@ export default function Sidebar(props: any) {
             setScreen('users')
         } else if (location.pathname.split('/')[2] === 'cases') {
             setScreen('cases')
+        } else if (location.pathname.split('/')[2] === 'roles') {
+            setScreen('roles')
         } else if (location.pathname.split('/')[2] === 'settings') {
             setScreen('settings');
         } else if (location.pathname.split('/')[2] === 'notifications') {
@@ -143,7 +146,7 @@ export default function Sidebar(props: any) {
     //     userProfile()
     // }, [])
 
-    const navList = ['leads', 'contacts', 'opportunities', 'accounts', 'users', 'cases', 'settings']
+    const navList = ['leads', 'contacts', 'opportunities', 'accounts', 'users', 'cases', 'roles', 'settings']
     const navIcons = (text: any, screen: any): React.ReactNode => {
         switch (text) {
             case 'leads':
@@ -160,6 +163,16 @@ export default function Sidebar(props: any) {
                 return screen === 'users' ? <FaUserFriends fill='#3e79f7' /> : <FaUserFriends />
             case 'cases':
                 return screen === 'cases' ? <FaBriefcase fill='#3e79f7' /> : <FaBriefcase />
+            case 'roles':
+                return <img 
+                    src={roleIcon} 
+                    alt="roles"
+                    style={{
+                        width: '20px',
+                        height: '20px',
+                        filter: screen === 'roles' ? 'invert(43%) sepia(93%) saturate(1728%) hue-rotate(213deg) brightness(97%) contrast(89%)' : 'none'
+                    }}
+                />
             case 'settings': // New case for Organization Settings
                 return screen === 'settings' ? <FaCog fill='#3e79f7' /> : <FaCog />;
             default: return <FaDiceD6 fill='#3e79f7' />
@@ -352,6 +365,7 @@ export default function Sidebar(props: any) {
                             <Route path='/app/cases/add-case' element={<AddCase />} />
                             <Route path='/app/cases/edit-case' element={<EditCase />} />
                             <Route path='/app/cases/case-details' element={<CaseDetails />} />
+                            <Route path='/app/roles' element={<Roles />} />
                             <Route path="/app/settings" element={<Settings />} />
                             <Route path="/app/notifications" element={<Notifications />} />
                         </Routes>

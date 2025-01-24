@@ -31,7 +31,7 @@ export const EnhancedTableHead = (props: any) => {
                             <TableCell
                                 sx={{ fontWeight: 'bold', color: 'rgb(26, 51, 83)' }}
                                 key={headCell.id}
-                                align={headCell.numeric ? 'left' : 'left'}
+                                align={headCell.align ? headCell.align : headCell.numeric ? 'left' : 'left'}
                                 padding={headCell.disablePadding ? 'none' : 'normal'}>{headCell.label}</TableCell>
                             : <TableCell
                                 sx={{ fontWeight: 'bold', color: 'rgb(26, 51, 83)' }}
