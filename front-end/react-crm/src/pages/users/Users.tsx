@@ -492,38 +492,6 @@ export default function Users() {
             <Container sx={{ width: '100%', maxWidth: '100%', minWidth: '100%' }}>
                 <Box sx={{ width: '100%', minWidth: '100%', m: '15px 0px 0px 0px' }}>
                     <Paper sx={{ width: 'cal(100%-15px)', mb: 2, p: '0px 15px 15px 15px' }}>
-                        {/* <Toolbar sx={{pl: { sm: 2 },pr: { xs: 1, sm: 1 }}}>
-                            <Tooltip title='Delete'>
-                                <Button
-                                    variant='outlined'
-                                    onClick={() => !!(selectedId?.length !== 0) && handleDelete(selectedId)}
-                                    startIcon={<FaTrashAlt color='red' style={{ width: '12px' }} />}
-                                    size='small'
-                                    color='error'
-                                    sx={{
-                                        // opacity: 0.7,
-                                        fontWeight: 'bold',
-                                        textTransform: 'capitalize',
-                                        color: 'red',
-                                        borderColor: 'darkgrey',
-                                    }}
-                                >
-                                    Delete
-                                </Button>
-                            </Tooltip>
-                            {selected.length > 0 ? (
-                                <Typography
-                                    sx={{ flex: '1 1 100%', margin: '5px' }}
-                                    color='inherit'
-                                    variant='subtitle1'
-                                    component='div'
-                                >
-                                    {selected.length} selected
-                                </Typography>
-                            ) : (
-                                ''
-                            )}
-                        </Toolbar> */}
                         <TableContainer>
                             <Table>
                                 <EnhancedTableHead
