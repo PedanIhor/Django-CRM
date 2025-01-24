@@ -45,6 +45,9 @@ import MailIcon from '@mui/icons-material/Mail';
 //         drawer: any;
 //     }
 // }
+// interface SidebarProps {
+//     open: boolean; // Define the open prop
+// }
 
 export default function Sidebar(props: any) {
     const navigate = useNavigate()
@@ -84,6 +87,7 @@ export default function Sidebar(props: any) {
         fetchData('/api/notifications/unread/', 'GET', null as any, Header) // Replace with your actual endpoint for unread notifications
             .then((res: any) => {
                 console.log(res);
+                console.log('unreadnot')
                 if (res?.unread_count) {
                     setUnreadCount(res.unread_count);  // Set unread notifications count
                 }
