@@ -18,6 +18,7 @@ import Alert from '@mui/material/Alert';
 import { SERVER } from '../../services/ApiUrls';
 import { CustomToolbar } from '../../styles/CssStyled';
 import Stack from '@mui/material/Stack';
+import { Spinner } from '../../components/Spinner';
 
 interface Permission {
   id: string;
@@ -159,7 +160,19 @@ const PermissionsMatrix = () => {
     return grouped;
   };
 
-  if (!matrixData) return <div>Loading...</div>;
+  if (!matrixData) return (
+    <Box 
+      sx={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center',
+        height: 'calc(100vh - 100px)', // Adjust this value based on your layout
+        width: '100%'
+      }}
+    >
+      <Spinner />
+    </Box>
+  );
 
   const groupedPermissions = groupPermissionsByModel(matrixData.permissions);
 
@@ -214,7 +227,11 @@ const PermissionsMatrix = () => {
                           zIndex: 1
                         }}
                       >
-                        {role.name}
+                        {role.name
+                          .toLowerCase()
+                          .split('_')
+                          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                          .join(' ')}
                       </TableCell>
                     ))}
                   </TableRow>
@@ -238,7 +255,7 @@ const PermissionsMatrix = () => {
                             fontSize: '1rem',
                           }}
                         >
-                          {model}
+                          {model.charAt(0).toUpperCase() + model.slice(1).toLowerCase()}
                         </TableCell>
                       </TableRow>
                       {permissions.map((permission) => (
@@ -254,7 +271,7 @@ const PermissionsMatrix = () => {
                           }}
                         >
                           <TableCell className="tableCell">
-                            {permission.name}
+                            {permission.name.replace(/_/g, ' ')}
                             <div style={{ fontSize: '0.875rem', color: 'gray' }}>
                               {permission.description}
                             </div>
