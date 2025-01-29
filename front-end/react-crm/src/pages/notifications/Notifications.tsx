@@ -75,15 +75,16 @@ const Notifications = ({ fetchUnreadNotificationsCount }: { fetchUnreadNotificat
                             onClick={() => handleNotificationClick(notification.id, notification.lead)}
                             sx={{
                                 padding: '10px 15px',
-                                backgroundColor: notification.is_read ? '#f5f5f5' : 'white',
+                                backgroundColor: notification.is_read ? 'white' : '#1976d20d',
                                 border: notification.is_read ? 'none' : '1px solid rgba(0, 0, 0, 0.12)',
                                 boxShadow: notification.is_read ? 'none' : '0px 2px 4px rgba(0, 0, 0, 0.1)',
                                 borderRadius: '4px',
                                 marginBottom: 1,
                                 cursor: 'pointer',
                                 '&:hover': {
-                                    backgroundColor: notification.is_read ? '#f5f5f5' : '#f9f9f9',
+                                    backgroundColor: notification.is_read ? 'white' : '#f9f9f9',
                                     boxShadow: notification.is_read ? 'none' : '0px 4px 6px rgba(0, 0, 0, 0.1)',
+                                    transition: 'background-color 0.5s, box-shadow 0.5s',
                                 },
                             }}
                         >
