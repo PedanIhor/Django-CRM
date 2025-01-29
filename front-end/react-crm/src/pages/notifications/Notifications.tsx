@@ -3,7 +3,8 @@ import { Box, List, ListItem, ListItemText, Typography, Divider } from '@mui/mat
 import { useNavigate } from 'react-router-dom';
 import { fetchData, Header1 } from '../../components/FetchData';
 import fetchUnreadNotificationsCount from "../../components/Sidebar";
-const Notifications = () => {
+
+const Notifications = ({ fetchUnreadNotificationsCount }: { fetchUnreadNotificationsCount: () => void }) => {
     const [notifications, setNotifications] = useState<any[]>([]); // Notifications state
     const navigate = useNavigate();  // To navigate back to previous page or home
 
@@ -44,8 +45,10 @@ const Notifications = () => {
                     // Navigate to the lead details page
                     
                     fetchNotifications()
-                    fetchUnreadNotificationsCount(undefined);
+                    console.log(`tamamlandı`)
                     navigate(`/app/leads/lead-details`, { state: { leadId } });
+                    fetchUnreadNotificationsCount();
+
                 } else {
                     console.error('Error marking notification as read:', res.error);
                 }

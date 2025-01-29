@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { AppBar, Avatar, Box, Drawer, IconButton, List, ListItem, ListItemIcon, Popover, Toolbar, Tooltip, Typography, Badge } from '@mui/material';
 import { FaAddressBook, FaBars, FaBriefcase, FaBuilding, FaChartLine, FaCog, FaDiceD6, FaHandshake, FaIndustry, FaSignOutAlt, FaTachometerAlt, FaUserFriends, FaUsers } from "react-icons/fa";
@@ -89,7 +88,7 @@ export default function Sidebar(props: any) {
             .then((res: any) => {
                 console.log(res);
                 console.log('unreadnot')
-                if (res?.unread_count) {
+                if (res?.unread_count >= 0) {
                     setUnreadCount(res.unread_count);
                     console.log(unreadCount)  // Set unread notifications count
                 }
@@ -237,16 +236,8 @@ export default function Sidebar(props: any) {
                             <Badge
                                 badgeContent={unreadCount > 0 ? unreadCount : null}
                                 color="primary"
+                                invisible={unreadCount === 0}
                             >
-                                {/* <MailIcon
-                                onClick={handleBadgeClick} // Attach the click handler
-                                sx={{
-                                    width: 24,
-                                    height: 24,
-                                    backgroundColor: 'gray',
-                                    borderRadius: '50%'
-                                }}
-                            /> */}
                                 <MailIcon color={unreadCount > 0 ? 'secondary' : 'action'} />
                             </Badge>
                         </IconButton>
@@ -368,7 +359,7 @@ export default function Sidebar(props: any) {
                             <Route path='/app/cases/case-details' element={<CaseDetails />} />
                             <Route path='/app/roles' element={<Roles />} />
                             <Route path="/app/settings" element={<Settings />} />
-                            <Route path="/app/notifications" element={<Notifications />} />
+                            <Route path="/app/notifications" element={<Notifications fetchUnreadNotificationsCount={fetchUnreadNotificationsCount} />} />
                         </Routes>
                     </Box>
                 </MyContext.Provider>
