@@ -320,12 +320,9 @@ export default function Sidebar(props: any) {
                             <Route path='/app/cases/case-details' element={<CaseDetails />} />
                             <Route path='/app/roles' element={<Roles />} />
                             <Route path="/app/settings" element={<Settings />} />
-<<<<<<< HEAD
                             <Route path="/app/notifications" element={<Notifications fetchUnreadNotificationsCount={fetchUnreadNotificationsCount} />} />
-=======
                             <Route path="/app/notifications" element={<Notifications />} />
                             <Route path="/app/permissions" element={<PermissionsMatrix />} />
->>>>>>> develop
                         </Routes>
                     </Box>
                 </MyContext.Provider>
