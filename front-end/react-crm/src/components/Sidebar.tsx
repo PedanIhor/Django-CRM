@@ -321,7 +321,6 @@ export default function Sidebar(props: any) {
                             <Route path='/app/roles' element={<Roles />} />
                             <Route path="/app/settings" element={<Settings />} />
                             <Route path="/app/notifications" element={<Notifications fetchUnreadNotificationsCount={fetchUnreadNotificationsCount} />} />
-                            <Route path="/app/notifications" element={<Notifications />} />
                             <Route path="/app/permissions" element={<PermissionsMatrix />} />
                         </Routes>
                     </Box>
