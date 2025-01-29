@@ -33,3 +33,6 @@ export const ProfileUrl = '/api/profile'
 export const OrgAuthUrl = '/api/organization/google-auth'
 
 export const OpportunityCardViewUrl = '/api/opportunities/card-view'
+
+// ROLES
+export const RolesUrl = '/api/roles'

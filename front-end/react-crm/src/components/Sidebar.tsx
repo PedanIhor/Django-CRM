@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AppBar, Avatar, Box, Drawer, IconButton, List, ListItem, ListItemIcon, Popover, Toolbar, Tooltip, Typography, Badge } from '@mui/material';
 import { FaAddressBook, FaBars, FaBriefcase, FaBuilding, FaChartLine, FaCog, FaDiceD6, FaHandshake, FaIndustry, FaSignOutAlt, FaTachometerAlt, FaUserFriends, FaUsers, FaShieldAlt } from "react-icons/fa";
+import roleIcon from '../assets/images/sidebar/img_roles.png';
 import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { fetchData } from './FetchData';
 import { ProfileUrl } from '../services/ApiUrls';
@@ -37,6 +38,13 @@ import Settings from './Settings';
 import Notifications from '../pages/notifications/Notifications';
 import MailIcon from '@mui/icons-material/Mail';
 import PermissionsMatrix from '../pages/permissions/PermissionsMatrix';
+import Roles from '../pages/roles/Roles';
+
+// declare global {
+//     interface Window {
+//         drawer: any;
+//     }
+// }
 
 export default function Sidebar(props: any) {
     const navigate = useNavigate()
@@ -104,6 +112,8 @@ export default function Sidebar(props: any) {
             setScreen('users')
         } else if (location.pathname.split('/')[2] === 'cases') {
             setScreen('cases')
+        } else if (location.pathname.split('/')[2] === 'roles') {
+            setScreen('roles')
         } else if (location.pathname.split('/')[2] === 'settings') {
             setScreen('settings');
         } else if (location.pathname.split('/')[2] === 'notifications') {
@@ -111,7 +121,7 @@ export default function Sidebar(props: any) {
         }
     }
 
-    const navList = ['leads', 'contacts', 'opportunities', 'accounts', 'users', 'cases', 'settings', 'permissions']
+    const navList = ['leads', 'contacts', 'opportunities', 'accounts', 'users', 'cases', 'roles', 'settings', 'permissions']
     const navIcons = (text: any, screen: any): React.ReactNode => {
         switch (text) {
             case 'leads':
@@ -130,6 +140,16 @@ export default function Sidebar(props: any) {
                 return screen === 'settings' ? <FaCog fill='#3e79f7' /> : <FaCog />
             case 'permissions':
                 return screen === 'permissions' ? <FaShieldAlt fill='#3e79f7' /> : <FaShieldAlt />
+            case 'roles':
+                return <img 
+                    src={roleIcon} 
+                    alt="roles"
+                    style={{
+                        width: '20px',
+                        height: '20px',
+                        filter: screen === 'roles' ? 'invert(43%) sepia(93%) saturate(1728%) hue-rotate(213deg) brightness(97%) contrast(89%)' : 'none'
+                    }}
+                />
             default: return <FaDiceD6 fill='#3e79f7' />
         }
     }
@@ -290,6 +310,7 @@ export default function Sidebar(props: any) {
                             <Route path='/app/cases/add-case' element={<AddCase />} />
                             <Route path='/app/cases/edit-case' element={<EditCase />} />
                             <Route path='/app/cases/case-details' element={<CaseDetails />} />
+                            <Route path='/app/roles' element={<Roles />} />
                             <Route path="/app/settings" element={<Settings />} />
                             <Route path="/app/notifications" element={<Notifications />} />
                             <Route path="/app/permissions" element={<PermissionsMatrix />} />
