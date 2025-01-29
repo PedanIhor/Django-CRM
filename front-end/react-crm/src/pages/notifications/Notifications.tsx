@@ -42,17 +42,10 @@ const Notifications = () => {
             .then((res) => {
                 if (!res.error) {
                     // Navigate to the lead details page
-                    navigate(`/app/leads/lead-details`, { state: { leadId } });
-
-                    // Update the notifications state by marking the notification as read
-                    // setNotifications((prevNotifications) =>
-                    //     prevNotifications.map((notification) =>
-                    //         notification.id === notificationId
-                    //             ? { ...notification, is_read: true }  // Update the notification in the state
-                    //             : notification
-                    //     )
-                    // );
+                    
+                    fetchNotifications()
                     fetchUnreadNotificationsCount(undefined);
+                    navigate(`/app/leads/lead-details`, { state: { leadId } });
                 } else {
                     console.error('Error marking notification as read:', res.error);
                 }
@@ -67,16 +60,30 @@ const Notifications = () => {
     }, []);
 
     return (
-        <Box sx={{ padding: 3 }}>
+        <Box sx={{ ml:2, mt:10, mr:2, padding: 3, backgroundColor: 'white', borderRadius: '8px', boxShadow: 1 }}>
             <Typography variant="h5" sx={{ marginBottom: 2 }}>
                 Notifications
             </Typography>
             <List>
                 {notifications.length > 0 ? (
                     notifications.map((notification: any) => (
-                        <ListItem key={notification.id}
+                        <ListItem
+                            key={notification.id}
                             onClick={() => handleNotificationClick(notification.id, notification.lead)}
-                        sx={{ padding: '10px 0' }}>
+                            sx={{
+                                padding: '10px 15px',
+                                backgroundColor: notification.is_read ? '#f5f5f5' : 'white',
+                                border: notification.is_read ? 'none' : '1px solid rgba(0, 0, 0, 0.12)',
+                                boxShadow: notification.is_read ? 'none' : '0px 2px 4px rgba(0, 0, 0, 0.1)',
+                                borderRadius: '4px',
+                                marginBottom: 1,
+                                cursor: 'pointer',
+                                '&:hover': {
+                                    backgroundColor: notification.is_read ? '#f5f5f5' : '#f9f9f9',
+                                    boxShadow: notification.is_read ? 'none' : '0px 4px 6px rgba(0, 0, 0, 0.1)',
+                                },
+                            }}
+                        >
                             <ListItemText
                                 primary={notification.message}
                                 secondary={new Date(notification.created_at).toLocaleString()}

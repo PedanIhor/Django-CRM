@@ -90,7 +90,8 @@ export default function Sidebar(props: any) {
                 console.log(res);
                 console.log('unreadnot')
                 if (res?.unread_count) {
-                    setUnreadCount(res.unread_count);  // Set unread notifications count
+                    setUnreadCount(res.unread_count);
+                    console.log(unreadCount)  // Set unread notifications count
                 }
             })
             .catch((error) => {
