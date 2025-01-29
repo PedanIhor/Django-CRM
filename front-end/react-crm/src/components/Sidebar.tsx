@@ -45,6 +45,9 @@ import Roles from '../pages/roles/Roles';
 //         drawer: any;
 //     }
 // }
+// interface SidebarProps {
+//     open: boolean; // Define the open prop
+// }
 
 export default function Sidebar(props: any) {
     const navigate = useNavigate()
@@ -82,8 +85,12 @@ export default function Sidebar(props: any) {
         fetchData('/api/notifications/unread/', 'GET', null as any, Header)
             .then((res: any) => {
                 console.log(res);
-                if (res?.unread_count) {
+
+                console.log('unreadnot')
+                if (res?.unread_count >= 0) {
                     setUnreadCount(res.unread_count);
+                    console.log(unreadCount)  // Set unread notifications count
+
                 }
             })
             .catch((error) => {
@@ -207,6 +214,7 @@ export default function Sidebar(props: any) {
                             <Badge
                                 badgeContent={unreadCount > 0 ? unreadCount : null}
                                 color="primary"
+                                invisible={unreadCount === 0}
                             >
                                 <MailIcon color={unreadCount > 0 ? 'secondary' : 'action'} />
                             </Badge>
@@ -312,6 +320,7 @@ export default function Sidebar(props: any) {
                             <Route path='/app/cases/case-details' element={<CaseDetails />} />
                             <Route path='/app/roles' element={<Roles />} />
                             <Route path="/app/settings" element={<Settings />} />
+                            <Route path="/app/notifications" element={<Notifications fetchUnreadNotificationsCount={fetchUnreadNotificationsCount} />} />
                             <Route path="/app/notifications" element={<Notifications />} />
                             <Route path="/app/permissions" element={<PermissionsMatrix />} />
                         </Routes>

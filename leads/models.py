@@ -55,7 +55,6 @@ class Lead(BaseModel):
     org = models.ForeignKey(
         Org, on_delete=models.SET_NULL, null=True, blank=True, related_name="lead_org"
     )
-    company = models.CharField(max_length=100, null=True, blank=True)
     skype_ID = models.CharField(max_length=100, null=True, blank=True)
     industry = models.CharField(
         _("Industry Type"), max_length=255, choices=INDCHOICES, blank=True, null=True

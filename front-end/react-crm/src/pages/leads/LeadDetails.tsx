@@ -132,12 +132,12 @@ const CustomStepIcon = (props: StepIconProps & { stageName?: string }) => {
     const { active, completed, stageName, className } = props;
     
     // Debug logging without activeStep
-    console.log('CustomStepIcon props:', {
-        stageName,
-        normalizedStageName: stageName?.trim().toLowerCase(),
-        active,
-        completed
-    });
+    // console.log('CustomStepIcon props:', {
+    //     stageName,
+    //     normalizedStageName: stageName?.trim().toLowerCase(),
+    //     active,
+    //     completed
+    // });
 
     const normalizedStageName = stageName?.trim().toLowerCase();
 
@@ -579,15 +579,15 @@ function LeadDetails(props: any) {
                             const originalIndex = status.findIndex(s => s === stage);
                             
                             // More detailed logging
-                            console.log('Step rendering:', {
-                                stage,
-                                normalizedStage: stage.trim().toLowerCase(),
-                                index,
-                                originalIndex,
-                                activeStep,
-                                isActive: originalIndex === activeStep,
-                                currentStatus: currentStatus.trim().toLowerCase()
-                            });
+                            // console.log('Step rendering:', {
+                            //     stage,
+                            //     normalizedStage: stage.trim().toLowerCase(),
+                            //     index,
+                            //     originalIndex,
+                            //     activeStep,
+                            //     isActive: originalIndex === activeStep,
+                            //     currentStatus: currentStatus.trim().toLowerCase()
+                            // });
                             
                             return (
                                 <Step 

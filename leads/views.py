@@ -163,6 +163,8 @@ class LeadListView(APIView, LimitOffsetPagination):
     )
     def post(self, request, *args, **kwargs):
         data = request.data
+        teams_list = data.pop("teams", None)
+        data["teams"] = []
         serializer = LeadCreateSerializer(data=data, request_obj=request)
         if serializer.is_valid():
             lead_obj = serializer.save(
@@ -199,8 +201,7 @@ class LeadListView(APIView, LimitOffsetPagination):
                 attachment.attachment = request.FILES.get("lead_attachment")
                 attachment.save()
 
-            if data.get("teams", None):
-                teams_list = data.get("teams")
+            if teams_list:
                 teams = Teams.objects.filter(
                     id__in=teams_list, org=request.profile.org)
                 lead_obj.teams.add(*teams)
@@ -218,8 +219,9 @@ class LeadListView(APIView, LimitOffsetPagination):
                     Notification.objects.create(
                         profile=profile,
                         message=notification_message,
+                        lead=lead_obj,
                         is_read=False
-                    )
+                    )                    
 
             if data.get("status") == "converted":
                 account_object = Account.objects.create(
