@@ -40,28 +40,30 @@ type FormErrors = {
     state?: string[];
     pincode?: string[];
     country?: string[];
+    first_name?: string[];
+    last_name?: string[];
     // profile_pic?: string[];
     // has_sales_access?: string[];
     // has_marketing_access?: string[];
     // is_organization_admin?: string[];
 };
 interface FormData {
-    email: string,
-    role: string,
-    phone: string,
-    alternate_phone: string,
-    address_line: string,
-    street: string,
-    city: string,
-    state: string,
-    pincode: string,
-    country: string,
-    // profile_pic: string | null,
-    // has_sales_access: boolean,
-    // has_marketing_access: boolean,
-    // is_organization_admin: boolean
-
-
+    email: string;
+    first_name: string;
+    last_name: string;
+    role: string;
+    phone: string;
+    alternate_phone: string;
+    address_line: string;
+    street: string;
+    city: string;
+    state: string;
+    pincode: string;
+    country: string;
+    profile_pic: string | null;
+    has_sales_access: boolean;
+    has_marketing_access: boolean;
+    is_organization_admin: boolean;
 }
 export function EditUser() {
     const { state } = useLocation()
@@ -76,6 +78,8 @@ export function EditUser() {
     const [countrySelectOpen, setCountrySelectOpen] = useState(false)
     const [formData, setFormData] = useState<FormData>({
         email: '',
+        first_name: '',
+        last_name: '',
         role: 'ADMIN',
         phone: '',
         alternate_phone: '',
@@ -85,11 +89,10 @@ export function EditUser() {
         state: '',
         pincode: '',
         country: '',
-        // profile_pic: null,
-        // has_sales_access: false,
-        // has_marketing_access: false,
-        // is_organization_admin: false
-
+        profile_pic: null,
+        has_sales_access: false,
+        has_marketing_access: false,
+        is_organization_admin: false
     })
     useEffect(() => {
         setFormData(state?.value)
@@ -182,6 +185,8 @@ export function EditUser() {
         // console.log('Form data:', data);
         const data = {
             email: formData.email,
+            first_name: formData.first_name,
+            last_name: formData.last_name,
             role: formData.role,
             phone: formData.phone,
             alternate_phone: formData.alternate_phone,
@@ -191,10 +196,10 @@ export function EditUser() {
             state: formData.state,
             pincode: formData.pincode,
             country: formData.country,
-            // profile_pic: formData.profile_pic,
-            // has_sales_access: formData.has_sales_access,
-            // has_marketing_access: formData.has_marketing_access,
-            // is_organization_admin: formData.is_organization_admin
+            profile_pic: formData.profile_pic,
+            has_sales_access: formData.has_sales_access,
+            has_marketing_access: formData.has_marketing_access,
+            is_organization_admin: formData.is_organization_admin
         }
 
         fetchData(`${UserUrl}/${state?.id}/`, 'PUT', JSON.stringify(data), Header)
@@ -216,6 +221,8 @@ export function EditUser() {
     const resetForm = () => {
         setFormData({
             email: '',
+            first_name: '',
+            last_name: '',
             role: 'ADMIN',
             phone: '',
             alternate_phone: '',
@@ -224,11 +231,11 @@ export function EditUser() {
             city: '',
             state: '',
             pincode: '',
-            country: ''
-            // profile_pic: null,
-            // has_sales_access: false,
-            // has_marketing_access: false,
-            // is_organization_admin: false
+            country: '',
+            profile_pic: null,
+            has_sales_access: false,
+            has_marketing_access: false,
+            is_organization_admin: false
         });
         setProfileErrors({})
         setUserErrors({})
@@ -265,6 +272,32 @@ export function EditUser() {
                                         noValidate
                                         autoComplete='off'
                                     >
+                                        <div className='fieldContainer'>
+                                            <div className='fieldSubContainer'>
+                                                <div className='fieldTitle'>First Name</div>
+                                                <RequiredTextField
+                                                    name='first_name'
+                                                    value={formData.first_name}
+                                                    onChange={handleChange}
+                                                    style={{ width: '70%' }}
+                                                    size='small'
+                                                    error={!!profileErrors?.first_name?.[0] || !!userErrors?.first_name?.[0]}
+                                                    helperText={profileErrors?.first_name?.[0] || userErrors?.first_name?.[0] || ''}
+                                                />
+                                            </div>
+                                            <div className='fieldSubContainer'>
+                                                <div className='fieldTitle'>Last Name</div>
+                                                <RequiredTextField
+                                                    name='last_name'
+                                                    value={formData.last_name}
+                                                    onChange={handleChange}
+                                                    style={{ width: '70%' }}
+                                                    size='small'
+                                                    error={!!profileErrors?.last_name?.[0] || !!userErrors?.last_name?.[0]}
+                                                    helperText={profileErrors?.last_name?.[0] || userErrors?.last_name?.[0] || ''}
+                                                />
+                                            </div>
+                                        </div>
                                         <div className='fieldContainer'>
                                             <div className='fieldSubContainer'>
                                                 <div className='fieldTitle'>Email</div>

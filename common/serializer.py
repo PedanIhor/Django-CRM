@@ -391,11 +391,11 @@ class DocumentCreateSerializer(serializers.ModelSerializer):
                 .exists()
             ):
                 raise serializers.ValidationError(
-                    "Document with this Title already exists"
+                    "Document with this Title already exists"
                 )
         if Document.objects.filter(title__iexact=title, org=self.org).exists():
             raise serializers.ValidationError(
-                "Document with this Title already exists")
+                "Document with this Title already exists")
         return title
 
     class Meta:
@@ -563,16 +563,17 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         required=True,
         validators=[validate_password]
     )
-    
     password2 = serializers.CharField(
         write_only=True,
         required=True,
         label="Confirm Password"
     )
+    first_name = serializers.CharField(required=False, allow_blank=True)
+    last_name = serializers.CharField(required=False, allow_blank=True)
 
     class Meta:
         model = User
-        fields = ("email", "password", "password2")
+        fields = ("email", "password", "password2", "first_name", "last_name")
         
     def validate_email(self, email):
         try:
@@ -585,7 +586,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     
     def validate(self, attrs):
         if attrs['password'] != attrs['password2']:
-            raise serializers.ValidationError(
+            raise ValidationError(
                 {"password": "Password fields didn't match."}
             )
 
@@ -605,11 +606,15 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         email = validated_data['email'].lower()
         password = validated_data['password']
+        first_name = validated_data.get('first_name', '')
+        last_name = validated_data.get('last_name', '')
         
-    # Create the user but no activate it yet
+        # Create the user but don't activate it yet
         user = User.objects.create(
             email=email,
-            is_active=False # User will be inactive until email is verified.
+            first_name=first_name,
+            last_name=last_name,
+            is_active=False  # User will be inactive until email is verified
         )    
         user.set_password(password)
         user.save()

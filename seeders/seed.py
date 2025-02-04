@@ -29,6 +29,8 @@ def seed_database():
         for i in range(random.randint(10, 30)):
             user = User.objects.create(
                 email=faker.email(),
+                first_name=faker.first_name(),
+                last_name=faker.last_name(),
                 profile_pic=faker.image_url(),
                 is_active=True,
                 is_staff=False,
