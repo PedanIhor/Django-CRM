@@ -119,12 +119,13 @@ class UsersListView(APIView, LimitOffsetPagination):
                     user = user_serializer.save(
                         is_active=False,
                     )
+                    # Update first_name and last_name
+                    user.first_name = params.get("first_name", "")
+                    user.last_name = params.get("last_name", "")
                     user.email = user.email
                     user.set_password("123")
                     user.save()
-                    # if params.get("password"):
-                    #     user.set_password(params.get("password"))
-                    #     user.save()
+
                     role_name = params.get("role")
                     role = Role.objects.get(name=role_name)
                     profile = Profile.objects.create(

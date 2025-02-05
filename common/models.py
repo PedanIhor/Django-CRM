@@ -259,7 +259,9 @@ class Profile(BaseModel):
             'email': self.user.email,
             'id':  self.user.id,
             'is_active': self.user.is_active,
-            'profile_pic': self.user.profile_pic
+            'profile_pic': self.user.profile_pic,
+            'first_name': self.user.first_name,
+            'last_name': self.user.last_name,
         }
     
 class Notification(BaseModel):
