@@ -11,7 +11,7 @@ urlpatterns = [
         views.CreateLeadFromSite.as_view(),
         name="create_lead_from_site",
     ),
-    path("", views.LeadListView.as_view()),
+    path("", views.LeadListView.as_view(), name="get_leads"),
     path("card-view/", views.LeadCardView.as_view()),
     path("<str:pk>/", views.LeadDetailView.as_view()),
     path("upload/", views.LeadUploadView.as_view()),
