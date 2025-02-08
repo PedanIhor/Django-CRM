@@ -131,7 +131,6 @@ class LeadCreateSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         instance.title = validated_data.get('title', instance.title)
-        instance.account_name = validated_data.get('account_name', instance.account_name)
         instance.phone = validated_data.get('phone', instance.phone)
         instance.email = validated_data.get('email', instance.email)
         instance.status = validated_data.get('status', instance.status)
@@ -142,17 +141,6 @@ class LeadCreateSerializer(serializers.ModelSerializer):
         instance.skype_ID = validated_data.get('skype_ID', instance.skype_ID)
         instance.industry = validated_data.get('industry', instance.industry)
         instance.probability = validated_data.get('probability', instance.probability)
-
-        # Handle company field
-        company_name = validated_data.get('company')
-        if company_name is None:
-            instance.company = None
-        else:
-            try:
-                company = Company.objects.filter(name=company_name).first()
-                instance.company = company
-            except Exception:
-                instance.company = None
 
         # Handle assigned_to - extract IDs from the profile objects
         if 'assigned_to' in validated_data:
@@ -168,11 +156,11 @@ class LeadCreateSerializer(serializers.ModelSerializer):
         if 'contacts' in validated_data:
             contact_ids = [c.get('id') if isinstance(c, dict) else c for c in validated_data['contacts']]
             instance.contacts.set(contact_ids)
-        
+
         if 'teams' in validated_data:
             team_ids = [t.get('id') if isinstance(t, dict) else t for t in validated_data['teams']]
             instance.teams.set(team_ids)
-        
+
         if 'tags' in validated_data:
             tag_ids = [t.get('id') if isinstance(t, dict) else t for t in validated_data['tags']]
             instance.tags.set(tag_ids)
@@ -184,9 +172,9 @@ class LeadCreateSerializer(serializers.ModelSerializer):
 class LeadCreateSwaggerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lead
-        fields = ["title","first_name","last_name","account_name","phone","email","lead_attachment","opportunity_amount","website",
+        fields = ["title","first_name","last_name","phone","email","lead_attachment","opportunity_amount","website",
                 "description","teams","assigned_to","contacts","status","source","address_line","street","city","state","postcode",
-                "country","tags","company","probability","industry","skype_ID"]
+                "country","tags","probability","industry","skype_ID"]
 
 
 class CreateLeadFromSiteSwaggerSerializer(serializers.Serializer):
