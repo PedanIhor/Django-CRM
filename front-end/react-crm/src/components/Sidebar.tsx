@@ -56,23 +56,46 @@ export default function Sidebar(props: any) {
     const [drawerWidth, setDrawerWidth] = useState(200)
     const [headerWidth, setHeaderWidth] = useState(drawerWidth)
     const [userDetail, setUserDetail] = useState('')
-    const [userRole, setUserRole] = useState('')
+    const [userPermissions, setUserPermissions] = useState<string[]>([]);
     const [organizationModal, setOrganizationModal] = useState(false)
     const organizationModalClose = () => { setOrganizationModal(false) }
     const [unreadCount, setUnreadCount] = useState(0);
 
+
+    // const userProfile = () => {
+    //     fetchData(`${ProfileUrl}/`, 'GET', null as any, Header1)
+    //         .then((res: any) => {
+    //             console.log(res, 'user')
+    //             if (res?.user_obj) {
+    //                 setUserDetail(res?.user_obj)
+    //             }
+    //         })
+    //         .catch((error) => {
+    //             console.error('Error:', error)
+    //         })
+    // }
+
+
     const userProfile = () => {
         fetchData(`${ProfileUrl}/`, 'GET', null as any, Header1)
             .then((res: any) => {
-                console.log(res, 'user')
+                console.log(res, 'user');
+
+                if (res?.profile_org_list?.[0]?.role?.permissions) {
+                    console.log("Fetched Permissions:", res.profile_org_list[0].role.permissions);
+                    setUserPermissions(Array.isArray(res.profile_org_list[0].role.permissions) ? res.profile_org_list[0].role.permissions : []);
+                }
+
+
                 if (res?.user_obj) {
-                    setUserDetail(res?.user_obj)
+                    setUserDetail(res.user_obj);
                 }
             })
             .catch((error) => {
-                console.error('Error:', error)
-            })
-    }
+                console.error('Error:', error);
+            });
+    };
+
 
     const fetchUnreadNotificationsCount = () => {
         const Header = {
@@ -100,6 +123,8 @@ export default function Sidebar(props: any) {
 
     useEffect(() => {
         fetchUnreadNotificationsCount();
+        userProfile(); // Fetch user permissions on load
+
     }, [])
 
     useEffect(() => {
@@ -128,7 +153,18 @@ export default function Sidebar(props: any) {
         }
     }
 
-    const navList = ['leads', 'contacts', 'opportunities', 'accounts', 'users', 'cases', 'roles', 'settings', 'permissions']
+    // const navList = ['leads', 'contacts', 'opportunities', 'accounts', 'users', 'cases', 'roles', 'settings', 'permissions']
+    const menuItems = [
+        { key: 'leads', icon: <FaUsers />, permission: 'list_leads' },
+        { key: 'contacts', icon: <FaAddressBook />, permission: 'list_contacts' },
+        { key: 'opportunities', icon: <FaHandshake />, permission: 'list_opportunities' },
+        { key: 'accounts', icon: <FaBuilding />, permission: 'get_accounts' },
+        { key: 'users', icon: <FaUserFriends />, permission: 'list_users' },
+        { key: 'cases', icon: <FaBriefcase />, permission: 'list_cases' },
+        { key: 'roles', icon: <FaShieldAlt />, permission: 'list_roles' },
+        { key: 'settings', icon: <FaCog />, permission: 'list_settings' },
+    ];
+
     const navIcons = (text: any, screen: any): React.ReactNode => {
         switch (text) {
             case 'leads':
@@ -148,8 +184,8 @@ export default function Sidebar(props: any) {
             case 'permissions':
                 return screen === 'permissions' ? <FaShieldAlt fill='#3e79f7' /> : <FaShieldAlt />
             case 'roles':
-                return <img 
-                    src={roleIcon} 
+                return <img
+                    src={roleIcon}
                     alt="roles"
                     style={{
                         width: '20px',
@@ -268,25 +304,31 @@ export default function Sidebar(props: any) {
                     }}
                 >
                     <Box>
-                        <List sx={{ pt: '65px' }}>
-                            {navList.map((text, index) => (
-                                <ListItem key={text} disablePadding  >
-                                    <StyledListItemButton
-                                        sx={{ pt: '6px', pb: '6px' }}
-                                        onClick={() => {
-                                            navigate(`/app/${text}`)
-                                            setScreen(text)
-                                        }}
-                                        selected={screen === text}
-                                    >
-                                        <ListItemIcon sx={{ ml: '5px' }}>
-                                            {navIcons(text, screen)}
-                                        </ListItemIcon>
-                                        <StyledListItemText primary={text} sx={{ ml: -2, textTransform: 'capitalize' }} />
-                                    </StyledListItemButton>
-                                </ListItem>
-                            ))}
-                        </List>
+                        {userPermissions.length > 0 && (
+                            <List sx={{ pt: '65px' }}>
+                                {menuItems.map(({ key, icon, permission }) => (
+                                    userPermissions.includes(permission) && (
+                                        <ListItem key={key} disablePadding>
+                                            <StyledListItemButton
+                                                sx={{ pt: '6px', pb: '6px' }}
+                                                onClick={() => {
+                                                    navigate(`/app/${key}`);
+                                                    setScreen(key);
+                                                }}
+                                                selected={screen === key}
+                                            >
+                                                <ListItemIcon sx={{ ml: '5px' }}>
+                                                    {screen === key ? React.cloneElement(icon, { fill: '#3e79f7' }) : icon}
+                                                </ListItemIcon>
+                                                <StyledListItemText primary={key} sx={{ ml: -2, textTransform: 'capitalize' }} />
+                                            </StyledListItemButton>
+                                        </ListItem>
+                                    )
+                                ))}
+                            </List>
+                        )}
+
+
                     </Box>
 
                 </Drawer>
