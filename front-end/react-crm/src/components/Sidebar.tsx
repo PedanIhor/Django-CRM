@@ -4,7 +4,7 @@ import { FaAddressBook, FaBars, FaBriefcase, FaBuilding, FaChartLine, FaCog, FaD
 import roleIcon from '../assets/images/sidebar/img_roles.png';
 import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { fetchData } from './FetchData';
-import { ProfileUrl } from '../services/ApiUrls';
+import { ProfileUrl, orgUrl } from '../services/ApiUrls';
 import { Header1 } from './FetchData';
 import OrganizationModal from '../pages/organization/OrganizationModal';
 import Leads from '../pages/leads/Leads';
@@ -60,6 +60,8 @@ export default function Sidebar(props: any) {
     const [organizationModal, setOrganizationModal] = useState(false)
     const organizationModalClose = () => { setOrganizationModal(false) }
     const [unreadCount, setUnreadCount] = useState(0);
+    const [roleId, setRoleId] = useState<string | null>(null);
+
 
 
     // const userProfile = () => {
@@ -77,24 +79,35 @@ export default function Sidebar(props: any) {
 
 
     const userProfile = () => {
-        fetchData(`${ProfileUrl}/`, 'GET', null as any, Header1)
+        const Header = {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            Authorization: localStorage.getItem('Token'),
+            org: localStorage.getItem('org')
+        }
+        fetchData(`${orgUrl}/`, 'GET', null as any, Header)
             .then((res: any) => {
-                console.log(res, 'user');
-
+                console.log(res, 'userprofile');
+    
+                const newRoleId = res?.profile_org_list?.[0]?.role?.id || null;
+    
+                setRoleId(newRoleId); 
+    
                 if (res?.profile_org_list?.[0]?.role?.permissions) {
-                    console.log("Fetched Permissions:", res.profile_org_list[0].role.permissions);
-                    setUserPermissions(Array.isArray(res.profile_org_list[0].role.permissions) ? res.profile_org_list[0].role.permissions : []);
-                }
-
-
-                if (res?.user_obj) {
-                    setUserDetail(res.user_obj);
+                    const permissions = Array.isArray(res.profile_org_list[0].role.permissions)
+                        ? res.profile_org_list[0].role.permissions
+                        : [];
+    
+                    localStorage.setItem('userPermissions', JSON.stringify(permissions));
+                    setUserPermissions(permissions);
                 }
             })
             .catch((error) => {
                 console.error('Error:', error);
             });
     };
+    
+    
 
 
     const fetchUnreadNotificationsCount = () => {
@@ -123,9 +136,49 @@ export default function Sidebar(props: any) {
 
     useEffect(() => {
         fetchUnreadNotificationsCount();
-        userProfile(); // Fetch user permissions on load
+    }, []);
 
-    }, [])
+    useEffect(() => {
+        
+        
+        const storedPermissions = localStorage.getItem('userPermissions');
+        if (storedPermissions) {
+            setUserPermissions(JSON.parse(storedPermissions));
+        } else {
+            userProfile(); // Fallback to API call if no stored permissions
+        }
+    }, [roleId]); // Runs again when role changes
+    
+
+    // useEffect(() => {
+    //     if (roleId) {
+    //         userProfile();
+    //     }
+    // }, [roleId]); // Triggers when role changes
+    
+
+    useEffect(() => {
+        const handleStorageChange = () => {
+            const updatedPermissions = JSON.parse(localStorage.getItem('userPermissions') || '[]');
+            setUserPermissions(updatedPermissions);
+        };
+    
+        window.addEventListener('storage', handleStorageChange);
+        
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+        };
+    }, []); 
+    
+
+    // useEffect(() => {
+    //     console.log("Current roleId:", roleId);
+    //     console.log("Current userPermissions:", userPermissions);
+    // }, [roleId, userPermissions]);
+    
+    
+    
+    
 
     useEffect(() => {
         toggleScreen()
@@ -163,6 +216,7 @@ export default function Sidebar(props: any) {
         { key: 'cases', icon: <FaBriefcase />, permission: 'list_cases' },
         { key: 'roles', icon: <FaShieldAlt />, permission: 'list_roles' },
         { key: 'settings', icon: <FaCog />, permission: 'list_settings' },
+        { key: 'permissions', icon: <FaShieldAlt />, permission: 'list_roles' },
     ];
 
     const navIcons = (text: any, screen: any): React.ReactNode => {
