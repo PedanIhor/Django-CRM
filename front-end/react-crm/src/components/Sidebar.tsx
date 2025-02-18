@@ -239,26 +239,7 @@ export default function Sidebar(props: any) {
                             anchorEl={anchorEl}
                             onClose={handleClose}
                         >
-                            <List disablePadding>
-                                <ListItem disablePadding>
-                                    <StyledListItemButton onClick={() => {
-                                        localStorage.clear();
-                                        navigate('/login');
-                                        setAnchorEl(null);
-                                    }}>
-                                        <ListItemIcon> <FaSignOutAlt fill='#3e79f7' /></ListItemIcon>
-                                        <StyledListItemText primary={'Sign out'} sx={{ ml: '-20px', color: '#3e79f7' }} />
-                                    </StyledListItemButton>
-                                </ListItem>
-                                <ListItem disablePadding>
-                                    <StyledListItemButton onClick={() => {
-                                        setOrganizationModal(!organizationModal);
-                                        setAnchorEl(null);
-                                    }}>
-                                        <ListItemIcon> <FaIndustry fill='#3e79f7' /></ListItemIcon>
-                                        <StyledListItemText primary={'Organization'} sx={{ ml: '-20px', color: '#3e79f7' }} />
-                                    </StyledListItemButton>
-                                </ListItem>
+                            <List disablePadding>                                
                                 <ListItem disablePadding>
                                     <StyledListItemButton onClick={() => {
                                         navigate('/app/my-profile');
@@ -267,6 +248,25 @@ export default function Sidebar(props: any) {
                                     }}>
                                         <ListItemIcon> <FaUser fill='#3e79f7' /></ListItemIcon>
                                         <StyledListItemText primary={'My Profile'} sx={{ ml: '-20px', color: '#3e79f7' }} />
+                                    </StyledListItemButton>
+                                </ListItem> 
+                                <ListItem disablePadding>
+                                    <StyledListItemButton onClick={() => {
+                                        setOrganizationModal(!organizationModal);
+                                        setAnchorEl(null);
+                                    }}>
+                                        <ListItemIcon> <FaIndustry fill='#3e79f7' /></ListItemIcon>
+                                        <StyledListItemText primary={'Organization'} sx={{ ml: '-20px', color: '#3e79f7' }} />
+                                    </StyledListItemButton>
+                                </ListItem>                               
+                                <ListItem disablePadding>
+                                    <StyledListItemButton onClick={() => {
+                                        localStorage.clear();
+                                        navigate('/login');
+                                        setAnchorEl(null);
+                                    }}>
+                                        <ListItemIcon> <FaSignOutAlt fill='#3e79f7' /></ListItemIcon>
+                                        <StyledListItemText primary={'Sign out'} sx={{ ml: '-20px', color: '#3e79f7' }} />
                                     </StyledListItemButton>
                                 </ListItem>
                             </List>
