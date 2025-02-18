@@ -1405,3 +1405,32 @@ class RolesViewSet(help_views.OrgViewSet):
         }
         
         return Response(response_data)
+
+class UserProfileDetailView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        """Get the profile details of the logged-in user"""
+        profile = request.profile
+        serializer = UserProfileDetailSerializer(profile)
+        return Response(serializer.data)
+
+    def put(self, request):
+        """Update the profile details of the logged-in user"""
+        profile = request.profile
+        serializer = UserProfileDetailSerializer(profile, data=request.data, partial=False)
+        
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def patch(self, request):
+        """Partially update the profile details of the logged-in user"""
+        profile = request.profile
+        serializer = UserProfileDetailSerializer(profile, data=request.data, partial=True)
+        
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
