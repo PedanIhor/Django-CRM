@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react'
 import {
     Card,
@@ -22,6 +21,8 @@ type response = {
         email: string;
         is_active: boolean;
         profile_pic: string;
+        first_name: string;
+        last_name: string;
     };
     role: {
         name: string;
@@ -104,11 +105,12 @@ export default function UserDetails() {
     }
 
     const editHandle = () => {
-        // navigate('/contacts/edit-contacts', { state: { value: contactDetails, address: newAddress } })
         navigate('/app/users/edit-user', {
             state: {
                 value: {
                     email: userDetails?.user_details?.email,
+                    first_name: userDetails?.user_details?.first_name,
+                    last_name: userDetails?.user_details?.last_name,
                     role: userDetails?.role.name,
                     phone: userDetails?.phone,
                     alternate_phone: userDetails?.alternate_phone,
@@ -122,7 +124,8 @@ export default function UserDetails() {
                     has_sales_access: userDetails?.has_sales_access,
                     has_marketing_access: userDetails?.has_marketing_access,
                     is_organization_admin: userDetails?.is_organization_admin,
-                }, id: state?.userId
+                },
+                id: state?.userId
             }
         })
     }
@@ -188,11 +191,25 @@ export default function UserDetails() {
                             </div> */}
                             <div style={{ padding: '20px', display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
                                 <div style={{ width: '32%' }}>
-                                    <div className='title2'>Email Name</div>
+                                    <div className='title2'>First Name</div>
+                                    <div className='title3'>
+                                        {userDetails?.user_details?.first_name || '---'}
+                                    </div>
+                                </div>
+                                <div style={{ width: '32%' }}>
+                                    <div className='title2'>Last Name</div>
+                                    <div className='title3'>
+                                        {userDetails?.user_details?.last_name || '---'}
+                                    </div>
+                                </div>
+                                <div style={{ width: '32%' }}>
+                                    <div className='title2'>Email</div>
                                     <div className='title3'>
                                         {userDetails?.user_details?.email || '---'}
                                     </div>
                                 </div>
+                            </div>
+                            <div style={{ padding: '20px', display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
                                 <div style={{ width: '32%' }}>
                                     <div className='title2'>Is Active</div>
                                     <div className='title3'>
@@ -205,17 +222,16 @@ export default function UserDetails() {
                                         <Avatar alt={'sdf'}>
                                             {userDetails?.user_details?.profile_pic}
                                         </Avatar>
-
                                     </div>
                                 </div>
-                            </div>
-                            <div style={{ padding: '20px', marginTop: '15px', display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
                                 <div style={{ width: '32%' }}>
                                     <div className='title2'>Role</div>
                                     <div style={{ fontSize: '16px', color: '#1E90FF', marginTop: '5%' }}>
                                         {userDetails?.role.name || '---'}
                                     </div>
                                 </div>
+                            </div>
+                            <div style={{ padding: '20px', marginTop: '15px', display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
                                 <div style={{ width: '32%' }}>
                                     <div className='title2'>Mobile Number</div>
                                     <div className='title3'>

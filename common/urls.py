@@ -46,4 +46,5 @@ urlpatterns = [
     path('roles/', include(roles_router.urls)),
     path('permissions/', include(permissions_router.urls)),
     path('modules/', views.ModulesListView.as_view()),
+    path('profile-detail/', views.UserProfileDetailView.as_view(), name='user-profile-detail'),
 ]
