@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AppBar, Avatar, Box, Drawer, IconButton, List, ListItem, ListItemIcon, Popover, Toolbar, Tooltip, Typography, Badge } from '@mui/material';
-import { FaAddressBook, FaBars, FaBriefcase, FaBuilding, FaChartLine, FaCog, FaDiceD6, FaHandshake, FaIndustry, FaSignOutAlt, FaTachometerAlt, FaUserFriends, FaUsers, FaShieldAlt, FaUserTag } from "react-icons/fa";
+import { FaAddressBook, FaBars, FaBriefcase, FaBuilding, FaChartLine, FaCog, FaDiceD6, FaHandshake, FaIndustry, FaSignOutAlt, FaTachometerAlt, FaUserFriends, FaUsers, FaShieldAlt, FaUserTag, FaUser } from "react-icons/fa";
 import roleIcon from '../assets/images/sidebar/img_roles.png';
 import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { fetchData } from './FetchData';
@@ -39,6 +39,7 @@ import Notifications from '../pages/notifications/Notifications';
 import MailIcon from '@mui/icons-material/Mail';
 import PermissionsMatrix from '../pages/permissions/PermissionsMatrix';
 import Roles from '../pages/roles/Roles';
+import MyProfile from '../pages/myProfile/MyProfile';
 
 // declare global {
 //     interface Window {
@@ -298,20 +299,34 @@ export default function Sidebar(props: any) {
                             anchorEl={anchorEl}
                             onClose={handleClose}
                         >
-                            <List disablePadding>
+                            <List disablePadding>                                
                                 <ListItem disablePadding>
                                     <StyledListItemButton onClick={() => {
-                                        localStorage.clear()
-                                        navigate('/login')
+                                        navigate('/app/my-profile');
+                                        setScreen('My Profile');
+                                        setAnchorEl(null);
                                     }}>
-                                        <ListItemIcon > <FaSignOutAlt fill='#3e79f7' /></ListItemIcon>
-                                        <StyledListItemText primary={'Sign out'} sx={{ ml: '-20px', color: '#3e79f7' }} />
+                                        <ListItemIcon> <FaUser fill='#3e79f7' /></ListItemIcon>
+                                        <StyledListItemText primary={'My Profile'} sx={{ ml: '-20px', color: '#3e79f7' }} />
                                     </StyledListItemButton>
-                                </ListItem>
+                                </ListItem> 
                                 <ListItem disablePadding>
-                                    <StyledListItemButton onClick={() => setOrganizationModal(!organizationModal)}>
-                                        <ListItemIcon > <FaIndustry fill='#3e79f7' /></ListItemIcon>
+                                    <StyledListItemButton onClick={() => {
+                                        setOrganizationModal(!organizationModal);
+                                        setAnchorEl(null);
+                                    }}>
+                                        <ListItemIcon> <FaIndustry fill='#3e79f7' /></ListItemIcon>
                                         <StyledListItemText primary={'Organization'} sx={{ ml: '-20px', color: '#3e79f7' }} />
+                                    </StyledListItemButton>
+                                </ListItem>                               
+                                <ListItem disablePadding>
+                                    <StyledListItemButton onClick={() => {
+                                        localStorage.clear();
+                                        navigate('/login');
+                                        setAnchorEl(null);
+                                    }}>
+                                        <ListItemIcon> <FaSignOutAlt fill='#3e79f7' /></ListItemIcon>
+                                        <StyledListItemText primary={'Sign out'} sx={{ ml: '-20px', color: '#3e79f7' }} />
                                     </StyledListItemButton>
                                 </ListItem>
                             </List>
@@ -388,6 +403,7 @@ export default function Sidebar(props: any) {
                             <Route path="/app/settings" element={<Settings />} />
                             <Route path="/app/notifications" element={<Notifications fetchUnreadNotificationsCount={fetchUnreadNotificationsCount} />} />
                             <Route path="/app/permissions" element={<PermissionsMatrix />} />
+                            <Route path="/app/my-profile" element={<MyProfile />} />
                         </Routes>
                     </Box>
                 </MyContext.Provider>

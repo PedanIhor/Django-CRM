@@ -50,10 +50,14 @@ type FormErrors = {
     has_sales_access?: string[];
     has_marketing_access?: string[];
     is_organization_admin?: string[];
+    first_name?: string[];
+    last_name?: string[];
 };
 
 interface FormData {
     email: string,
+    first_name: string,
+    last_name: string,
     role: string,
     phone: string,
     alternate_phone: string,
@@ -67,7 +71,7 @@ interface FormData {
     has_sales_access: boolean,
     has_marketing_access: boolean,
     is_organization_admin: boolean,
-    send_invitation: boolean, // Add send_invitation here
+    send_invitation: boolean,
 }
 export function AddUsers() {
 
@@ -118,6 +122,8 @@ export function AddUsers() {
     const [userErrors, setUserErrors] = useState<FormErrors>({});
     const [formData, setFormData] = useState<FormData>({
         email: '',
+        first_name: '',
+        last_name: '',
         role: 'ADMIN',
         phone: '',
         alternate_phone: '',
@@ -181,6 +187,8 @@ export function AddUsers() {
 
         const data = {
             email: formData.email,
+            first_name: formData.first_name,
+            last_name: formData.last_name,
             role: formData.role,
             phone: formData.phone,
             alternate_phone: formData.alternate_phone,
@@ -221,6 +229,8 @@ export function AddUsers() {
     const resetForm = () => {
         setFormData({
             email: '',
+            first_name: '',
+            last_name: '',
             role: 'ADMIN',
             phone: '',
             alternate_phone: '',
@@ -270,6 +280,32 @@ export function AddUsers() {
                                         noValidate
                                         autoComplete='off'
                                     >
+                                        <div className='fieldContainer'>
+                                            <div className='fieldSubContainer'>
+                                                <div className='fieldTitle'>First Name</div>
+                                                <TextField
+                                                    name='first_name'
+                                                    value={formData.first_name}
+                                                    onChange={handleChange}
+                                                    style={{ width: '70%' }}
+                                                    size='small'
+                                                    error={!!profileErrors?.first_name?.[0] || !!userErrors?.first_name?.[0]}
+                                                    helperText={profileErrors?.first_name?.[0] || userErrors?.first_name?.[0] || ''}
+                                                />
+                                            </div>
+                                            <div className='fieldSubContainer'>
+                                                <div className='fieldTitle'>Last Name</div>
+                                                <TextField
+                                                    name='last_name'
+                                                    value={formData.last_name}
+                                                    onChange={handleChange}
+                                                    style={{ width: '70%' }}
+                                                    size='small'
+                                                    error={!!profileErrors?.last_name?.[0] || !!userErrors?.last_name?.[0]}
+                                                    helperText={profileErrors?.last_name?.[0] || userErrors?.last_name?.[0] || ''}
+                                                />
+                                            </div>
+                                        </div>
                                         <div className='fieldContainer'>
                                             <div className='fieldSubContainer'>
                                                 <div className='fieldTitle'>Email</div>

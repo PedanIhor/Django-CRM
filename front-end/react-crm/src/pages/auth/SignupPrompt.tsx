@@ -16,6 +16,8 @@ import { RegisterUrl, SERVER } from '../../services/ApiUrls';
 export default function SignUpPrompt() {
     const [open, setOpen] = useState(false);
     const [email, setEmail] = useState('');
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
     const [password, setPassword] = useState('');
     const [password2, setPassword2] = useState('');
     const [loading, setLoading] = useState(false);
@@ -33,6 +35,8 @@ export default function SignUpPrompt() {
     const handleClose = () => {
         setOpen(false);
         setEmail('');
+        setFirstName('');
+        setLastName('');
         setPassword('');
         setPassword2('');
         setError('');
@@ -47,7 +51,7 @@ export default function SignUpPrompt() {
 
         // Validate form inputs
         if (!email || !password || !password2) {
-            setError('All fields are required.');
+            setError('Email and password fields are required.');
             setLoading(false);
             return;
         }
@@ -64,7 +68,13 @@ export default function SignUpPrompt() {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ email, password, password2 }),
+                body: JSON.stringify({ 
+                    email, 
+                    password, 
+                    password2,
+                    first_name: firstName,
+                    last_name: lastName 
+                }),
             });
 
             if (response.status === 201) {
@@ -156,7 +166,23 @@ export default function SignUpPrompt() {
                                 variant="outlined"
                                 fullWidth
                                 value={email}
-                                onChange={(e) => setEmail(e.target.value)}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
+                                sx={{ mb: 2 }}
+                            />
+                            <TextField
+                                label="First Name"
+                                variant="outlined"
+                                fullWidth
+                                value={firstName}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFirstName(e.target.value)}
+                                sx={{ mb: 2 }}
+                            />
+                            <TextField
+                                label="Last Name"
+                                variant="outlined"
+                                fullWidth
+                                value={lastName}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLastName(e.target.value)}
                                 sx={{ mb: 2 }}
                             />
                             <TextField
@@ -165,7 +191,7 @@ export default function SignUpPrompt() {
                                 variant="outlined"
                                 fullWidth
                                 value={password}
-                                onChange={(e) => setPassword(e.target.value)}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
                                 sx={{ mb: 2 }}
                             />
                             <TextField
@@ -174,7 +200,7 @@ export default function SignUpPrompt() {
                                 variant="outlined"
                                 fullWidth
                                 value={password2}
-                                onChange={(e) => setPassword2(e.target.value)}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword2(e.target.value)}
                                 sx={{ mb: 2 }}
                             />
                             <Button

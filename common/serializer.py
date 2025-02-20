@@ -317,7 +317,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["id", "email", "profile_pic"]
+        fields = ["id", "email", "profile_pic", "first_name", "last_name"]
 
 
 class ProfileSerializer(serializers.ModelSerializer):
@@ -391,11 +391,11 @@ class DocumentCreateSerializer(serializers.ModelSerializer):
                 .exists()
             ):
                 raise serializers.ValidationError(
-                    "Document with this Title already exists"
+                    "Document with this Title already exists"
                 )
         if Document.objects.filter(title__iexact=title, org=self.org).exists():
             raise serializers.ValidationError(
-                "Document with this Title already exists")
+                "Document with this Title already exists")
         return title
 
     class Meta:
@@ -563,16 +563,17 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         required=True,
         validators=[validate_password]
     )
-    
     password2 = serializers.CharField(
         write_only=True,
         required=True,
         label="Confirm Password"
     )
+    first_name = serializers.CharField(required=False, allow_blank=True)
+    last_name = serializers.CharField(required=False, allow_blank=True)
 
     class Meta:
         model = User
-        fields = ("email", "password", "password2")
+        fields = ("email", "password", "password2", "first_name", "last_name")
         
     def validate_email(self, email):
         try:
@@ -585,7 +586,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     
     def validate(self, attrs):
         if attrs['password'] != attrs['password2']:
-            raise serializers.ValidationError(
+            raise ValidationError(
                 {"password": "Password fields didn't match."}
             )
 
@@ -605,11 +606,15 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         email = validated_data['email'].lower()
         password = validated_data['password']
+        first_name = validated_data.get('first_name', '')
+        last_name = validated_data.get('last_name', '')
         
-    # Create the user but no activate it yet
+        # Create the user but don't activate it yet
         user = User.objects.create(
             email=email,
-            is_active=False # User will be inactive until email is verified.
+            first_name=first_name,
+            last_name=last_name,
+            is_active=False  # User will be inactive until email is verified
         )    
         user.set_password(password)
         user.save()
@@ -658,4 +663,68 @@ class RolePermissionsUpdateSerializer(serializers.Serializer):
 class RolePermissionsMatrixSerializer(serializers.Serializer):
     roles = RoleSerializer(many=True)
     permissions = PermissionSerializer(many=True)
+
+class UserProfileDetailSerializer(serializers.ModelSerializer):
+    first_name = serializers.CharField(source='user.first_name')
+    last_name = serializers.CharField(source='user.last_name')
+    profile_pic = serializers.CharField(source='user.profile_pic')
+    email = serializers.EmailField(source='user.email', read_only=True)  # Email should be read-only
+    address_line = serializers.CharField(source='address.address_line', required=False, allow_blank=True)
+    street = serializers.CharField(source='address.street', required=False, allow_blank=True)
+    city = serializers.CharField(source='address.city', required=False, allow_blank=True)
+    state = serializers.CharField(source='address.state', required=False, allow_blank=True)
+    postcode = serializers.CharField(source='address.postcode', required=False, allow_blank=True)
+    country = serializers.CharField(source='address.country', required=False, allow_blank=True)
+
+    class Meta:
+        model = Profile
+        fields = [
+            'first_name', 'last_name', 'profile_pic', 'email',
+            'phone', 'address_line', 'street', 'city', 'state',
+            'postcode', 'country'
+        ]
+
+    def update(self, instance, validated_data):
+        # Update User model fields
+        user_data = validated_data.pop('user', {})
+        user = instance.user
+        for attr, value in user_data.items():
+            setattr(user, attr, value)
+        user.save()
+
+        address_data = validated_data.pop('address', {})
+        address = instance.address
+        if address:
+            for attr, value in address_data.items():
+                setattr(address, attr, value)
+            address.save()
+        else:
+            address = Address.objects.create(**address_data)
+            instance.address = address
+            instance.save()
+
+        # Update Profile model fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        return instance
+
+    def get_address_line(self, obj):
+        return obj.address.address_line if obj.address else ''
+
+    def get_street(self, obj):
+        return obj.address.street if obj.address else ''
+
+    def get_city(self, obj):
+        return obj.address.city if obj.address else ''
+
+    def get_state(self, obj):
+        return obj.address.state if obj.address else ''
+
+    def get_postcode(self, obj):
+        return obj.address.postcode if obj.address else ''
+
+    def get_country(self, obj):
+        return obj.address.country if obj.address else ''
 

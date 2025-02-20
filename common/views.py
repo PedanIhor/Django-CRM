@@ -119,6 +119,9 @@ class UsersListView(APIView, LimitOffsetPagination):
                     user = user_serializer.save(
                         is_active=False,
                     )
+                    # Update first_name and last_name
+                    user.first_name = params.get("first_name", "")
+                    user.last_name = params.get("last_name", "")
                     user.email = user.email
                     user.set_password("123")
                     user.save()
@@ -219,10 +222,12 @@ class UserDetailView(APIView):
         keys = data.keys()
         if "email" not in keys:
             data["email"] = profile.user.email
-
+        if "first_name" not in keys:
+            data["first_name"] = profile.user.first_name
+        if "last_name" not in keys:
+            data["last_name"] = profile.user.last_name
         if "role" not in keys:
             data["role"] = profile.role
-
         if "phone" not in keys:
             data["phone"] = profile.phone
 
@@ -330,6 +335,8 @@ class UserDetailView(APIView):
             address_obj = address_serializer.save()
             user = serializer.save()
             user.email = user.email
+            user.first_name = params.get("first_name", user.first_name)
+            user.last_name = params.get("last_name", user.last_name)
             user.save()
         if profile_serializer.is_valid():
             profile = profile_serializer.save()
@@ -394,6 +401,8 @@ class UserDetailView(APIView):
             address_serializer.save()
             user = serializer.save()
             user.email = user.email
+            user.first_name = params.get("first_name", user.first_name)
+            user.last_name = params.get("last_name", user.last_name)
             user.save()
         if profile_serializer.is_valid():
             profile_serializer.save()
@@ -1069,11 +1078,13 @@ class GoogleLoginView(APIView):
         except User.DoesNotExist:
             user = User()
             user.email = data['email']
+            # Set name fields from Google data
+            user.first_name = data.get('given_name', '')
+            user.last_name = data.get('family_name', '')
             user.profile_pic = data['picture']
             # provider random default password
             user.password = make_password(
                 BaseUserManager().make_random_password())
-            user.email = data['email']
             user.save()
         # generate token without username & password
         token = RefreshToken.for_user(user)
@@ -1142,15 +1153,21 @@ class UserRegistrationView(APIView):
     def post(self, request):
         serializer = UserRegistrationSerializer(data=request.data)
         if serializer.is_valid():
-            user = serializer.save()
+            user = serializer.save()  # This will now save first_name and last_name
             user.is_active = False
             user.save()
             try:
                 send_email_to_new_user(user.id)
             except Exception as e:
                 user.delete()
-                return Response({"error": "Failed to send verification email. Please try again."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-            return Response({"message": "User registered successfully. Please verify your email."}, status=status.HTTP_201_CREATED)
+                return Response(
+                    {"error": "Failed to send verification email. Please try again."}, 
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+            return Response(
+                {"message": "User registered successfully. Please verify your email."}, 
+                status=status.HTTP_201_CREATED
+            )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -1390,3 +1407,32 @@ class RolesViewSet(help_views.OrgViewSet):
         }
         
         return Response(response_data)
+
+class UserProfileDetailView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        """Get the profile details of the logged-in user"""
+        profile = request.profile
+        serializer = UserProfileDetailSerializer(profile)
+        return Response(serializer.data)
+
+    def put(self, request):
+        """Update the profile details of the logged-in user"""
+        profile = request.profile
+        serializer = UserProfileDetailSerializer(profile, data=request.data, partial=False)
+        
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def patch(self, request):
+        """Partially update the profile details of the logged-in user"""
+        profile = request.profile
+        serializer = UserProfileDetailSerializer(profile, data=request.data, partial=True)
+        
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
