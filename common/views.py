@@ -125,9 +125,11 @@ class UsersListView(APIView, LimitOffsetPagination):
                     user.email = user.email
                     user.set_password("123")
                     user.save()
-
-                    role_name = params.get("role")
-                    role = Role.objects.get(name=role_name)
+                    # if params.get("password"):
+                    #     user.set_password(params.get("password"))
+                    #     user.save()
+                    role_pk = params.get("role")
+                    role = Role.objects.get(pk=role_pk, org_id=request.profile.org.id)
                     profile = Profile.objects.create(
                         user=user,
                         date_of_joining=timezone.now(),

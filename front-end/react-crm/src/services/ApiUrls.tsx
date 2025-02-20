@@ -29,6 +29,7 @@ export const UsersUrl = '/api/users'
 export const UserUrl = '/api/user'
 // PROFILE
 export const ProfileUrl = '/api/profile'
+export const orgUrl = '/api/org'
 // 
 export const OrgAuthUrl = '/api/organization/google-auth'
 

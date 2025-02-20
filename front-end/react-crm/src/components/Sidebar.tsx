@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { AppBar, Avatar, Box, Drawer, IconButton, List, ListItem, ListItemIcon, Popover, Toolbar, Tooltip, Typography, Badge } from '@mui/material';
-import { FaAddressBook, FaBars, FaBriefcase, FaBuilding, FaChartLine, FaCog, FaDiceD6, FaHandshake, FaIndustry, FaSignOutAlt, FaTachometerAlt, FaUserFriends, FaUsers, FaShieldAlt, FaUser } from "react-icons/fa";
+import { FaAddressBook, FaBars, FaBriefcase, FaBuilding, FaChartLine, FaCog, FaDiceD6, FaHandshake, FaIndustry, FaSignOutAlt, FaTachometerAlt, FaUserFriends, FaUsers, FaShieldAlt, FaUserTag, FaUser } from "react-icons/fa";
 import roleIcon from '../assets/images/sidebar/img_roles.png';
 import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { fetchData } from './FetchData';
-import { ProfileUrl } from '../services/ApiUrls';
+import { ProfileUrl, orgUrl } from '../services/ApiUrls';
 import { Header1 } from './FetchData';
 import OrganizationModal from '../pages/organization/OrganizationModal';
 import Leads from '../pages/leads/Leads';
@@ -57,23 +57,59 @@ export default function Sidebar(props: any) {
     const [drawerWidth, setDrawerWidth] = useState(200)
     const [headerWidth, setHeaderWidth] = useState(drawerWidth)
     const [userDetail, setUserDetail] = useState('')
-    const [userRole, setUserRole] = useState('')
+    const [userPermissions, setUserPermissions] = useState<string[]>([]);
     const [organizationModal, setOrganizationModal] = useState(false)
     const organizationModalClose = () => { setOrganizationModal(false) }
     const [unreadCount, setUnreadCount] = useState(0);
+    const [roleId, setRoleId] = useState<string | null>(null);
+
+
+
+    // const userProfile = () => {
+    //     fetchData(`${ProfileUrl}/`, 'GET', null as any, Header1)
+    //         .then((res: any) => {
+    //             console.log(res, 'user')
+    //             if (res?.user_obj) {
+    //                 setUserDetail(res?.user_obj)
+    //             }
+    //         })
+    //         .catch((error) => {
+    //             console.error('Error:', error)
+    //         })
+    // }
+
 
     const userProfile = () => {
-        fetchData(`${ProfileUrl}/`, 'GET', null as any, Header1)
+        const Header = {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            Authorization: localStorage.getItem('Token'),
+            org: localStorage.getItem('org')
+        }
+        fetchData(`${orgUrl}/`, 'GET', null as any, Header)
             .then((res: any) => {
-                console.log(res, 'user')
-                if (res?.user_obj) {
-                    setUserDetail(res?.user_obj)
+                console.log(res, 'userprofile');
+    
+                const newRoleId = res?.profile_org_list?.[0]?.role?.id || null;
+    
+                setRoleId(newRoleId); 
+    
+                if (res?.profile_org_list?.[0]?.role?.permissions) {
+                    const permissions = Array.isArray(res.profile_org_list[0].role.permissions)
+                        ? res.profile_org_list[0].role.permissions
+                        : [];
+    
+                    localStorage.setItem('userPermissions', JSON.stringify(permissions));
+                    setUserPermissions(permissions);
                 }
             })
             .catch((error) => {
-                console.error('Error:', error)
-            })
-    }
+                console.error('Error:', error);
+            });
+    };
+    
+    
+
 
     const fetchUnreadNotificationsCount = () => {
         const Header = {
@@ -101,7 +137,49 @@ export default function Sidebar(props: any) {
 
     useEffect(() => {
         fetchUnreadNotificationsCount();
-    }, [])
+    }, []);
+
+    useEffect(() => {
+        
+        
+        const storedPermissions = localStorage.getItem('userPermissions');
+        if (storedPermissions) {
+            setUserPermissions(JSON.parse(storedPermissions));
+        } else {
+            userProfile(); // Fallback to API call if no stored permissions
+        }
+    }, [roleId]); // Runs again when role changes
+    
+
+    // useEffect(() => {
+    //     if (roleId) {
+    //         userProfile();
+    //     }
+    // }, [roleId]); // Triggers when role changes
+    
+
+    useEffect(() => {
+        const handleStorageChange = () => {
+            const updatedPermissions = JSON.parse(localStorage.getItem('userPermissions') || '[]');
+            setUserPermissions(updatedPermissions);
+        };
+    
+        window.addEventListener('storage', handleStorageChange);
+        
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+        };
+    }, []); 
+    
+
+    // useEffect(() => {
+    //     console.log("Current roleId:", roleId);
+    //     console.log("Current userPermissions:", userPermissions);
+    // }, [roleId, userPermissions]);
+    
+    
+    
+    
 
     useEffect(() => {
         toggleScreen()
@@ -129,38 +207,20 @@ export default function Sidebar(props: any) {
         }
     }
 
-    const navList = ['leads', 'contacts', 'opportunities', 'accounts', 'users', 'cases', 'roles', 'settings', 'permissions']
-    const navIcons = (text: any, screen: any): React.ReactNode => {
-        switch (text) {
-            case 'leads':
-                return screen === 'leads' ? <FaUsers fill='#3e79f7' /> : <FaUsers />
-            case 'contacts':
-                return screen === 'contacts' ? <FaAddressBook fill='#3e79f7' /> : <FaAddressBook />
-            case 'opportunities':
-                return screen === 'opportunities' ? <FaHandshake fill='#3e79f7' /> : <FaHandshake />
-            case 'accounts':
-                return screen === 'accounts' ? <FaBuilding fill='#3e79f7' /> : <FaBuilding />
-            case 'users':
-                return screen === 'users' ? <FaUserFriends fill='#3e79f7' /> : <FaUserFriends />
-            case 'cases':
-                return screen === 'cases' ? <FaBriefcase fill='#3e79f7' /> : <FaBriefcase />
-            case 'settings':
-                return screen === 'settings' ? <FaCog fill='#3e79f7' /> : <FaCog />
-            case 'permissions':
-                return screen === 'permissions' ? <FaShieldAlt fill='#3e79f7' /> : <FaShieldAlt />
-            case 'roles':
-                return <img 
-                    src={roleIcon} 
-                    alt="roles"
-                    style={{
-                        width: '20px',
-                        height: '20px',
-                        filter: screen === 'roles' ? 'invert(43%) sepia(93%) saturate(1728%) hue-rotate(213deg) brightness(97%) contrast(89%)' : 'none'
-                    }}
-                />
-            default: return <FaDiceD6 fill='#3e79f7' />
-        }
-    }
+    // const navList = ['leads', 'contacts', 'opportunities', 'accounts', 'users', 'cases', 'roles', 'settings', 'permissions']
+    const menuItems = [
+        { key: 'leads', icon: <FaUsers />, permission: 'list_leads' },
+        { key: 'contacts', icon: <FaAddressBook />, permission: 'list_contacts' },
+        { key: 'opportunities', icon: <FaHandshake />, permission: 'list_opportunities' },
+        { key: 'accounts', icon: <FaBuilding />, permission: 'get_accounts' },
+        { key: 'users', icon: <FaUserFriends />, permission: 'list_users' },
+        { key: 'cases', icon: <FaBriefcase />, permission: 'list_cases' },
+        { key: 'roles', icon: <FaUserTag />, permission: 'list_roles' },
+        { key: 'settings', icon: <FaCog />, permission: 'list_settings' },
+        { key: 'permissions', icon: <FaShieldAlt />, permission: 'list_roles' },
+    ];
+
+    
 
     const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
 
@@ -283,57 +343,63 @@ export default function Sidebar(props: any) {
                     }}
                 >
                     <Box>
-                        <List sx={{ pt: '65px' }}>
-                            {navList.map((text, index) => (
-                                <ListItem key={text} disablePadding  >
-                                    <StyledListItemButton
-                                        sx={{ pt: '6px', pb: '6px' }}
-                                        onClick={() => {
-                                            navigate(`/app/${text}`)
-                                            setScreen(text)
-                                        }}
-                                        selected={screen === text}
-                                    >
-                                        <ListItemIcon sx={{ ml: '5px' }}>
-                                            {navIcons(text, screen)}
-                                        </ListItemIcon>
-                                        <StyledListItemText primary={text} sx={{ ml: -2, textTransform: 'capitalize' }} />
-                                    </StyledListItemButton>
-                                </ListItem>
-                            ))}
-                        </List>
+                        {userPermissions.length > 0 && (
+                            <List sx={{ pt: '65px' }}>
+                                {menuItems.map(({ key, icon, permission }) => (
+                                    userPermissions.includes(permission) && (
+                                        <ListItem key={key} disablePadding>
+                                            <StyledListItemButton
+                                                sx={{ pt: '6px', pb: '6px' }}
+                                                onClick={() => {
+                                                    navigate(`/app/${key}`);
+                                                    setScreen(key);
+                                                }}
+                                                selected={screen === key}
+                                            >
+                                                <ListItemIcon sx={{ ml: '5px' }}>
+                                                    {screen === key ? React.cloneElement(icon, { fill: '#3e79f7' }) : icon}
+                                                </ListItemIcon>
+                                                <StyledListItemText primary={key} sx={{ ml: -2, textTransform: 'capitalize' }} />
+                                            </StyledListItemButton>
+                                        </ListItem>
+                                    )
+                                ))}
+                            </List>
+                        )}
+
+
                     </Box>
 
                 </Drawer>
                 <MyContext.Provider value={context}>
                     <Box sx={{ width: 'auto', ml: drawerWidth === 60 ? '60px' : '200px', overflowX: 'hidden' }}>
                         <Routes>
-                            <Route index element={<Leads />} />
-                            <Route path='/app/leads' element={<Leads />} />
+                            <Route index element={<Leads userPermissions={userPermissions} />} />
+                            <Route path='/app/leads' element={<Leads userPermissions={userPermissions} />} />
                             <Route path='/app/leads/add-leads' element={<AddLeads />} />
                             <Route path='/app/leads/edit-lead' element={<EditLead />} />
                             <Route path='/app/leads/lead-details' element={<LeadDetails />} />
-                            <Route path='/app/contacts' element={<Contacts />} />
+                            <Route path='/app/contacts' element={<Contacts userPermissions={userPermissions} />} />
                             <Route path='/app/contacts/add-contacts' element={<AddContacts />} />
                             <Route path='/app/contacts/contact-details' element={<ContactDetails />} />
                             <Route path='/app/contacts/edit-contact' element={<EditContact />} />
-                            <Route path='/app/accounts' element={<Accounts />} />
+                            <Route path='/app/accounts' element={<Accounts userPermissions={userPermissions} />} />
                             <Route path='/app/accounts/add-account' element={<AddAccount />} />
                             <Route path='/app/accounts/account-details' element={<AccountDetails />} />
                             <Route path='/app/accounts/edit-account' element={<EditAccount />} />
-                            <Route path='/app/users' element={<Users />} />
+                            <Route path='/app/users' element={<Users/>} />
                             <Route path='/app/users/add-users' element={<AddUsers />} />
                             <Route path='/app/users/edit-user' element={<EditUser />} />
                             <Route path='/app/users/user-details' element={<UserDetails />} />
-                            <Route path='/app/opportunities' element={<Opportunities />} />
+                            <Route path='/app/opportunities' element={<Opportunities userPermissions={userPermissions} />} />
                             <Route path='/app/opportunities/add-opportunity' element={<AddOpportunity />} />
                             <Route path='/app/opportunities/opportunity-details' element={<OpportunityDetails />} />
                             <Route path='/app/opportunities/edit-opportunity' element={<EditOpportunity />} />
-                            <Route path='/app/cases' element={<Cases />} />
+                            <Route path='/app/cases' element={<Cases userPermissions={userPermissions}/>} />
                             <Route path='/app/cases/add-case' element={<AddCase />} />
                             <Route path='/app/cases/edit-case' element={<EditCase />} />
                             <Route path='/app/cases/case-details' element={<CaseDetails />} />
-                            <Route path='/app/roles' element={<Roles />} />
+                            <Route path='/app/roles' element={<Roles/>} />
                             <Route path="/app/settings" element={<Settings />} />
                             <Route path="/app/notifications" element={<Notifications fetchUnreadNotificationsCount={fetchUnreadNotificationsCount} />} />
                             <Route path="/app/permissions" element={<PermissionsMatrix />} />

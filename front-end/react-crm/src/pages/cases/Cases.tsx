@@ -73,7 +73,7 @@ type Item = {
   id: string;
 };
 
-export default function Cases(props: any) {
+export default function Cases({ userPermissions }: { userPermissions: string[] }) {
   const navigate = useNavigate()
   const [tab, setTab] = useState('Active');
   const [loading, setLoading] = useState(true);

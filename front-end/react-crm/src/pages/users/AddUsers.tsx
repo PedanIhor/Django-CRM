@@ -1,4 +1,4 @@
-import React, { ChangeEvent, useState } from 'react'
+import React, { ChangeEvent, useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import {
     TextField,
@@ -33,6 +33,7 @@ import { FaArrowAltCircleDown, FaArrowDown, FaTimes, FaUpload } from 'react-icon
 import { AntSwitch, CustomSelectField, CustomSelectTextField, RequiredTextField } from '../../styles/CssStyled'
 import { FiChevronDown } from '@react-icons/all-files/fi/FiChevronDown'
 import { FiChevronUp } from '@react-icons/all-files/fi/FiChevronUp'
+import { RolesUrl, SERVER } from '../../services/ApiUrls';
 
 type FormErrors = {
     email?: string[];
@@ -73,6 +74,14 @@ interface FormData {
     send_invitation: boolean,
 }
 export function AddUsers() {
+
+    interface Role {
+        id: string;
+        name: string;
+        permissions: any[];
+    }
+
+
     const { state } = useLocation()
     const navigate = useNavigate()
 
@@ -81,6 +90,8 @@ export function AddUsers() {
     const [error, setError] = useState(false)
     const [msg, setMsg] = useState('')
     const [responceError, setResponceError] = useState(false)
+    const [roles, setRoles] = useState<Role[]>([])
+
 
     const handleChange = (e: any) => {
         const { name, value, files, type, checked } = e.target;
@@ -130,6 +141,27 @@ export function AddUsers() {
 
     })
 
+    const getRoles = async () => {
+        const Header = {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            Authorization: localStorage.getItem('Token'),
+            org: localStorage.getItem('org')
+        }
+        try {
+            await fetchData(`${RolesUrl}/?include_permissions=false`, 'GET', null as any, Header)
+                .then((res: any) => {
+                    if (!res.error) {
+                        const roleNames = res.map((role: any) => role.name);
+                        console.log(roleNames, 'roles')
+                        setRoles(res);
+                    }
+                })
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        }
+    }
+
     const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0] || null;
         if (file) {
@@ -140,6 +172,9 @@ export function AddUsers() {
             reader.readAsDataURL(file);
         }
     };
+    useEffect(() => {
+        getRoles()
+    }, [])
 
     const submitForm = () => {
         const Header = {
@@ -147,7 +182,7 @@ export function AddUsers() {
             'Content-Type': 'application/json',
             Authorization: localStorage.getItem('Token'),
             org: localStorage.getItem('org')
-          }
+        }
         // console.log('Form data:', data);
 
         const data = {
@@ -222,8 +257,8 @@ export function AddUsers() {
     const crntPage = 'Add Users'
     const backBtn = 'Back To Users'
 
-    
-   
+
+
 
     // console.log(formData.profile_pic, 'formData.profile_pic')
     return (
@@ -302,11 +337,15 @@ export function AddUsers() {
                                                         onChange={handleChange}
                                                         error={!!errors?.role?.[0]}
                                                     >
-                                                        {['ADMIN', 'SALES_MANAGER', 'SALES_REPRESENTATIVE', 'EMPLOYEE'].map((option) => (
-                                                            <MenuItem key={option} value={option}>
-                                                                {option}
-                                                            </MenuItem>
-                                                        ))}
+                                                        {roles.length > 0 ? (
+                                                            roles.map((option) => (
+                                                                <MenuItem key={option.id} value={option.id}>
+                                                                    {option.name}
+                                                                </MenuItem>
+                                                            ))
+                                                        ) : (
+                                                            <MenuItem disabled>No roles available</MenuItem>
+                                                        )}
                                                     </Select>
                                                     {/* <FormHelperText>{errors?.[0] ? errors[0] : ''}</FormHelperText> */}
                                                 </FormControl>
@@ -347,24 +386,24 @@ export function AddUsers() {
                                         </div>
                                         <div className='CheckBox'>
                                             <div className='fieldSubContainer_checkbox'>
-                                            <Tooltip title="Select to send an invitation link to the user">
-                                            <FormControlLabel
-                                            label="Send Invitation Link to User"
-                                            control={
-                                            <Checkbox
-                                            checked={formData.send_invitation} // Bind the checkbox to formData.send_invitation
-                                            onChange={(e) => handleChange({ target: { name: 'send_invitation', value: e.target.checked } })}
-                                            name='send_invitation'
-                                            color="primary"
-                                            />
-                                            }
-                                           
-                                             />
-                                            </Tooltip>
+                                                <Tooltip title="Select to send an invitation link to the user">
+                                                    <FormControlLabel
+                                                        label="Send Invitation Link to User"
+                                                        control={
+                                                            <Checkbox
+                                                                checked={formData.send_invitation} // Bind the checkbox to formData.send_invitation
+                                                                onChange={(e) => handleChange({ target: { name: 'send_invitation', value: e.target.checked } })}
+                                                                name='send_invitation'
+                                                                color="primary"
+                                                            />
+                                                        }
+
+                                                    />
+                                                </Tooltip>
                                             </div>
-                        
+
                                             <div className='fieldSubContainer'>
-                                            
+
                                             </div>
                                         </div>
                                         {/* <div className='fieldContainer2'>
@@ -819,3 +858,5 @@ export function AddUsers() {
         </Box>
     )
 }
+
+
