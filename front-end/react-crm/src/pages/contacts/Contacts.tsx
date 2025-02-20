@@ -43,7 +43,7 @@ const categoryStyles: { [key: string]: { backgroundColor: string; borderColor: s
     'Loyal Customer': { backgroundColor: '#0080801A', borderColor: '#008080' },
 };
 
-export default function Contacts() {
+export default function Contacts({ userPermissions }: { userPermissions: string[] }) {
     const navigate = useNavigate();
 
     const [value, setValue] = useState('Open');
@@ -252,6 +252,7 @@ export default function Contacts() {
                             <FiChevronRight style={{ height: '15px' }} />
                         </FabRight>
                     </Box>
+                    {userPermissions.includes('add_contacts') && (
                     <Button
                         variant='contained'
                         startIcon={<FiPlus className='plus-icon' />}
@@ -260,6 +261,7 @@ export default function Contacts() {
                     >
                         Add Contact
                     </Button>
+                    )}
                 </Stack>
             </CustomToolbar>
             <Container sx={{ width: '100%', maxWidth: '100%', minWidth: '100%' }}>

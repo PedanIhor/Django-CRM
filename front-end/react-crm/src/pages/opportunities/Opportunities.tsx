@@ -85,7 +85,7 @@ type Item = {
   id: string;
 };
 
-export default function Opportunities(props: any) {
+export default function Opportunities({ userPermissions }: { userPermissions: string[] }) {
   const navigate = useNavigate()
   const [tab, setTab] = useState('open');
   const [loading, setLoading] = useState(true);
@@ -379,6 +379,7 @@ export default function Opportunities(props: any) {
               </Box>
             </>
           )}
+          {userPermissions.includes('add_opportunities') && (
           <Button
             variant="contained"
             startIcon={<FiPlus className="plus-icon" />}
@@ -387,6 +388,7 @@ export default function Opportunities(props: any) {
           >
             Add Opportunity
           </Button>
+          )}
         </Stack>
       </CustomToolbar>
 

@@ -199,7 +199,7 @@ export const ToolbarNew = styled(Toolbar)({
 // interface LeadList {
 //   drawer: number;
 // }
-export default function Leads(props: any) {
+export default function Leads({ userPermissions }: { userPermissions: string[] }) {
   // const {drawer}=props
   const navigate = useNavigate();
   const [tab, setTab] = useState('open');
@@ -602,6 +602,7 @@ export default function Leads(props: any) {
               </Box>
             </>
           )}
+          {userPermissions.includes('add_leads') && (
           <Button
             variant="contained"
             startIcon={<FiPlus className="plus-icon" />}
@@ -610,6 +611,7 @@ export default function Leads(props: any) {
           >
             Add Lead
           </Button>
+          )}
         </Stack>
       </CustomToolbar>
       <Container sx={{ width: '100%', maxWidth: '100%', minWidth: '100%' }}>

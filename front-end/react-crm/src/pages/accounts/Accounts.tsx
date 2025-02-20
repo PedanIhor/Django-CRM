@@ -129,7 +129,7 @@ const headCells: readonly HeadCell[] = [
 type Item = {
     id: string;
 };
-export default function Accounts() {
+export default function Accounts({ userPermissions }: { userPermissions: string[] }) {
     const navigate = useNavigate()
     const location = useLocation()
     const [successSnackbarOpen, setSuccessSnackbarOpen] = useState(false)
@@ -565,6 +565,7 @@ export default function Accounts() {
                             <FiChevronRight style={{ height: '15px' }} />
                         </FabRight>
                     </Box>
+                    {userPermissions.includes('add_accounts') && (
                     <Button
                         variant='contained'
                         startIcon={<FiPlus className='plus-icon' />}
@@ -573,6 +574,8 @@ export default function Accounts() {
                     >
                         Add Account
                     </Button>
+
+                    )}
                 </Stack>
             </CustomToolbar>
             <Container sx={{ width: '100%', maxWidth: '100%', minWidth: '100%' }}>
