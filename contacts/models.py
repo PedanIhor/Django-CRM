@@ -10,8 +10,19 @@ from teams.models import Teams
 
 
 class Contact(BaseModel):
+    CONTACT_TYPE_CHOICES = (
+        ('individual', 'Individual'),
+        ('corporate', 'Corporate'),
+    )
+    
     salutation = models.CharField(
         _("Salutation"), max_length=255, default="", blank=True
+    )
+    type = models.CharField(
+        _("Contact Type"),
+        max_length=20,
+        choices=CONTACT_TYPE_CHOICES,
+        default='individual'
     )
     first_name = models.CharField(_("First name"), max_length=255)
     last_name = models.CharField(_("Last name"), max_length=255)
@@ -44,8 +55,12 @@ class Contact(BaseModel):
     teams = models.ManyToManyField(Teams, related_name="contact_teams")
     org = models.ForeignKey(Org, on_delete=models.SET_NULL, null=True, blank=True)
     country = models.CharField(max_length=3, choices=COUNTRIES, blank=True, null=True)
-    accounts = models.ManyToManyField(
-        "accounts.Account", related_name="contact_accounts"
+    account = models.ForeignKey(
+        "accounts.Account",
+        related_name="contacts",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
     )
 
     class Meta:
