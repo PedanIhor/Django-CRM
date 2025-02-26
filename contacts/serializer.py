@@ -67,6 +67,8 @@ class CreateContactSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Corporate contacts must have an account.")
         if data.get('type') == 'individual':
             data['account'] = None
+            data['title'] = None
+            data['department'] = None
         return data
 
     class Meta:

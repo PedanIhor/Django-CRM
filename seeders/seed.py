@@ -109,7 +109,6 @@ def seed_database():
                 linked_in_url=faker.url() if random.choice([True, False]) else None,
                 facebook_url=faker.url() if random.choice([True, False]) else None,
                 twitter_username=faker.user_name() if random.choice([True, False]) else None,
-                date_of_birth=faker.date_of_birth(minimum_age=18, maximum_age=70),
                 primary_email=faker.unique.email(),
                 secondary_email=faker.email(),
                 mobile_number=faker.phone_number(),
@@ -119,7 +118,6 @@ def seed_database():
                 created_by=random.choice(profiles).user  # Created by a random profile in the org
             )
             # Assign contact to 1–2 profiles
-            contact.assigned_to.set(random.sample(profiles, random.randint(1, 2)))
             # Assign contact to one of the teams
             contact.teams.add(random.choice(teams))
             contacts.append(contact)

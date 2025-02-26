@@ -11,17 +11,17 @@ from teams.models import Teams
 
 class Contact(BaseModel):
     salutation = models.CharField(
-        _("Salutation"), max_length=255, default="", blank=True
+        _("Salutation"), max_length=255, default="", blank=True, null=True
     )
     first_name = models.CharField(_("First name"), max_length=255)
     last_name = models.CharField(_("Last name"), max_length=255)
-    title = models.CharField(_("Title"), max_length=255, default="", blank=True)
+    title = models.CharField(_("Title"), max_length=255, default="", blank=True, null=True)
     primary_email = models.EmailField(unique=True)
-    secondary_email = models.EmailField(default="", blank=True)
-    mobile_number = PhoneNumberField(null=True, blank=True, unique=True)
-    secondary_number = PhoneNumberField(null=True, blank=True, unique=True)
-    department = models.CharField(_("Department"), max_length=255, blank=True)
-    language = models.CharField(_("Language"), max_length=255, blank=True)
+    secondary_email = models.EmailField(default="", blank=True, null=True)
+    mobile_number = PhoneNumberField(null=True, blank=True)
+    secondary_number = PhoneNumberField(null=True, blank=True)
+    department = models.CharField(_("Department"), max_length=255, blank=True, null=True)
+    language = models.CharField(_("Language"), max_length=255, blank=True, null=True)
     do_not_call = models.BooleanField(default=False)
     address = models.ForeignKey(
         Address,
@@ -30,19 +30,19 @@ class Contact(BaseModel):
         blank=True,
         null=True,
     )
-    description = models.TextField(blank=True)
-    linked_in_url = models.URLField(blank=True, unique=True)
-    facebook_url = models.URLField(blank=True, unique=True)
-    twitter_username = models.CharField(max_length=255, blank=True, unique=True)
+    description = models.TextField(blank=True, null=True)
+    linked_in_url = models.URLField(blank=True, null=True)
+    facebook_url = models.URLField(blank=True, null=True)
+    twitter_username = models.CharField(max_length=255, blank=True, null=True)
     # created_by = models.ForeignKey(
     #     Profile, related_name="contact_created_by", on_delete=models.SET_NULL, null=True
     # )
-    is_active = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
     teams = models.ManyToManyField(Teams, related_name="contact_teams")
     org = models.ForeignKey(Org, on_delete=models.SET_NULL, null=True, blank=True)
-    country = models.CharField(max_length=3, choices=COUNTRIES, blank=True)
+    country = models.CharField(max_length=3, choices=COUNTRIES, null=True, blank=True)
     account = models.ForeignKey(
-        "accounts.Account", related_name="contacts", on_delete=models.CASCADE
+        "accounts.Account", related_name="contacts", on_delete=models.CASCADE, null=True
     )
 
     TYPE_CHOICES = [
