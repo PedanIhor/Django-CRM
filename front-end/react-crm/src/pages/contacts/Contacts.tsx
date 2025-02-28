@@ -11,13 +11,14 @@ import { getComparator, stableSort } from '../../components/Sorting';
 import { Spinner } from '../../components/Spinner';
 import { fetchData } from '../../components/FetchData';
 import { ContactUrl } from '../../services/ApiUrls';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { FaTrashAlt, FaEdit } from 'react-icons/fa';
 import { DeleteModal } from '../../components/DeleteModal';
 import { EnhancedTableHead } from '../../components/EnchancedTableHead';
 import { CustomToolbar, FabLeft, FabRight } from '../../styles/CssStyled';
 import { FiChevronUp } from '@react-icons/all-files/fi/FiChevronUp';
 import { FiChevronDown } from '@react-icons/all-files/fi/FiChevronDown';
+import SuccessSnackbar from '../../components/SuccessSnackbar';
 
 
 
@@ -45,6 +46,9 @@ const categoryStyles: { [key: string]: { backgroundColor: string; borderColor: s
 
 export default function Contacts({ userPermissions }: { userPermissions: string[] }) {
     const navigate = useNavigate();
+    const location = useLocation();
+    const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+    const [successMessage, setSuccessMessage] = useState('');
 
     const [value, setValue] = useState('Open');
     const [loading, setLoading] = useState(true);
@@ -68,7 +72,14 @@ export default function Contacts({ userPermissions }: { userPermissions: string[
 
     useEffect(() => {
         getContacts();
-    }, [currentPage, recordsPerPage, filterCategory, sortCriteria]);
+        // Check for success message in navigation state
+        if (location.state?.showSuccessMessage) {
+            setShowSuccessMessage(true);
+            setSuccessMessage(location.state.message);
+            // Clear the navigation state
+            window.history.replaceState({}, document.title);
+        }
+    }, [currentPage, recordsPerPage, filterCategory, sortCriteria, location]);
 
     const getContacts = async () => {
         const Header = {
@@ -215,6 +226,11 @@ export default function Contacts({ userPermissions }: { userPermissions: string[
 
     return (
         <Box sx={{ mt: '60px' }}>
+            <SuccessSnackbar 
+                open={showSuccessMessage}
+                onClose={() => setShowSuccessMessage(false)}
+                message={successMessage}
+            />
             <CustomToolbar sx={{ flexDirection: 'row-reverse' }}>
                 <Stack sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
                     <Select
