@@ -666,8 +666,7 @@ function AddContacts() {
                     <div className="fieldContainer">
                       <div className="fieldSubContainer">
                         <div className="fieldTitle">Billing Address</div>
-                        <RequiredTextField
-                          required
+                        <TextField
                           name="address_line"
                           value={formData.address_line}
                           onChange={handleChange}
