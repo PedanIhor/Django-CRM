@@ -14,6 +14,9 @@ import {
   Select,
   FormHelperText,
   Button,
+  Alert,
+  Collapse,
+  IconButton
 } from '@mui/material';
 import { useQuill } from 'react-quilljs';
 import 'quill/dist/quill.snow.css';
@@ -27,6 +30,7 @@ import {
 } from '../../styles/CssStyled';
 import { FiChevronDown } from '@react-icons/all-files/fi/FiChevronDown';
 import { FiChevronUp } from '@react-icons/all-files/fi/FiChevronUp';
+import { FiX } from '@react-icons/all-files/fi/FiX';
 import { FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
 import '../../styles/style.css';
 
@@ -112,6 +116,9 @@ function AddContacts() {
     mobile_number: '',
     secondary_number: '',
   });
+
+  const [errorMessage, setErrorMessage] = useState<string>('');
+  const [showError, setShowError] = useState(false);
 
   useEffect(() => {
     if (quill) {
@@ -240,18 +247,39 @@ function AddContacts() {
     };
     fetchData(`${ContactUrl}/`, 'POST', JSON.stringify(data), Header)
       .then((res: any) => {
-        // console.log('Form data:', res);
         if (!res.error) {
-          // setResponceError(data.error)
-          navigate('/app/contacts');
+          navigate('/app/contacts', { 
+            state: { showSuccessMessage: true, message: 'Contact added successfully!' }
+          });
           resetForm();
         }
         if (res.error) {
           setError(true);
           setErrors(res?.errors?.contact_errors);
+          // Set error message for the alert
+          const errorMessages: string[] = [];
+          if (res?.errors?.contact_errors) {
+            Object.entries(res.errors.contact_errors).forEach(([field, errors]) => {
+              if (Array.isArray(errors)) {
+                // Capitalize first letter of each word and remove underscores
+                const formattedField = field
+                  .split('_')
+                  .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                  .join(' ');
+                errorMessages.push(`${formattedField}: ${errors.join(', ')}`);
+              }
+            });
+          }
+          setErrorMessage(errorMessages.join('\n'));
+          setShowError(true);
+          // Scroll to top to show the error
+          window.scrollTo({ top: 0, behavior: 'smooth' });
         }
       })
-      .catch(() => {});
+      .catch(() => {
+        setErrorMessage('An unexpected error occurred. Please try again.');
+        setShowError(true);
+      });
   };
 
   const resetForm = () => {
@@ -306,6 +334,30 @@ function AddContacts() {
         onSubmit={handleSubmit}
       />
       <Box sx={{ mt: '120px' }}>
+        <Collapse in={showError}>
+          <Alert 
+            severity="error"
+            action={
+              <IconButton
+                aria-label="close"
+                color="inherit"
+                size="small"
+                onClick={() => setShowError(false)}
+              >
+                <FiX />
+              </IconButton>
+            }
+            sx={{ 
+              mb: 2,
+              mx: 2,
+              '& .MuiAlert-message': {
+                whiteSpace: 'pre-line'
+              }
+            }}
+          >
+            {errorMessage}
+          </Alert>
+        </Collapse>
         <form onSubmit={handleSubmit}>
           {/* contact details */}
           <div style={{ padding: '10px' }}>
