@@ -11,23 +11,21 @@ from teams.models import Teams
 
 class Contact(BaseModel):
     salutation = models.CharField(
-        _("Salutation"), max_length=255, default="", blank=True
+        _("Salutation"), max_length=255, default="", blank=True, null=True
     )
     first_name = models.CharField(_("First name"), max_length=255)
     last_name = models.CharField(_("Last name"), max_length=255)
-    date_of_birth = models.DateField(null=True, blank=True)
-    organization = models.CharField(_("Organization"), max_length=255, null=True)
-    title = models.CharField(_("Title"), max_length=255, default="", blank=True)
+    title = models.CharField(_("Title"), max_length=255, default="", blank=True, null=True)
     primary_email = models.EmailField(unique=True)
-    secondary_email = models.EmailField(default="", blank=True)
-    mobile_number = PhoneNumberField(null=True, unique=True)
-    secondary_number = PhoneNumberField(null=True,blank=True)
-    department = models.CharField(_("Department"), max_length=255, null=True)
-    language = models.CharField(_("Language"), max_length=255, null=True)
+    secondary_email = models.EmailField(default="", blank=True, null=True)
+    mobile_number = PhoneNumberField(null=True, blank=True)
+    secondary_number = PhoneNumberField(null=True, blank=True)
+    department = models.CharField(_("Department"), max_length=255, blank=True, null=True)
+    language = models.CharField(_("Language"), max_length=255, blank=True, null=True)
     do_not_call = models.BooleanField(default=False)
     address = models.ForeignKey(
         Address,
-        related_name="adress_contacts",
+        related_name="address_contacts",
         on_delete=models.CASCADE,
         blank=True,
         null=True,
@@ -35,17 +33,25 @@ class Contact(BaseModel):
     description = models.TextField(blank=True, null=True)
     linked_in_url = models.URLField(blank=True, null=True)
     facebook_url = models.URLField(blank=True, null=True)
-    twitter_username = models.CharField(max_length=255, blank=True,null=True)
+    twitter_username = models.CharField(max_length=255, blank=True, null=True)
     # created_by = models.ForeignKey(
     #     Profile, related_name="contact_created_by", on_delete=models.SET_NULL, null=True
     # )
-    is_active = models.BooleanField(default=False)
-    assigned_to = models.ManyToManyField(Profile, related_name="contact_assigned_users")
+    is_active = models.BooleanField(default=True)
     teams = models.ManyToManyField(Teams, related_name="contact_teams")
     org = models.ForeignKey(Org, on_delete=models.SET_NULL, null=True, blank=True)
-    country = models.CharField(max_length=3, choices=COUNTRIES, blank=True, null=True)
-    accounts = models.ManyToManyField(
-        "accounts.Account", related_name="contact_accounts"
+    country = models.CharField(max_length=3, choices=COUNTRIES, null=True, blank=True)
+    account = models.ForeignKey(
+        "accounts.Account", related_name="contacts", on_delete=models.CASCADE, null=True
+    )
+
+    TYPE_CHOICES = [
+        ("individual", "Individual"),
+        ("corporate", "Corporate"),
+    ]
+
+    type = models.CharField(
+        max_length=10, choices=TYPE_CHOICES, default="individual"
     )
 
     class Meta:
@@ -71,16 +77,9 @@ class Contact(BaseModel):
         team_user_ids = list(self.teams.values_list("users__id", flat=True))
         return Profile.objects.filter(id__in=team_user_ids)
 
-    @property
-    def get_team_and_assigned_users(self):
-        team_user_ids = list(self.teams.values_list("users__id", flat=True))
-        assigned_user_ids = list(self.assigned_to.values_list("id", flat=True))
-        user_ids = team_user_ids + assigned_user_ids
-        return Profile.objects.filter(id__in=user_ids)
-
-    @property
-    def get_assigned_users_not_in_teams(self):
-        team_user_ids = list(self.teams.values_list("users__id", flat=True))
-        assigned_user_ids = list(self.assigned_to.values_list("id", flat=True))
-        user_ids = set(assigned_user_ids) - set(team_user_ids)
-        return Profile.objects.filter(id__in=list(user_ids))
+    def save(self, *args, **kwargs):
+        if self.type == "corporate" and not self.account:
+            raise ValueError("Corporate contacts must have an account.")
+        if self.type == "individual":
+            self.account = None
+        super().save(*args, **kwargs)

@@ -12,13 +12,9 @@ from teams.serializer import TeamsSerializer
 
 class ContactSerializer(serializers.ModelSerializer):
     teams = TeamsSerializer(read_only=True, many=True)
-    assigned_to = ProfileSerializer(read_only=True, many=True)
     address = BillingAddressSerializer(read_only=True)
     get_team_users = ProfileSerializer(read_only=True, many=True)
-    get_team_and_assigned_users = ProfileSerializer(read_only=True, many=True)
-    get_assigned_users_not_in_teams = ProfileSerializer(read_only=True, many=True)
     contact_attachment = AttachmentsSerializer(read_only=True, many=True)
-    date_of_birth = serializers.DateField()
     org = OrganizationSerializer()
     country = serializers.SerializerMethodField()
 
@@ -32,8 +28,6 @@ class ContactSerializer(serializers.ModelSerializer):
             "salutation",
             "first_name",
             "last_name",
-            "date_of_birth",
-            "organization",
             "title",
             "primary_email",
             "secondary_email",
@@ -49,16 +43,15 @@ class ContactSerializer(serializers.ModelSerializer):
             "facebook_url",
             "twitter_username",
             "contact_attachment",
-            "assigned_to",
             "created_by",
             "created_at",
             "is_active",
             "teams",
             "created_on_arrow",
             "get_team_users",
-            "get_team_and_assigned_users",
-            "get_assigned_users_not_in_teams",
             "org",
+            "type",
+            "account",
         )
 
 
@@ -69,6 +62,14 @@ class CreateContactSerializer(serializers.ModelSerializer):
         if request_obj:
             self.org = request_obj.profile.org
 
+    def validate(self, data):
+        if data.get('type') == 'corporate' and not data.get('account'):
+            raise serializers.ValidationError("Corporate contacts must have an account.")
+        if data.get('type') == 'individual':
+            data['account'] = None
+            data['title'] = None
+            data['department'] = None
+        return data
 
     class Meta:
         model = Contact
@@ -76,7 +77,6 @@ class CreateContactSerializer(serializers.ModelSerializer):
             "salutation",
             "first_name",
             "last_name",
-            "organization",
             "title",
             "primary_email",
             "secondary_email",
@@ -91,6 +91,8 @@ class CreateContactSerializer(serializers.ModelSerializer):
             "linked_in_url",
             "facebook_url",
             "twitter_username",
+            "type",
+            "account",
         )
 
 
