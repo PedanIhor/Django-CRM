@@ -124,37 +124,19 @@ def create_test_org():
             country="NL"
         )
 
-        total_contact_in_db = Contact.objects.count()
-        contact_titles = ['Manager', 'Executive', 'Analyst', 'Consultant']
-        contact = Contact.objects.create(
-            salutation="Mr." if i % 2 == 0 else "Ms.",
-            first_name=f"Name{total_contact_in_db + i}",
-            last_name=f"Lastname{total_contact_in_db + i}",
-            title=contact_titles[i % len(contact_titles)],
-            language="English",
-            primary_email=f"contact{total_contact_in_db + i}@mail.com",
-            mobile_number=None,
-            address=address,
-            org=org,
-            is_active=True,
-            created_by=org_admin.user
-        )
-        # Assign contact to 1–2 profiles
-        contact.assigned_to.set(random.sample(profiles, random.randint(1, 2)))
-        # Assign contact to one of the teams
-        contact.teams.add(random.choice(teams))
-        contacts.append(contact)
+    return org
 
 
-def fill_leads(count: int):
+def fill_leads(org: Org, count: int):
     total_count_in_db = Lead.objects.count()
     leads = []
     for i in range(total_count_in_db, count + total_count_in_db):
         status_id = i % len(LEAD_STATUS) # 1/5 leads will have status 'converted'
+        status = LEAD_STATUS[status_id][0]
         source_id = i % len(LEAD_SOURCE)
         formatted_string = POST_LEAD_JSON_FORMAT.format(
             i=i,
-            status=LEAD_STATUS[status_id][0],
+            status=status,
             source=LEAD_SOURCE[source_id][0],
             phone=911234567890 + i)
         json_obj = json.loads(formatted_string)
@@ -164,7 +146,22 @@ def fill_leads(count: int):
         json_obj.pop("contacts")
         json_obj.pop("tags")
         lead = Lead(**json_obj)
+        lead.org = org
+        lead.save()
         leads.append(lead)
 
-    Lead.objects.bulk_create(leads)
+        if i % 3 == 0:
+            email = "user3@test.com"
+        elif i % 4 == 0:
+            email = "user4@test.com"
+        elif i % 5 == 0:
+            email = "user5@test.com"
+        else:
+            email = None
+
+        if email:
+            assigned_to = Profile.objects.filter(org__id=org.id, user__email=email).first()
+            if assigned_to:
+                lead.assigned_to.set([assigned_to])
+                lead.save()
 

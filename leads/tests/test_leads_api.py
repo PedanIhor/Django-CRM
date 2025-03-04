@@ -4,6 +4,7 @@ Tests for the Leads API.
 
 from django.test import TestCase
 from django.urls import reverse
+from django.db.models import Q
 
 from rest_framework.test import APIClient
 from rest_framework import status
@@ -46,10 +47,9 @@ class PublicLeadsAPITests(TestCase):
 
     def setUp(self):
         self.client = APIClient()
-        db_tests_dump.create_test_org()
-        db_tests_dump.fill_leads(100) # 20 must be converted leads
-
-        self.org = Org.objects.first()
+        org = db_tests_dump.create_test_org()
+        db_tests_dump.fill_leads(org, 100) # 20 must be converted leads
+        self.org = org
 
         self.headers = {
             "org": self.org.id,
@@ -147,33 +147,60 @@ class PublicLeadsAPITests(TestCase):
 
     def test_get_leads_list_pagination(self):
         self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.retrieve_token_for_role("ADMIN"))
-        db_open_leads = Lead.objects.filter(org__id=self.org.id).filter(status="open").all()
+        db_open_leads = (Lead.objects
+            .filter(org__id=self.org.id)
+            .exclude(status='closed')
+            .order_by("-id")
+            .all()
+        )
 
-        def test_limit_offset(limit, offset):
+        def proceed_limit_offset(limit, offset):
             res = self.client.get(GET_LEADS_LIST, headers=self.headers, data={"limit": limit, "offset": offset})
             self.assertEqual(res.status_code, status.HTTP_200_OK)
             self.assertEqual(db_open_leads.count(), res.data["open_leads"]["leads_count"])
             total_count = db_open_leads.count()
-            exp_res_count = max(0, total_count - offset if total_count - offset < limit else limit)
+
+            if total_count - offset <= 0:
+                exp_res_count = 0
+            elif total_count - offset < limit:
+                exp_res_count = total_count - offset
+            else:
+                exp_res_count = limit
+
             res_count = len(res.data["open_leads"]["open_leads"])
             self.assertEqual(res_count, exp_res_count, f"Returned leads count {res_count} is not as expected {exp_res_count}")
-            paginated_leads_ids = [lead.id for lead in db_open_leads[offset:offset+limit]]
+            paginated_leads_ids = [str(lead.id) for lead in db_open_leads[offset:offset+limit]]
             paginated_res_ids = [lead["id"] for lead in res.data["open_leads"]["open_leads"]]
             self.assertEqual(paginated_leads_ids, paginated_res_ids)
 
-        test_limit_offset(10, 0)
-        test_limit_offset(10, 10)
-        test_limit_offset(10, 20)
-        test_limit_offset(20, 0)
-        test_limit_offset(20, 20)
-        test_limit_offset(20, 40)
-        test_limit_offset(30, 0)
-        test_limit_offset(30, 30)
-        test_limit_offset(30, 60)
-        test_limit_offset(40, 0)
-        test_limit_offset(40, 40)
-        test_limit_offset(40, 80) # Zero result expected
-        test_limit_offset(50, 150) # Out of bounds
+        proceed_limit_offset(10, 0)
+        proceed_limit_offset(10, 10)
+        proceed_limit_offset(10, 20)
+        proceed_limit_offset(20, 0)
+        proceed_limit_offset(20, 20)
+        proceed_limit_offset(20, 40)
+        proceed_limit_offset(30, 0)
+        proceed_limit_offset(30, 30)
+        proceed_limit_offset(30, 60)
+        proceed_limit_offset(40, 0)
+        proceed_limit_offset(40, 40)
+        proceed_limit_offset(40, 80) # Zero result expected
+        proceed_limit_offset(50, 150) # Out of bounds
 
-
-
+    def test_get_leads_list_filter_by_assigned_user(self):
+        user = User.objects.filter(profile__org__id=self.org.id, email="user3@test.com").first()
+        user_leads = (
+            Lead.objects
+                .filter(org__id=self.org.id, assigned_to__user=user)
+                .exclude(status="closed")
+                .order_by("-id")
+                .distinct()
+                .all()
+        )
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.retrieve_token_for_user(user))
+        res = self.client.get(GET_LEADS_LIST, headers=self.headers, data={"limit": 100, "offset": 0})
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(user_leads), len(res.data["open_leads"]["open_leads"]))
+        db_leads_ids = [str(lead.id) for lead in user_leads]
+        res_leads_ids = [lead["id"] for lead in res.data["open_leads"]["open_leads"]]
+        self.assertEqual(db_leads_ids, res_leads_ids)

@@ -101,15 +101,8 @@ class LeadListView(APIView, LimitOffsetPagination):
             queryset_open.distinct(), self.request, view=self
         )
         open_leads = LeadSerializer(results_leads_open, many=True).data
-        if results_leads_open:
-            offset = queryset_open.filter(
-                id__gte=results_leads_open[-1].id).count()
-            if offset == queryset_open.count():
-                offset = None
-        else:
-            offset = 0
         context["open_leads"] = {
-            "leads_count": self.count,
+            "leads_count": queryset_open.count(),
             "open_leads": open_leads,
         }
 
@@ -118,16 +111,9 @@ class LeadListView(APIView, LimitOffsetPagination):
             queryset_close.distinct(), self.request, view=self
         )
         close_leads = LeadSerializer(results_leads_close, many=True).data
-        if results_leads_close:
-            offset = queryset_close.filter(
-                id__gte=results_leads_close[-1].id).count()
-            if offset == queryset_close.count():
-                offset = None
-        else:
-            offset = 0
 
         context["close_leads"] = {
-            "leads_count": self.count,
+            "leads_count": queryset_close.count(),
             "close_leads": close_leads,
         }
         contacts = Contact.objects.filter(org=self.request.profile.org).values(
