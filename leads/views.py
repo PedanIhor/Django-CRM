@@ -56,6 +56,8 @@ class LeadListView(APIView, LimitOffsetPagination):
     permission_classes = (crm_permissions(get="get_leads", list="list_leads", post="add_leads"),)
 
     def get_context_data(self, **kwargs):
+        if self.request.headers.get("org") is None:
+            raise PermissionDenied("Organization not provided in header")
         params = self.request.query_params
         queryset = (
             self.model.objects.filter(org=self.request.profile.org)
@@ -106,13 +108,9 @@ class LeadListView(APIView, LimitOffsetPagination):
                 offset = None
         else:
             offset = 0
-        context["per_page"] = 10
-        page_number = (int(self.offset / 10) + 1,)
-        context["page_number"] = page_number
         context["open_leads"] = {
             "leads_count": self.count,
             "open_leads": open_leads,
-            "offset": offset,
         }
 
         queryset_close = queryset.filter(status="closed")
@@ -131,7 +129,6 @@ class LeadListView(APIView, LimitOffsetPagination):
         context["close_leads"] = {
             "leads_count": self.count,
             "close_leads": close_leads,
-            "offset": offset,
         }
         contacts = Contact.objects.filter(org=self.request.profile.org).values(
             "id", "first_name"
@@ -221,7 +218,7 @@ class LeadListView(APIView, LimitOffsetPagination):
                         message=notification_message,
                         lead=lead_obj,
                         is_read=False
-                    )                    
+                    )
 
             if data.get("status") == "converted":
                 account_object = Account.objects.create(
@@ -513,7 +510,7 @@ class LeadDetailView(APIView):
                     else:
                         assigned_to_ids.append(profile)
                 profiles = Profile.objects.filter(
-                    id__in=assigned_to_ids, 
+                    id__in=assigned_to_ids,
                     org=request.profile.org
                 )
                 lead_obj.assigned_to.add(*profiles)
