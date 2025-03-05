@@ -63,8 +63,8 @@ export default function ContactDetails() {
     const [org, setOrg] = useState<response | null>(null)
 
     useEffect(() => {
-        getContactDetail(state.contactId.id)
-    }, [state.contactId.id])
+        getContactDetail(state.contactId)
+    }, [state.contactId])
 
     const getContactDetail = (id: any) => {
         const Header = {
@@ -75,7 +75,7 @@ export default function ContactDetails() {
           }
         fetchData(`${ContactUrl}/${id}/`, 'GET', null as any, Header)
             .then((res) => {
-                // console.log(res, 'res');
+                console.log(res, 'res');
                 if (!res.error) {
                     setContactDetails(res?.contact_obj)
                     setAddressDetails(res?.address_obj)
