@@ -39,18 +39,13 @@ type FormErrors = {
     billing_state?: string[],
     billing_postcode?: string[],
     billing_country?: string[],
-    contact_name?: string[],
     teams?: string[],
-    assigned_to?: string[],
     tags?: string[],
     account_attachment?: string[],
     website?: string[],
     status?: string[],
-    lead?: string[],
     contacts?: string[],
     file?: string[]
-
-
 };
 interface FormData {
     name: string,
@@ -62,14 +57,11 @@ interface FormData {
     billing_state: string,
     billing_postcode: string,
     billing_country: string,
-    contact_name: string,
     teams: string[],
-    assigned_to: string[],
     tags: string[],
     account_attachment: string | null,
     website: string,
     status: string,
-    lead: string,
     contacts: [],
     file?: string | null
 }
@@ -81,11 +73,9 @@ export function EditAccount() {
     const [error, setError] = useState(false)
     const [reset, setReset] = useState(false)
     const [selectedContacts, setSelectedContacts] = useState<any[]>([]);
-    const [selectedAssignTo, setSelectedAssignTo] = useState<any[]>([]);
     const [selectedTags, setSelectedTags] = useState<any[]>([]);
     const [selectedTeams, setSelectedTeams] = useState<any[]>([]);
     const [selectedCountry, setSelectedCountry] = useState<any[]>([]);
-    const [leadSelectOpen, setLeadSelectOpen] = useState(false)
     const [statusSelectOpen, setStatusSelectOpen] = useState(false)
     const [countrySelectOpen, setCountrySelectOpen] = useState(false)
     const [contactSelectOpen, setContactSelectOpen] = useState(false)
@@ -100,17 +90,13 @@ export function EditAccount() {
         billing_state: '',
         billing_postcode: '',
         billing_country: '',
-        contact_name: '',
         teams: [],
-        assigned_to: [],
         tags: [],
         account_attachment: null,
         website: '',
         status: '',
-        lead: '',
         contacts: [],
         file: null
-
     })
 
     useEffect(() => {
@@ -140,15 +126,12 @@ export function EditAccount() {
         if (title === 'contacts') {
             setFormData({ ...formData, contacts: val.length > 0 ? val.map((item: any) => item.id) : [] });
             setSelectedContacts(val);
-        } else if (title === 'assigned_to') {
-            setFormData({ ...formData, assigned_to: val.length > 0 ? val.map((item: any) => item.id) : [] });
-            setSelectedAssignTo(val);
         } else if (title === 'tags') {
-            setFormData({ ...formData, assigned_to: val.length > 0 ? val.map((item: any) => item.id) : [] });
+            setFormData({ ...formData, tags: val.length > 0 ? val.map((item: any) => item.id) : [] });
             setSelectedTags(val);
         } else if (title === 'teams') {
             setFormData({ ...formData, teams: val.length > 0 ? val.map((item: any) => item.id) : [] });
-            setSelectedTags(val);
+            setSelectedTeams(val);
         }
         else {
             setFormData({ ...formData, [title]: val })
@@ -166,17 +149,6 @@ export function EditAccount() {
             setFormData({ ...formData, [name]: value });
         }
     };
-    // const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
-    //     const file = event.target.files?.[0] || null;
-    //     if (file) {
-    //         setFormData({ ...formData, account_attachment: file?.name })
-    //         const reader = new FileReader();
-    //         reader.onload = () => {
-    //             setFormData({ ...formData, file: reader.result as string });
-    //         };
-    //         reader.readAsDataURL(file);
-    //     }
-    // };
     const handleFileChange = (event: any) => {
         const file = event.target.files?.[0] || null;
         if (file) {
@@ -207,7 +179,6 @@ export function EditAccount() {
             Authorization: localStorage.getItem('Token'),
             org: localStorage.getItem('org')
           }
-        // console.log('Form data:', formData.lead_attachment,'sfs', formData.file);
         const data = {
             name: formData.name,
             phone: formData.phone,
@@ -218,20 +189,16 @@ export function EditAccount() {
             billing_state: formData.billing_state,
             billing_postcode: formData.billing_postcode,
             billing_country: formData.billing_country,
-            contact_name: formData.contact_name,
             teams: formData.teams,
-            assigned_to: formData.assigned_to,
             tags: formData.tags,
             account_attachment: formData.file,
             website: formData.website,
             status: formData.status,
-            lead: formData.lead,
             contacts: formData.contacts
         }
 
         fetchData(`${AccountsUrl}/${state?.id}/`, 'PUT', JSON.stringify(data), Header)
             .then((res: any) => {
-                // console.log('Form data:', res);
                 if (!res.error) {
                     resetForm()
                     navigate('/app/accounts')
@@ -255,25 +222,20 @@ export function EditAccount() {
             billing_state: '',
             billing_postcode: '',
             billing_country: '',
-            contact_name: '',
             teams: [],
-            assigned_to: [],
             tags: [],
             account_attachment: '',
             website: '',
             status: '',
-            lead: '',
             contacts: [],
             file: null
         });
         setErrors({})
         setSelectedContacts([]);
-        setSelectedAssignTo([])
         setSelectedTags([])
         setSelectedTeams([])
     }
     const onCancel = () => {
-        // resetForm()
         setReset(true)
     }
 
@@ -282,7 +244,6 @@ export function EditAccount() {
     const crntPage = 'Add Account'
     const backBtn = state?.edit ? 'Back to Accounts' : 'Back to AccountDetails'
 
-    // console.log(state, 'accountform')
     return (
         <Box sx={{ mt: '60px' }}>
             <CustomAppBar backbtnHandle={backbtnHandle} module={module} backBtn={backBtn} crntPage={crntPage} onCancel={onCancel} onSubmit={handleSubmit} />
@@ -378,69 +339,13 @@ export function EditAccount() {
                                                 </FormControl>
                                             </div>
                                             <div className='fieldSubContainer'>
-                                                <div className='fieldTitle'>Contact Name</div>
-                                                <FormControl sx={{ width: '70%' }}>
-                                                    <RequiredSelect
-                                                        name='contact_name'
-                                                        value={formData.contact_name}
-                                                        open={contactSelectOpen}
-                                                        onClick={() => setContactSelectOpen(!contactSelectOpen)}
-                                                        IconComponent={() => (
-                                                            <div onClick={() => setContactSelectOpen(!contactSelectOpen)} className="select-icon-background">
-                                                                {contactSelectOpen ? <FiChevronUp className='select-icon' /> : <FiChevronDown className='select-icon' />}
-                                                            </div>
-                                                        )}
-                                                        className='select'
-                                                        onChange={handleChange}
-                                                        error={!!errors?.contact_name?.[0]}
-                                                    >
-                                                        {state?.contacts?.length ? state?.contacts.map((option: any) => (
-                                                            <MenuItem key={option?.id} value={option?.first_name}>
-                                                                {option?.first_name}
-                                                            </MenuItem>
-                                                        )) : ''}
-                                                    </RequiredSelect>
-                                                    <FormHelperText className='helperText'>{errors?.contact_name?.[0] ? errors?.contact_name[0] : ''}</FormHelperText>
-                                                </FormControl>
-                                            </div>
-                                        </div>
-                                        <div className='fieldContainer2'>
-                                            <div className='fieldSubContainer'>
-                                                <div className='fieldTitle'>Lead</div>
-                                                <FormControl sx={{ width: '70%' }}>
-                                                    <Select
-                                                        name='lead'
-                                                        value={formData.lead}
-                                                        open={leadSelectOpen}
-                                                        onClick={() => setLeadSelectOpen(!leadSelectOpen)}
-                                                        IconComponent={() => (
-                                                            <div onClick={() => setLeadSelectOpen(!leadSelectOpen)} className="select-icon-background">
-                                                                {leadSelectOpen ? <FiChevronUp className='select-icon' /> : <FiChevronDown className='select-icon' />}
-                                                            </div>
-                                                        )}
-                                                        className={'select'}
-                                                        onChange={handleChange}
-                                                        error={!!errors?.lead?.[0]}
-                                                    >
-                                                        {state?.leads?.length ? state?.leads.map((option: any) => (
-                                                            <MenuItem key={option?.id} value={option?.id}>
-                                                                {option?.title}
-                                                            </MenuItem>
-                                                        )) : ''}
-                                                    </Select>
-                                                    <FormHelperText className='helperText'>{errors?.lead?.[0] || ''}</FormHelperText>
-                                                </FormControl>
-                                            </div>
-                                            <div className='fieldSubContainer'>
                                                 <div className='fieldTitle'>Teams</div>
                                                 <FormControl error={!!errors?.teams?.[0]} sx={{ width: '70%' }}>
                                                     <Autocomplete
-                                                        // ref={autocompleteRef}
                                                         value={selectedTeams}
                                                         multiple
                                                         limitTags={5}
                                                         options={state?.teams || []}
-                                                        // options={state.contacts ? state.contacts.map((option: any) => option) : ['']}
                                                         getOptionLabel={(option: any) => option || []}
                                                         onChange={(e: any, value: any) => handleChange2('teams', value)}
                                                         size='small'
@@ -479,50 +384,6 @@ export function EditAccount() {
                                         </div>
                                         <div className='fieldContainer2'>
                                             <div className='fieldSubContainer'>
-                                                <div className='fieldTitle'>Assign To</div>
-                                                <FormControl error={!!errors?.assigned_to?.[0]} sx={{ width: '70%' }}>
-                                                    <Autocomplete
-                                                        multiple
-                                                        value={selectedAssignTo}
-                                                        limitTags={2}
-                                                        options={state.users ? state.users.filter((option: any) => !selectedAssignTo.some((selectedOption) => selectedOption.id === option.id)) : []}
-                                                        getOptionLabel={(option: any) => state?.users ? option?.user__email : option}
-                                                        onChange={(e: any, value: any) => handleChange2('assigned_to', value)}
-                                                        size='small'
-                                                        filterSelectedOptions
-                                                        filterOptions={(options) => options.filter(option => !selectedAssignTo.includes(option?.id))}
-                                                        renderTags={(value, getTagProps) =>
-                                                            value.map((option, index) => (
-                                                                <Chip
-                                                                    deleteIcon={<FaTimes style={{ width: '9px' }} />}
-                                                                    sx={{ backgroundColor: 'rgba(0, 0, 0, 0.08)', height: '18px' }}
-                                                                    variant='outlined'
-                                                                    label={state?.users ? option?.user__email : option}
-                                                                    {...getTagProps({ index })}
-                                                                />
-                                                            ))
-                                                        }
-                                                        popupIcon={<CustomPopupIcon><FaPlus className='input-plus-icon' /></CustomPopupIcon>}
-                                                        renderInput={(params) => (
-                                                            <TextField {...params}
-                                                                placeholder='Add Users'
-                                                                InputProps={{
-                                                                    ...params.InputProps,
-                                                                    sx: {
-                                                                        '& .MuiAutocomplete-popupIndicator': { '&:hover': { backgroundColor: 'white' } },
-                                                                        '& .MuiAutocomplete-endAdornment': {
-                                                                            mt: '-8px',
-                                                                            mr: '-8px',
-                                                                        }
-                                                                    }
-                                                                }}
-                                                            />
-                                                        )}
-                                                    />
-                                                    <FormHelperText>{errors?.assigned_to?.[0] || ''}</FormHelperText>
-                                                </FormControl>
-                                            </div>
-                                            <div className='fieldSubContainer'>
                                                 <div className='fieldTitle'>account_attachment</div>
                                                 <TextField
                                                     name='account_attachment'
@@ -557,13 +418,10 @@ export function EditAccount() {
                                                     error={!!errors?.account_attachment?.[0]}
                                                 />
                                             </div>
-                                        </div>
-                                        <div className='fieldContainer2'>
                                             <div className='fieldSubContainer'>
                                                 <div className='fieldTitle'>Tags</div>
                                                 <FormControl error={!!errors?.tags?.[0]} sx={{ width: '70%' }}>
                                                     <Autocomplete
-                                                        // ref={autocompleteRef}
                                                         value={selectedTags}
                                                         multiple
                                                         limitTags={5}
@@ -602,9 +460,6 @@ export function EditAccount() {
                                                     />
                                                     <FormHelperText>{errors?.tags?.[0] || ''}</FormHelperText>
                                                 </FormControl>
-                                            </div>
-                                            <div className='fieldSubContainer'>
-                                                <div className='fieldTitle'></div>
                                             </div>
                                         </div>
                                     </Box>
