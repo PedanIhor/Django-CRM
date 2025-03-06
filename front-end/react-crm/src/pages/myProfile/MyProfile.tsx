@@ -6,6 +6,8 @@ import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Cancel';
 import SuccessSnackbar from '../../components/SuccessSnackbar';
+import axios from 'axios';
+import { SERVER } from '../../services/ApiUrls';
 
 interface ProfileData {
     address_line: string;
@@ -28,6 +30,7 @@ const MyProfile: React.FC = () => {
     const [formData, setFormData] = useState<ProfileData | null>(null);
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
     useEffect(() => {
         const getProfile = async () => {
@@ -124,6 +127,56 @@ const MyProfile: React.FC = () => {
         setSnackbarOpen(false);
     };
 
+    
+
+const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files[0]) {
+        const file = event.target.files[0];
+        setSelectedFile(file);
+
+        const formData = new FormData();
+        formData.append('profile_pic', file);
+
+        const headers = {
+            Accept: 'application/json',
+            Authorization: localStorage.getItem('Token'),
+            org: localStorage.getItem('org')
+        };
+
+        try {
+            // Upload the image to the server and get the URL
+            const uploadResponse = await axios.post(`${SERVER}/api/upload-profile-pic/`, formData, { headers });
+
+            const uploadResult = uploadResponse.data;
+            const imageUrl = uploadResult.url; // Assuming the server returns the URL of the saved image
+            console.log('Image URL:', imageUrl);
+            // Update the formData state with the new profile picture URL
+            setFormData((prevFormData) => {
+                if (prevFormData) {
+                    return {
+                        ...prevFormData,
+                        profile_pic: imageUrl
+                    };
+                }
+                return prevFormData;
+            });
+
+            // Update the userData state with the new profile picture URL
+            if (userData) {
+                setUserData({
+                    ...userData,
+                    profile_pic: imageUrl
+                });
+            }
+
+            setSnackbarMessage('Profile picture updated successfully');
+            setSnackbarOpen(true);
+        } catch (error) {
+            console.error('Error updating profile picture:', error);
+        }
+    }
+};
+
     return (
         <Box sx={{ mt: '60px' }}>
             <CustomToolbar>
@@ -144,10 +197,10 @@ const MyProfile: React.FC = () => {
                                 }}
                             >
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                                    <Avatar 
-                                        src={userData?.profile_pic}
-                                        sx={{ width: 100, height: 100 }}
-                                    />
+                                <Avatar 
+                                    src={userData?.profile_pic ? `${SERVER}${userData.profile_pic}` : undefined}
+                                    sx={{ width: 100, height: 100 }}
+                                />
                                     <Box>
                                         <Typography variant="h5" sx={{ color: '#0e0e0e !important', fontWeight: "400 !important" }}>
                                             {userData?.first_name} {userData?.last_name}
@@ -155,6 +208,19 @@ const MyProfile: React.FC = () => {
                                         <Typography variant="body1" sx={{ color: 'rgba(74, 99, 103, 0.6)' }}>
                                             {userData?.city}, {userData?.country}
                                         </Typography>
+                                        <Typography 
+                                            variant="body2" 
+                                            sx={{ color: 'blue', cursor: 'pointer' }} 
+                                            onClick={() => document.getElementById('fileInput')?.click()}
+                                        >
+                                            Change Profile Image
+                                        </Typography>
+                                        <input 
+                                            type="file" 
+                                            id="fileInput" 
+                                            style={{ display: 'none' }} 
+                                            onChange={handleFileChange} 
+                                        />
                                     </Box>
                                 </Box>
                             </Paper>
@@ -362,4 +428,4 @@ const MyProfile: React.FC = () => {
     );
 };
 
-export default MyProfile; 
+export default MyProfile;

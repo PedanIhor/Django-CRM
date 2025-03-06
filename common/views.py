@@ -68,6 +68,10 @@ from django.core.exceptions import ObjectDoesNotExist
 from common.crm_permissions import IsAdmin, crm_permissions, crm_roles
 from help_tools import help_views
 
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+import os
+
 class GetTeamsAndUsersView(APIView):
     permission_classes = (IsAuthenticated,)
 
@@ -1436,3 +1440,50 @@ class UserProfileDetailView(APIView):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+
+
+
+class UploadProfilePicView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        print("Received request to upload profile picture")
+        if request.FILES.get('profile_pic'):
+            profile = request.profile
+            profile_pic = request.FILES['profile_pic']
+            print(f"Received file: {profile_pic.name}")
+            
+            # Specify the directory where the file should be saved
+            save_path = os.path.join(settings.MEDIA_ROOT, 'profile-pics')
+            os.makedirs(save_path, exist_ok=True)
+            print(f"Save path: {save_path}")
+            
+            # Save the file
+            file_name, file_extension = os.path.splitext(profile_pic.name)
+            file_path = os.path.join(save_path, f"{file_name}{file_extension}")
+            try:
+                with open(file_path, 'wb+') as destination:
+                    for chunk in profile_pic.chunks():
+                        destination.write(chunk)
+                print(f"File saved successfully at {file_path}")
+            except Exception as e:
+                print(f"Error saving file: {e}")
+                return JsonResponse({'error': 'Error saving file'}, status=500)
+            
+            # Construct the URL for the saved file
+            file_url = os.path.join(settings.MEDIA_URL, 'profile-pics', f"{file_name}{file_extension}")
+            print(f"File URL: {file_url}")
+            
+            # Update the profile with the new profile picture URL
+            profile.user.profile_pic = file_url
+            profile.user.save()
+            print("Profile picture updated successfully")
+            
+            return JsonResponse({'url': file_url})
+        print("No file received in the request")
+        return JsonResponse({'error': 'Invalid request'}, status=400)
+    
