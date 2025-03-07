@@ -40,14 +40,15 @@ type response = {
     secondary_number: string;
     title: string;
     twitter_username: string;
-    address_line: string;
-    city: string;
-    country: string;
-    postcode: string;
-    state: string;
-    street: string;
+    address: {
+        address_line: string;
+        city: string;
+        country: string;
+        postcode: string;
+        state: string;
+        street: string;
+    };
     name: string;
-    website: string;
 };
 
 export const formatDate = (dateString: any) => {
@@ -59,8 +60,6 @@ export default function ContactDetails() {
     const navigate = useNavigate()
     const { state } = useLocation()
     const [contactDetails, setContactDetails] = useState<response | null>(null)
-    const [addressDetails, setAddressDetails] = useState<response | null>(null)
-    const [org, setOrg] = useState<response | null>(null)
 
     useEffect(() => {
         getContactDetail(state.contactId)
@@ -78,38 +77,15 @@ export default function ContactDetails() {
                 console.log(res, 'res');
                 if (!res.error) {
                     setContactDetails(res?.contact_obj)
-                    setAddressDetails(res?.address_obj)
-                    setOrg(res?.org)
                 }
             })
     }
-
-    //   useEffect(() => {
-    // navigate(-1)
-    //     fetchData(`${ContactUrl}/${state.contactId}/`, 'GET', null as any, Header)
-    //       .then((data) => {
-    //         if (!data.error) {
-    // setData(Object.assign({}, data, { cases: data.cases }));
-
-    //           setContactDetails(data.contact_obj)
-    //           setNewaddress(...contactDetails, {
-    //             addreslane: data.contact_obj.address.address_line,
-    //             city: data.contact_obj.address.city,
-    //             state: data.contact_obj.address.state,
-    //             postcode: data.contact_obj.address.postcode,
-    //             country: data.contact_obj.address.country,
-    //             street: data.contact_obj.address.street
-    //           })
-    //         }
-    //       })
-    //   }, [])
 
     const backbtnHandle = () => {
         navigate('/app/contacts')
     }
 
     const editHandle = () => {
-        // navigate('/contacts/edit-contacts', { state: { value: contactDetails, address: newAddress } })
         navigate('/app/contacts/edit-contact', {
             state: {
                 value: {
@@ -126,12 +102,12 @@ export default function ContactDetails() {
                     language: contactDetails?.language,
                     do_not_call: contactDetails?.do_not_call,
                     department: contactDetails?.department,
-                    address: addressDetails?.address_line,
-                    street: addressDetails?.street,
-                    city: addressDetails?.city,
-                    state: addressDetails?.state,
-                    country: addressDetails?.country,
-                    postcode: addressDetails?.postcode,
+                    address: contactDetails?.address?.address_line,
+                    street: contactDetails?.address?.street,
+                    city: contactDetails?.address?.city,
+                    state: contactDetails?.address?.state,
+                    country: contactDetails?.address?.country,
+                    postcode: contactDetails?.address?.postcode,
                     description: contactDetails?.description,
                     linked_in_url: contactDetails?.linked_in_url,
                     facebook_url: contactDetails?.facebook_url,
@@ -144,7 +120,6 @@ export default function ContactDetails() {
     const module = 'Contacts'
     const crntPage = 'Contact Detail'
     const backBtn = 'Back To Contacts'
-    // console.log(state, 'contact');
 
     return (
         <Box sx={{ mt: '60px' }}>
@@ -182,41 +157,26 @@ export default function ContactDetails() {
                                     <div className='title2'>Account Title</div>
                                     <div style={{ fontSize: '16px', color: 'gray', display: 'flex', flexDirection: 'row', marginTop: '5%' }}>
                                         <div style={{ display: 'flex' }}>
-                                            {/* <AvatarGroup
-                                                total={2}
-                                                max={3}
-                                            >
-                                                <Tooltip title={con.user.username}>
-                                                    <Avatar alt={'sdf'}>
-                                                    </Avatar>
-                                                </Tooltip>
-                                            </AvatarGroup> */}
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             <div style={{ padding: '20px', display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-                                <div style={{ width: '32%' }}>
+                                <div style={{ width: '48%' }}>
                                     <div className='title2'>First Name</div>
                                     <div className='title3'>
                                         {contactDetails?.first_name || '----'}
                                     </div>
                                 </div>
-                                <div style={{ width: '32%' }}>
+                                <div style={{ width: '48%' }}>
                                     <div className='title2'>Last Name</div>
                                     <div className='title3'>
                                         {contactDetails?.last_name || '----'}
                                     </div>
                                 </div>
-                                <div style={{ width: '32%' }}>
-                                    <div className='title2'>Organization Name</div>
-                                    <div className='title3'>
-                                        {org?.name || '----'}
-                                    </div>
-                                </div>
                             </div>
                             <div style={{ padding: '20px', marginTop: '15px', display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-                                <div style={{ width: '32%' }}>
+                                <div style={{ width: '48%' }}>
                                     <div className='title2'>Email Address</div>
                                     <div style={{ fontSize: '16px', color: '#1E90FF', marginTop: '5%' }}>
                                         <div>
@@ -225,19 +185,13 @@ export default function ContactDetails() {
                                         </div>
                                     </div>
                                 </div>
-                                <div style={{ width: '32%' }}>
+                                <div style={{ width: '48%' }}>
                                     <div className='title2'>Mobile Number</div>
                                     <div className='title3'>
                                         <div>
                                             {contactDetails?.mobile_number ? <div>{contactDetails?.mobile_number}{<FaStar style={{ fontSize: '16px', fill: 'yellow' }} />}</div> : '----'}<br />
                                             {contactDetails?.secondary_number ? contactDetails?.secondary_number : ''}
                                         </div>
-                                    </div>
-                                </div>
-                                <div style={{ width: '32%' }}>
-                                    <div className='title2'>website</div>
-                                    <div className='title3'>
-                                        {contactDetails?.website ? <Link>{contactDetails?.website}</Link> : '----'}
                                     </div>
                                 </div>
                             </div>
@@ -263,7 +217,6 @@ export default function ContactDetails() {
                                     </div>
                                 </div>
                             </div>
-                            {/* Address details */}
                             <div style={{ marginTop: '15px' }}>
                                 <div style={{ padding: '20px', borderBottom: '1px solid lightgray', display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
                                     <div style={{ fontWeight: 600, fontSize: '18px', color: '#1a3353f0' }}>
@@ -274,19 +227,19 @@ export default function ContactDetails() {
                                     <div style={{ width: '32%' }}>
                                         <div className='title2'>Address Lane</div>
                                         <div className='title3'>
-                                            {addressDetails?.address_line || '----'}
+                                            {contactDetails?.address?.address_line || '----'}
                                         </div>
                                     </div>
                                     <div style={{ width: '32%' }}>
                                         <div className='title2'>Street</div>
                                         <div className='title3'>
-                                            {addressDetails?.street || '----'}
+                                            {contactDetails?.address?.street || '----'}
                                         </div>
                                     </div>
                                     <div style={{ width: '32%' }}>
                                         <div className='title2'>City</div>
                                         <div className='title3'>
-                                            {addressDetails?.city || '----'}
+                                            {contactDetails?.address?.city || '----'}
                                         </div>
                                     </div>
                                 </div>
@@ -294,24 +247,23 @@ export default function ContactDetails() {
                                     <div style={{ width: '32%' }}>
                                         <div className='title2'>Pincode</div>
                                         <div className='title3'>
-                                            {addressDetails?.postcode || '----'}
+                                            {contactDetails?.address?.postcode || '----'}
                                         </div>
                                     </div>
                                     <div style={{ width: '32%' }}>
                                         <div className='title2'>State</div>
                                         <div className='title3'>
-                                            {addressDetails?.state || '----'}
+                                            {contactDetails?.address?.state || '----'}
                                         </div>
                                     </div>
                                     <div style={{ width: '32%' }}>
                                         <div className='title2'>Country</div>
                                         <div className='title3'>
-                                            {contactDetails?.country || '----'}
+                                            {contactDetails?.address?.country || '----'}
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            {/* Description */}
                             <div style={{ marginTop: '15px' }}>
                                 <div style={{ padding: '20px', borderBottom: '1px solid lightgray', display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
                                     <div style={{ fontWeight: 600, fontSize: '18px', color: '#1a3353f0' }}>
@@ -331,7 +283,6 @@ export default function ContactDetails() {
                                     Social
                                 </div>
                                 <div style={{ color: '#3E79F7', fontSize: '16px', fontWeight: 600 }}>
-                                    {/* Add Social #1E90FF */}
                                     <Button
                                         type='submit'
                                         variant='text'
