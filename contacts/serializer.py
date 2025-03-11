@@ -3,19 +3,22 @@ from rest_framework import serializers
 from common.serializer import (
     AttachmentsSerializer,
     BillingAddressSerializer,
+    UserSerializer,
     OrganizationSerializer,
     ProfileSerializer,
 )
 from contacts.models import Contact
 from teams.serializer import TeamsSerializer
-
+from accounts.serializer import AccountSerializer
 
 class ContactSerializer(serializers.ModelSerializer):
-    teams = TeamsSerializer(read_only=True, many=True)
+    # teams = TeamsSerializer(read_only=True, many=True)
     address = BillingAddressSerializer(read_only=True)
-    get_team_users = ProfileSerializer(read_only=True, many=True)
-    contact_attachment = AttachmentsSerializer(read_only=True, many=True)
-    org = OrganizationSerializer()
+    account = AccountSerializer(read_only=True)
+    created_by = UserSerializer(read_only=True)
+    # get_team_users = ProfileSerializer(read_only=True, many=True)
+    # contact_attachment = AttachmentsSerializer(read_only=True, many=True)
+    # org = OrganizationSerializer()
     country = serializers.SerializerMethodField()
 
     def get_country(self, obj):
@@ -49,7 +52,6 @@ class ContactSerializer(serializers.ModelSerializer):
             "teams",
             "created_on_arrow",
             "get_team_users",
-            "org",
             "type",
             "account",
         )

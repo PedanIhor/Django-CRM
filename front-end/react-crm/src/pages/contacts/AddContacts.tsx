@@ -244,6 +244,7 @@ function AddContacts() {
       twitter_username: formData.twitter_username,
       type: formData.type,
       account: formData.account,
+      postcode: formData.postcode,
     };
     fetchData(`${ContactUrl}/`, 'POST', JSON.stringify(data), Header)
       .then((res: any) => {
