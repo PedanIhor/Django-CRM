@@ -17,7 +17,10 @@ import { ContactUrl } from '../../services/ApiUrls'
 import { fetchData } from '../../components/FetchData'
 
 type response = {
-    created_by: string;
+    created_by: {
+        first_name: string;
+        last_name: string;
+    };
     created_on: string;
     created_on_arrow: string;
     date_of_birth: string;
@@ -49,6 +52,12 @@ type response = {
         street: string;
     };
     name: string;
+    country: string;
+    type: string;
+    account: {
+        name: string;
+        id: string;
+    };
 };
 
 export const formatDate = (dateString: any) => {
@@ -106,7 +115,7 @@ export default function ContactDetails() {
                     street: contactDetails?.address?.street,
                     city: contactDetails?.address?.city,
                     state: contactDetails?.address?.state,
-                    country: contactDetails?.address?.country,
+                    country: contactDetails?.country,
                     postcode: contactDetails?.address?.postcode,
                     description: contactDetails?.description,
                     linked_in_url: contactDetails?.linked_in_url,
@@ -126,7 +135,7 @@ export default function ContactDetails() {
             <div>
                 <CustomAppBar backbtnHandle={backbtnHandle} module={module} backBtn={backBtn} crntPage={crntPage} editHandle={editHandle} />
                 <Box sx={{ mt: '110px', p: '20px', display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-                    <Box sx={{ width: '65%' }}>
+                    <Box sx={{ width: '100%' }}>
                         <Card sx={{ borderRadius: '7px' }}>
                             <div style={{ padding: '20px', borderBottom: '1px solid lightgray', display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <div style={{ fontWeight: 600, fontSize: '18px', color: '#1a3353f0' }}>
@@ -134,8 +143,8 @@ export default function ContactDetails() {
                                 </div>
                                 <div style={{ color: 'gray', fontSize: '16px', display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', marginRight: '15px', textTransform: 'capitalize' }}>
-                                        created on
-                                        {formatDate(contactDetails?.created_on)}
+                                        created{' '}
+                                        {contactDetails?.created_on_arrow}
                                         &nbsp;by &nbsp;&nbsp;
                                         <span style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center' }}>
                                             <Avatar
@@ -146,19 +155,10 @@ export default function ContactDetails() {
                                                 }}
                                             />
                                         </span> &nbsp;&nbsp;
-                                        {contactDetails?.first_name}
-                                        {contactDetails?.last_name}
+                                        {contactDetails?.created_by?.first_name}
+                                        {contactDetails?.created_by?.last_name}
                                     </div>
                                     <div>Last update&nbsp;{contactDetails?.created_on_arrow}</div>
-                                </div>
-                            </div>
-                            <div style={{ padding: '20px', display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-                                <div style={{ width: '32%' }}>
-                                    <div className='title2'>Account Title</div>
-                                    <div style={{ fontSize: '16px', color: 'gray', display: 'flex', flexDirection: 'row', marginTop: '5%' }}>
-                                        <div style={{ display: 'flex' }}>
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
                             <div style={{ padding: '20px', display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
@@ -197,12 +197,6 @@ export default function ContactDetails() {
                             </div>
                             <div style={{ padding: '20px', marginTop: '15px', display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
                                 <div style={{ width: '32%' }}>
-                                    <div className='title2'>Department</div>
-                                    <div className='title3'>
-                                        {contactDetails?.department || '----'}
-                                    </div>
-                                </div>
-                                <div style={{ width: '32%' }}>
                                     <div className='title2'>Language</div>
                                     <div className='title3'>
                                         {contactDetails?.language || '----'}
@@ -211,12 +205,88 @@ export default function ContactDetails() {
                                 <div style={{ width: '32%' }}>
                                     <div className='title2'>Do Not Call</div>
                                     <div className='title3'>
-                                        <AntSwitch
-                                            checked={contactDetails?.do_not_call}
-                                            inputProps={{ 'aria-label': 'ant design' }} />
+                                        {contactDetails?.do_not_call ? 'True' : 'False'}
+                                    </div>
+                                </div>
+                                <div style={{ width: '32%' }}>
+                                </div>
+                            </div>                            
+                            <div style={{ padding: '20px', marginTop: '15px', display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
+                                <div style={{ width: '32%' }}>
+                                    <div className='title2'>LinkedIn URL</div>
+                                    <div className='title3'>
+                                        {contactDetails?.linked_in_url || '----'}
+                                    </div>
+                                </div>
+                                <div style={{ width: '32%' }}>
+                                    <div className='title2'>Facebook URL</div>
+                                    <div className='title3'>
+                                        {contactDetails?.facebook_url || '----'}
+                                    </div>
+                                </div>
+                                <div style={{ width: '32%' }}>
+                                    <div className='title2'>Twitter URL</div>
+                                    <div className='title3'>
+                                        {contactDetails?.twitter_username || '----'}
                                     </div>
                                 </div>
                             </div>
+                            <div style={{ padding: '20px', marginTop: '15px', display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
+                                <div style={{ width: '32%' }}>
+                                    <div className='title2'>Type</div>
+                                    <div className='title3'>
+                                        {contactDetails?.type ? contactDetails.type.charAt(0).toUpperCase() + contactDetails.type.slice(1).toLowerCase() : '----'}
+                                    </div>
+                                </div>
+                                <div style={{ width: '32%' }}>
+                                </div>
+                                <div style={{ width: '32%' }}>
+                                </div>
+                            </div>
+                            {contactDetails?.type === 'corporate' && (
+                                <div style={{ marginTop: '15px' }}>
+                                    <div style={{ padding: '20px', borderBottom: '1px solid lightgray', display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
+                                        <div style={{ fontWeight: 600, fontSize: '18px', color: '#1a3353f0' }}>
+                                            Account Information
+                                        </div>
+                                    </div>
+                                    <div style={{ padding: '20px', display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>                                        
+                                        <div style={{ width: '32%' }}>
+                                            <div className='title2'>Account Name</div>
+                                            <div className='title3'>
+                                                {contactDetails?.account?.name ? 
+                                                    <Link 
+                                                        component="button"
+                                                        variant="body1"
+                                                        onClick={() => navigate(`/app/accounts/account-details`, { state: { accountId: contactDetails?.account?.id, detail: true} })}
+                                                        style={{ color: '#3E79F7', textDecoration: 'none', cursor: 'pointer' }}
+                                                    >
+                                                        {contactDetails.account.name}
+                                                    </Link> 
+                                                    : '----'}
+                                            </div>
+                                        </div>
+                                        <div style={{ width: '32%' }}>
+                                            <div className='title2'>Contact Title</div>
+                                            <div className='title3'>
+                                                {contactDetails?.title || '----'}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div style={{ padding: '20px', display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>                                        
+                                        <div style={{ width: '32%' }}>
+                                            <div className='title2'>Contact Department</div>
+                                            <div className='title3'>
+                                                {contactDetails?.department || '----'}
+                                            </div>
+                                        </div>
+                                        <div style={{ width: '32%' }}>
+                                        </div>
+                                        <div style={{ width: '32%' }}>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                             <div style={{ marginTop: '15px' }}>
                                 <div style={{ padding: '20px', borderBottom: '1px solid lightgray', display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
                                     <div style={{ fontWeight: 600, fontSize: '18px', color: '#1a3353f0' }}>
@@ -245,7 +315,7 @@ export default function ContactDetails() {
                                 </div>
                                 <div style={{ padding: '20px', marginTop: '15px', display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
                                     <div style={{ width: '32%' }}>
-                                        <div className='title2'>Pincode</div>
+                                        <div className='title2'>Postcode</div>
                                         <div className='title3'>
                                             {contactDetails?.address?.postcode || '----'}
                                         </div>
@@ -259,7 +329,7 @@ export default function ContactDetails() {
                                     <div style={{ width: '32%' }}>
                                         <div className='title2'>Country</div>
                                         <div className='title3'>
-                                            {contactDetails?.address?.country || '----'}
+                                            {contactDetails?.country || '----'}
                                         </div>
                                     </div>
                                 </div>
@@ -273,59 +343,6 @@ export default function ContactDetails() {
                                 <Box sx={{ p: '15px' }}>
                                     {contactDetails?.description ? <div dangerouslySetInnerHTML={{ __html: contactDetails?.description }} /> : '---'}
                                 </Box>
-                            </div>
-                        </Card>
-                    </Box>
-                    <Box sx={{ width: '34%' }}>
-                        <Card sx={{ borderRadius: '7px', p: '20px' }}>
-                            <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-                                <div style={{ fontWeight: 600, fontSize: '16px', color: '#1a3353f0' }}>
-                                    Social
-                                </div>
-                                <div style={{ color: '#3E79F7', fontSize: '16px', fontWeight: 600 }}>
-                                    <Button
-                                        type='submit'
-                                        variant='text'
-                                        size='small'
-                                        startIcon={<FaEnvelope style={{ fill: '#3E79F7' }} />}
-                                        style={{ textTransform: 'capitalize', fontWeight: 600, fontSize: '16px' }}
-                                    >
-                                        Add Socials
-                                    </Button>
-                                </div>
-                            </div>
-                            <div style={{ fontSize: '16px', marginTop: '15px' }}>
-                                LinkedIn URL
-                            </div>
-                            <div style={{ paddingBottom: '10px', width: '80%', marginBottom: '10px' }}>
-                                <TextField
-                                    variant='outlined'
-                                    size='small'
-                                    value={contactDetails?.linked_in_url || '----'}
-                                    sx={{ height: '40px', width: '100%', mt: 1 }}
-                                />
-                            </div>
-                            <div style={{ fontSize: '16px' }}>
-                                Facebook URL
-                            </div>
-                            <div style={{ paddingBottom: '10px', width: '80%', marginBottom: '10px' }}>
-                                <TextField
-                                    variant='outlined'
-                                    size='small'
-                                    value={contactDetails?.facebook_url || '----'}
-                                    sx={{ height: '40px', width: '100%', mt: 1 }}
-                                />
-                            </div>
-                            <div style={{ fontSize: '16px', marginTop: '15px' }}>
-                                Twitter URL
-                            </div>
-                            <div style={{ paddingBottom: '10px', width: '80%', marginBottom: '10px' }}>
-                                <TextField
-                                    variant='outlined'
-                                    size='small'
-                                    value={contactDetails?.twitter_username || '----'}
-                                    sx={{ height: '40px', width: '100%', mt: 1 }}
-                                />
                             </div>
                         </Card>
                     </Box>
