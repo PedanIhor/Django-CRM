@@ -5,6 +5,7 @@ Tests for the Leads API.
 from django.test import TestCase
 from django.urls import reverse
 from django.db.models import Q
+import json
 
 from rest_framework.test import APIClient
 from rest_framework import status
@@ -17,9 +18,10 @@ from common.models import (
     User,
 )
 from leads.models import Lead
+from contacts.models import Contact
 
 
-GET_LEADS_LIST = reverse("common_urls:api_leads:get_leads")
+LEADS_URL = reverse("common_urls:api_leads:leads")
 
 LIST_RESPONSE_KEYS = {
     "open_leads": {
@@ -39,6 +41,34 @@ LIST_RESPONSE_KEYS = {
     "users": [],
     "countries": [],
     "industries": [],
+}
+
+POST_REQUEST_PAYLOAD = {
+   "title":"Test Lead Title CEO",
+   "first_name":"Test",
+   "last_name":"Contact",
+   "phone":"+911234567899",
+   "email":"contact_email@test.com",
+   "lead_attachment":None,
+   "opportunity_amount":"99999",
+   "website":"https://random-site.com",
+   "description":"",
+   "teams":"",
+   "assigned_to":[],
+   "contacts":[],
+   "status":"assigned",
+   "source":"call",
+   "address_line":"144 Testable str., Testad, Netherlands",
+   "street":"Testable str.",
+   "city":"Testad",
+   "state":"North Holland",
+   "postcode":"77777",
+   "country":"NL",
+   "tags":[],
+   "company":"",
+   "probability":"60",
+   "industry":"ADVERTISING",
+   "skype_ID":"any-skype"
 }
 
 
@@ -65,44 +95,44 @@ class PublicLeadsAPITests(TestCase):
 
     def test_get_leads_list_org_not_provided(self):
         self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.retrieve_token_for_role("ADMIN"))
-        res = self.client.get(GET_LEADS_LIST, headers={})
+        res = self.client.get(LEADS_URL, headers={})
         self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_get_leads_list_response_structure(self):
         self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.retrieve_token_for_role("ADMIN"))
-        res = self.client.get(GET_LEADS_LIST, headers=self.headers)
+        res = self.client.get(LEADS_URL, headers=self.headers)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertTrue(set(LIST_RESPONSE_KEYS.keys()).issubset(set(res.data.keys())), "Response keys are not as expected")
 
     def test_get_leads_list_filter_by_status(self):
         self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.retrieve_token_for_role("ADMIN"))
-        res = self.client.get(GET_LEADS_LIST, headers=self.headers, data={"status": "open"})
+        res = self.client.get(LEADS_URL, headers=self.headers, data={"status": "open"})
         for lead in res.data["open_leads"]["open_leads"]:
             self.assertEqual(lead["status"], "open")
         self.assertEqual(res.data['close_leads']['close_leads'], [])
         self.assertEqual(res.status_code, status.HTTP_200_OK)
 
-        res = self.client.get(GET_LEADS_LIST, headers=self.headers, data={"status": "assigned"})
+        res = self.client.get(LEADS_URL, headers=self.headers, data={"status": "assigned"})
         for lead in res.data["open_leads"]["open_leads"]:
             self.assertEqual(lead["status"], "assigned")
         self.assertEqual(res.status_code, status.HTTP_200_OK)
 
-        res = self.client.get(GET_LEADS_LIST, headers=self.headers, data={"status": "in process"})
+        res = self.client.get(LEADS_URL, headers=self.headers, data={"status": "in process"})
         for lead in res.data["open_leads"]["open_leads"]:
             self.assertEqual(lead["status"], "in process")
         self.assertEqual(res.status_code, status.HTTP_200_OK)
 
-        res = self.client.get(GET_LEADS_LIST, headers=self.headers, data={"status": "converted"})
+        res = self.client.get(LEADS_URL, headers=self.headers, data={"status": "converted"})
         for lead in res.data["open_leads"]["open_leads"]:
             self.assertEqual(lead["status"], "converted")
         self.assertEqual(res.status_code, status.HTTP_200_OK)
 
-        res = self.client.get(GET_LEADS_LIST, headers=self.headers, data={"status": "recycled"})
+        res = self.client.get(LEADS_URL, headers=self.headers, data={"status": "recycled"})
         for lead in res.data["open_leads"]["open_leads"]:
             self.assertEqual(lead["status"], "recycled")
         self.assertEqual(res.status_code, status.HTTP_200_OK)
 
-        res = self.client.get(GET_LEADS_LIST, headers=self.headers, data={"status": "closed"})
+        res = self.client.get(LEADS_URL, headers=self.headers, data={"status": "closed"})
         self.assertEqual(res.data["open_leads"]["open_leads"], [])
         for lead in res.data['close_leads']['close_leads']:
             self.assertEqual(lead["status"], "closed")
@@ -110,37 +140,37 @@ class PublicLeadsAPITests(TestCase):
 
     def test_get_leads_list_filter_by_source(self):
         self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.retrieve_token_for_role("ADMIN"))
-        res = self.client.get(GET_LEADS_LIST, headers=self.headers, data={"source": "call"})
+        res = self.client.get(LEADS_URL, headers=self.headers, data={"source": "call"})
         for lead in res.data["open_leads"]["open_leads"]:
             self.assertEqual(lead["source"], "call")
         self.assertEqual(res.status_code, status.HTTP_200_OK)
 
-        res = self.client.get(GET_LEADS_LIST, headers=self.headers, data={"source": "email"})
+        res = self.client.get(LEADS_URL, headers=self.headers, data={"source": "email"})
         for lead in res.data["open_leads"]["open_leads"]:
             self.assertEqual(lead["source"], "email")
         self.assertEqual(res.status_code, status.HTTP_200_OK)
 
-        res = self.client.get(GET_LEADS_LIST, headers=self.headers, data={"source": "existing customer"})
+        res = self.client.get(LEADS_URL, headers=self.headers, data={"source": "existing customer"})
         for lead in res.data["open_leads"]["open_leads"]:
             self.assertEqual(lead["source"], "existing customer")
         self.assertEqual(res.status_code, status.HTTP_200_OK)
 
-        res = self.client.get(GET_LEADS_LIST, headers=self.headers, data={"source": "partner"})
+        res = self.client.get(LEADS_URL, headers=self.headers, data={"source": "partner"})
         for lead in res.data["open_leads"]["open_leads"]:
             self.assertEqual(lead["source"], "partner")
         self.assertEqual(res.status_code, status.HTTP_200_OK)
 
-        res = self.client.get(GET_LEADS_LIST, headers=self.headers, data={"source": "public relations"})
+        res = self.client.get(LEADS_URL, headers=self.headers, data={"source": "public relations"})
         for lead in res.data["open_leads"]["open_leads"]:
             self.assertEqual(lead["source"], "public relations")
         self.assertEqual(res.status_code, status.HTTP_200_OK)
 
-        res = self.client.get(GET_LEADS_LIST, headers=self.headers, data={"source": "compaign"})
+        res = self.client.get(LEADS_URL, headers=self.headers, data={"source": "compaign"})
         for lead in res.data["open_leads"]["open_leads"]:
             self.assertEqual(lead["source"], "compaign")
         self.assertEqual(res.status_code, status.HTTP_200_OK)
 
-        res = self.client.get(GET_LEADS_LIST, headers=self.headers, data={"source": "other"})
+        res = self.client.get(LEADS_URL, headers=self.headers, data={"source": "other"})
         for lead in res.data["open_leads"]["open_leads"]:
             self.assertEqual(lead["source"], "other")
         self.assertEqual(res.status_code, status.HTTP_200_OK)
@@ -155,7 +185,7 @@ class PublicLeadsAPITests(TestCase):
         )
 
         def proceed_limit_offset(limit, offset):
-            res = self.client.get(GET_LEADS_LIST, headers=self.headers, data={"limit": limit, "offset": offset})
+            res = self.client.get(LEADS_URL, headers=self.headers, data={"limit": limit, "offset": offset})
             self.assertEqual(res.status_code, status.HTTP_200_OK)
             self.assertEqual(db_open_leads.count(), res.data["open_leads"]["leads_count"])
             total_count = db_open_leads.count()
@@ -198,9 +228,44 @@ class PublicLeadsAPITests(TestCase):
                 .all()
         )
         self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.retrieve_token_for_user(user))
-        res = self.client.get(GET_LEADS_LIST, headers=self.headers, data={"limit": 100, "offset": 0})
+        res = self.client.get(LEADS_URL, headers=self.headers, data={"limit": 100, "offset": 0})
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(len(user_leads), len(res.data["open_leads"]["open_leads"]))
         db_leads_ids = [str(lead.id) for lead in user_leads]
         res_leads_ids = [lead["id"] for lead in res.data["open_leads"]["open_leads"]]
         self.assertEqual(db_leads_ids, res_leads_ids)
+
+    def test_post_leads(self):
+        user = User.objects.filter(profile__org__id=self.org.id, email="user1@test.com").first()
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.retrieve_token_for_user(user))
+
+        payload = POST_REQUEST_PAYLOAD.copy()
+
+        contact = Contact.objects.first()
+        contacts = [str(contact.id)]
+        payload["contacts"] = contacts
+
+        assignees = [str(id) for id in list(Profile.objects.filter(user__email__in=["user3@test.com", "user4@test.com"]).all().values_list("id", flat=True))]
+        payload["assigned_to"] = assignees
+
+        res = self.client.post(LEADS_URL, json.dumps(payload), headers=self.headers, content_type="application/json")
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Lead.objects.count(), 101)
+        lead = Lead.objects.filter(org__id=self.org.id, created_by_id=user.id).first()
+        self.assertEqual(lead.title, "Test Lead Title CEO")
+        self.assertEqual(lead.phone, "+911234567899")
+        self.assertEqual(lead.email, "contact_email@test.com")
+        self.assertEqual(lead.opportunity_amount, 99999)
+        self.assertEqual(lead.website, "https://random-site.com")
+        self.assertEqual(lead.description, "")
+        self.assertEqual(lead.teams.count(), 0) # We do not have an user interface to assign a lead to a team for now
+        lead_assignees_ids = {str(id) for id in list(lead.assigned_to.all().values_list("id", flat=True))}
+        self.assertEqual(lead_assignees_ids, set(assignees))
+        self.assertEqual(lead.contacts.all().count(), 1)
+        self.assertEqual(lead.contacts.first().id, contact.id)
+        self.assertEqual(lead.status, "assigned")
+        self.assertEqual(lead.source, "call")
+        self.assertEqual(lead.probability, 60)
+        self.assertEqual(lead.industry, "ADVERTISING")
+        self.assertEqual(lead.skype_ID, "any-skype")
+
