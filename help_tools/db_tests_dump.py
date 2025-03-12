@@ -108,9 +108,16 @@ def create_test_org():
             name=f"Team{i}",
             description="Team{i} Description",
             org=org,
-            created_by=org_admin.user  # Set created_by_id to org admin
+            created_by=org_admin.user
         )
         teams.append(team)
+
+    all_members = [profile for profile in profiles if profile.role.name == "SALES_MANAGER" or profile.role.name == "SALES_REPRESENTATIVE"]
+    for i in range(len(all_members)):
+        team_index = i % 2
+        teams[team_index].users.add(all_members[i])
+
+    [team.save() for team in teams]
 
     contacts = []
     for i in range(30):
@@ -123,6 +130,18 @@ def create_test_org():
             postcode="12345",
             country="NL"
         )
+        contact = Contact.objects.create(
+            first_name=f"Contact_first{i}",
+            last_name=f"Contact_last{i}",
+            language="English",
+            primary_email=f"contact{i}@mail.com",
+            address=address,
+            org=org,
+            is_active=True,
+            created_by=profiles[i % 2].user
+        )
+        contact.save()
+        contacts.append(contact)
 
     return org
 
