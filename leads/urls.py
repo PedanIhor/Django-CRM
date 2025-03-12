@@ -13,7 +13,7 @@ urlpatterns = [
     ),
     path("", views.LeadListView.as_view(), name="leads"),
     path("card-view/", views.LeadCardView.as_view()),
-    path("<str:pk>/", views.LeadDetailView.as_view()),
+    path("<str:pk>/", views.LeadDetailView.as_view(), name="lead_detail"),
     path("upload/", views.LeadUploadView.as_view()),
     path("comment/<str:pk>/", views.LeadCommentView.as_view()),
     path("attachment/<str:pk>/", views.LeadAttachmentView.as_view()),

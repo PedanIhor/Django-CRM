@@ -43,6 +43,22 @@ LIST_RESPONSE_KEYS = {
     "industries": [],
 }
 
+GET_RESPONSE_KEYS = {
+    "lead_obj": {},
+    "attachments": [],
+    "comments":[],
+    "users_mention": [],
+    "assigned_data": [],
+    "teams": [],
+    "contacts": [],
+    "status": [],
+    "source": [],
+    "users": [],
+    "users_excluding_team": [],
+    "countries": [],
+    "industries": [],
+}
+
 POST_REQUEST_PAYLOAD = {
    "title":"Test Lead Title CEO",
    "first_name":"Test",
@@ -269,3 +285,37 @@ class PublicLeadsAPITests(TestCase):
         self.assertEqual(lead.industry, "ADVERTISING")
         self.assertEqual(lead.skype_ID, "any-skype")
 
+    def test_get_lead_details(self):
+        lead_db = Lead.objects.filter(org_id=self.org.id).first()
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.retrieve_token_for_role("ADMIN"))
+        lead_url = reverse("common_urls:api_leads:lead_detail", args=[lead_db.id])
+        res = self.client.get(lead_url, headers=self.headers)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(set(GET_RESPONSE_KEYS.keys()), set(res.data.keys()), "Response keys are not as expected")
+        lead_res = res.data["lead_obj"]
+
+        self.assertEqual(lead_res["id"], str(lead_db.id))
+        self.assertEqual(lead_db.title, lead_res["title"])
+        self.assertEqual(lead_db.phone, lead_res["phone"])
+        self.assertEqual(lead_db.email, lead_res["email"])
+        self.assertEqual(float(lead_db.opportunity_amount), float(lead_res["opportunity_amount"]))
+        self.assertEqual(lead_db.website, lead_res["website"])
+        self.assertEqual(lead_db.description, lead_res["description"])
+        self.assertEqual(lead_db.teams.all().count(), len(lead_res["teams"])) # We do not have an user interface to assign a lead to a team for now
+        self.assertEqual(lead_db.contacts.all().count(), len(lead_res["contacts"]))
+        db_contacts_ids = {str(contact.id) for contact in lead_db.contacts.all()}
+        res_contacts_ids = {contact["id"] for contact in lead_res["contacts"]}
+        self.assertEqual(db_contacts_ids, res_contacts_ids)
+        db_assigned_to_ids = {str(profile.id) for profile in lead_db.assigned_to.all()}
+        res_assigned_to_ids = {profile["id"] for profile in lead_res["assigned_to"]}
+        self.assertEqual(db_assigned_to_ids, res_assigned_to_ids)
+        self.assertEqual(lead_db.status, lead_res["status"])
+        self.assertEqual(lead_db.source, lead_res["source"])
+        self.assertEqual(lead_db.probability, lead_res["probability"])
+        self.assertEqual(lead_db.industry, lead_res["industry"])
+        self.assertEqual(lead_db.skype_ID, lead_res["skype_ID"])
+
+
+    def proceed_lead_for_status_converted(lead: Lead):
+         # TODO: Convert lead to an opportunity if status is "converted"
+        pass
