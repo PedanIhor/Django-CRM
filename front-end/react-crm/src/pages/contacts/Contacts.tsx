@@ -105,6 +105,8 @@ export default function Contacts({ userPermissions }: { userPermissions: string[
                 Header
             );
 
+            console.log(data, 'data');
+
             // Update states with the response
             setContactList(data.contact_obj_list); // Update contact list
             setCountries(data.countries); // Update countries if provided
