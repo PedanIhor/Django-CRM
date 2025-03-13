@@ -39,7 +39,6 @@ type FormErrors = {
     billing_state?: string[],
     billing_postcode?: string[],
     billing_country?: string[],
-    teams?: string[],
     tags?: string[],
     account_attachment?: string[],
     website?: string[],
@@ -57,7 +56,6 @@ interface FormData {
     billing_state: string,
     billing_postcode: string,
     billing_country: string,
-    teams: string[],
     tags: string[],
     account_attachment: string | null,
     website: string,
@@ -74,7 +72,6 @@ export function EditAccount() {
     const [reset, setReset] = useState(false)
     const [selectedContacts, setSelectedContacts] = useState<any[]>([]);
     const [selectedTags, setSelectedTags] = useState<any[]>([]);
-    const [selectedTeams, setSelectedTeams] = useState<any[]>([]);
     const [selectedCountry, setSelectedCountry] = useState<any[]>([]);
     const [statusSelectOpen, setStatusSelectOpen] = useState(false)
     const [countrySelectOpen, setCountrySelectOpen] = useState(false)
@@ -90,7 +87,6 @@ export function EditAccount() {
         billing_state: '',
         billing_postcode: '',
         billing_country: '',
-        teams: [],
         tags: [],
         account_attachment: null,
         website: '',
@@ -129,9 +125,6 @@ export function EditAccount() {
         } else if (title === 'tags') {
             setFormData({ ...formData, tags: val.length > 0 ? val.map((item: any) => item.id) : [] });
             setSelectedTags(val);
-        } else if (title === 'teams') {
-            setFormData({ ...formData, teams: val.length > 0 ? val.map((item: any) => item.id) : [] });
-            setSelectedTeams(val);
         }
         else {
             setFormData({ ...formData, [title]: val })
@@ -189,7 +182,6 @@ export function EditAccount() {
             billing_state: formData.billing_state,
             billing_postcode: formData.billing_postcode,
             billing_country: formData.billing_country,
-            teams: formData.teams,
             tags: formData.tags,
             account_attachment: formData.file,
             website: formData.website,
@@ -222,7 +214,6 @@ export function EditAccount() {
             billing_state: '',
             billing_postcode: '',
             billing_country: '',
-            teams: [],
             tags: [],
             account_attachment: '',
             website: '',
@@ -233,7 +224,6 @@ export function EditAccount() {
         setErrors({})
         setSelectedContacts([]);
         setSelectedTags([])
-        setSelectedTeams([])
     }
     const onCancel = () => {
         setReset(true)
@@ -339,51 +329,6 @@ export function EditAccount() {
                                                 </FormControl>
                                             </div>
                                             <div className='fieldSubContainer'>
-                                                <div className='fieldTitle'>Teams</div>
-                                                <FormControl error={!!errors?.teams?.[0]} sx={{ width: '70%' }}>
-                                                    <Autocomplete
-                                                        value={selectedTeams}
-                                                        multiple
-                                                        limitTags={5}
-                                                        options={state?.teams || []}
-                                                        getOptionLabel={(option: any) => option || []}
-                                                        onChange={(e: any, value: any) => handleChange2('teams', value)}
-                                                        size='small'
-                                                        filterSelectedOptions
-                                                        renderTags={(value, getTagProps) =>
-                                                            value.map((option: any, index: any) => (
-                                                                <Chip
-                                                                    deleteIcon={<FaTimes style={{ width: '9px' }} />}
-                                                                    sx={{ backgroundColor: 'rgba(0, 0, 0, 0.08)', height: '18px' }}
-                                                                    variant='outlined'
-                                                                    label={option}
-                                                                    {...getTagProps({ index })}
-                                                                />
-                                                            ))
-                                                        }
-                                                        popupIcon={<CustomPopupIcon ><FaPlus className='input-plus-icon' /></CustomPopupIcon>}
-                                                        renderInput={(params) => (
-                                                            <TextField {...params}
-                                                                placeholder='Add Teams'
-                                                                InputProps={{
-                                                                    ...params.InputProps,
-                                                                    sx: {
-                                                                        '& .MuiAutocomplete-popupIndicator': { '&:hover': { backgroundColor: 'white' } },
-                                                                        '& .MuiAutocomplete-endAdornment': {
-                                                                            mt: '-8px',
-                                                                            mr: '-8px',
-                                                                        }
-                                                                    }
-                                                                }}
-                                                            />
-                                                        )}
-                                                    />
-                                                    <FormHelperText>{errors?.teams?.[0] || ''}</FormHelperText>
-                                                </FormControl>
-                                            </div>
-                                        </div>
-                                        <div className='fieldContainer2'>
-                                            <div className='fieldSubContainer'>
                                                 <div className='fieldTitle'>account_attachment</div>
                                                 <TextField
                                                     name='account_attachment'
@@ -418,49 +363,6 @@ export function EditAccount() {
                                                     error={!!errors?.account_attachment?.[0]}
                                                 />
                                             </div>
-                                            <div className='fieldSubContainer'>
-                                                <div className='fieldTitle'>Tags</div>
-                                                <FormControl error={!!errors?.tags?.[0]} sx={{ width: '70%' }}>
-                                                    <Autocomplete
-                                                        value={selectedTags}
-                                                        multiple
-                                                        limitTags={5}
-                                                        options={state?.tags || []}
-                                                        getOptionLabel={(option: any) => option}
-                                                        onChange={(e: any, value: any) => handleChange2('tags', value)}
-                                                        size='small'
-                                                        filterSelectedOptions
-                                                        renderTags={(value, getTagProps) =>
-                                                            value.map((option, index) => (
-                                                                <Chip
-                                                                    deleteIcon={<FaTimes style={{ width: '9px' }} />}
-                                                                    sx={{ backgroundColor: 'rgba(0, 0, 0, 0.08)', height: '18px' }}
-                                                                    variant='outlined'
-                                                                    label={option}
-                                                                    {...getTagProps({ index })}
-                                                                />
-                                                            ))
-                                                        }
-                                                        popupIcon={<CustomPopupIcon><FaPlus className='input-plus-icon' /></CustomPopupIcon>}
-                                                        renderInput={(params) => (
-                                                            <TextField {...params}
-                                                                placeholder='Add Tags'
-                                                                InputProps={{
-                                                                    ...params.InputProps,
-                                                                    sx: {
-                                                                        '& .MuiAutocomplete-popupIndicator': { '&:hover': { backgroundColor: 'white' } },
-                                                                        '& .MuiAutocomplete-endAdornment': {
-                                                                            mt: '-8px',
-                                                                            mr: '-8px',
-                                                                        }
-                                                                    }
-                                                                }}
-                                                            />
-                                                        )}
-                                                    />
-                                                    <FormHelperText>{errors?.tags?.[0] || ''}</FormHelperText>
-                                                </FormControl>
-                                            </div>
                                         </div>
                                     </Box>
                                 </AccordionDetails>
@@ -480,7 +382,8 @@ export function EditAccount() {
                                         <div className='fieldContainer'>
                                             <div className='fieldSubContainer'>
                                                 <div className='fieldTitle'>Billing Address Line</div>
-                                                <TextField
+                                                <RequiredTextField
+                                                required
                                                     name='billing_address_line'
                                                     value={formData.billing_address_line}
                                                     onChange={handleChange}
@@ -492,7 +395,8 @@ export function EditAccount() {
                                             </div>
                                             <div className='fieldSubContainer'>
                                                 <div className='fieldTitle'>Billing Street</div>
-                                                <TextField
+                                                <RequiredTextField
+                                                    required
                                                     name='billing_street'
                                                     value={formData.billing_street}
                                                     onChange={handleChange}
@@ -506,7 +410,8 @@ export function EditAccount() {
                                         <div className='fieldContainer2'>
                                             <div className='fieldSubContainer'>
                                                 <div className='fieldTitle'>Billing City</div>
-                                                <TextField
+                                                <RequiredTextField
+                                                    required
                                                     name='billing_city'
                                                     value={formData.billing_city}
                                                     onChange={handleChange}
@@ -518,7 +423,8 @@ export function EditAccount() {
                                             </div>
                                             <div className='fieldSubContainer'>
                                                 <div className='fieldTitle'>Billing State</div>
-                                                <TextField
+                                                <RequiredTextField
+                                                    required
                                                     name='billing_state'
                                                     value={formData.billing_state}
                                                     onChange={handleChange}
@@ -532,7 +438,8 @@ export function EditAccount() {
                                         <div className='fieldContainer2'>
                                             <div className='fieldSubContainer'>
                                                 <div className='fieldTitle'>Billing Postcode</div>
-                                                <TextField
+                                                <RequiredTextField
+                                                    required
                                                     name='billing_postcode'
                                                     value={formData.billing_postcode}
                                                     onChange={handleChange}
@@ -545,7 +452,7 @@ export function EditAccount() {
                                             <div className='fieldSubContainer'>
                                                 <div className='fieldTitle'>Billing Country</div>
                                                 <FormControl sx={{ width: '70%' }}>
-                                                    <Select
+                                                    <RequiredSelect                                                        
                                                         name='billing_country'
                                                         value={formData.billing_country}
                                                         open={countrySelectOpen}
@@ -564,7 +471,7 @@ export function EditAccount() {
                                                                 {option[1]}
                                                             </MenuItem>
                                                         ))}
-                                                    </Select>
+                                                    </RequiredSelect>
                                                     <FormHelperText>{errors?.billing_country?.[0] ? errors?.billing_country[0] : ''}</FormHelperText>
                                                 </FormControl>
                                             </div>
