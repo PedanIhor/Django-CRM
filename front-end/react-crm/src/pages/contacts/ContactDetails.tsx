@@ -68,6 +68,7 @@ export const formatDate = (dateString: any) => {
 export default function ContactDetails() {
     const navigate = useNavigate()
     const { state } = useLocation()
+    console.log(state, 'state');
     const [contactDetails, setContactDetails] = useState<response | null>(null)
 
     useEffect(() => {
@@ -120,8 +121,11 @@ export default function ContactDetails() {
                     description: contactDetails?.description,
                     linked_in_url: contactDetails?.linked_in_url,
                     facebook_url: contactDetails?.facebook_url,
-                    twitter_username: contactDetails?.twitter_username
-                }, id: state?.contactId?.id, countries: state?.countries
+                    twitter_username: contactDetails?.twitter_username,
+                    type: contactDetails?.type,
+                    account: contactDetails?.account?.name,
+                    account_id: contactDetails?.account?.id,
+                }, id: state?.contactId, countries: state?.countries
             }
         })
     }

@@ -17,7 +17,7 @@ import {
 } from '@mui/material'
 import { useQuill } from 'react-quilljs';
 import 'quill/dist/quill.snow.css';
-import { ContactUrl } from '../../services/ApiUrls';
+import { ContactUrl, SERVER } from '../../services/ApiUrls';
 import { CustomAppBar } from '../../components/CustomAppBar';
 import { fetchData, Header } from '../../components/FetchData';
 import { AntSwitch, CustomSelectField, RequiredTextField } from '../../styles/CssStyled';
@@ -33,7 +33,6 @@ type FormErrors = {
   salutation?: string[];
   first_name?: string[];
   last_name?: string[];
-  organization?: string[];
   title?: string[];
   primary_email?: string[];
   secondary_email?: string[];
@@ -43,7 +42,7 @@ type FormErrors = {
   country?: string[];
   language?: string[];
   do_not_call?: string[];
-  address_line?: string[];
+  address?: string[];
   street?: string[];
   city?: string[];
   state?: string[];
@@ -80,12 +79,11 @@ function EditContact() {
     mobile_number: '',
     secondary_number: '',
     date_of_birth: '',
-    organization: '',
     title: '',
     language: '',
     do_not_call: false,
     department: '',
-    address_line: '',
+    address: '',
     street: '',
     city: '',
     state: '',
@@ -94,10 +92,26 @@ function EditContact() {
     description: '',
     linked_in_url: '',
     facebook_url: '',
-    twitter_username: ''
+    twitter_username: '',
+    type: '',
+    account: '',
+    account_id: ''
   })
   const [errors, setErrors] = useState<FormErrors>({});
   const [countrySelectOpen, setCountrySelectOpen] = useState(false)
+  const [accountSelectOpen, setAccountSelectOpen] = useState(false)
+  const [accounts, setAccounts] = useState<Array<{id: string, name: string}>>([])
+
+  // Function to find country ID from country name
+  const getCountryIdByName = (countryName: string) => {
+    if (!state?.countries || !countryName) return '';
+    
+    const foundCountry = state.countries.find((country: any) => 
+      country[1].toLowerCase() === countryName.toLowerCase()
+    );
+    
+    return foundCountry ? foundCountry[0] : '';
+  };
 
   useEffect(() => {
     // Scroll to the top of the page when the component mounts
@@ -120,6 +134,7 @@ function EditContact() {
   }, [quill, hasInitialFocus]);
 
   useEffect(() => {
+    console.log(state, 'state');
     setFormData(state?.value)
   }, [state?.id])
 
@@ -142,6 +157,34 @@ function EditContact() {
       quill.clipboard.dangerouslyPasteHTML(formData.description);
     }
   }, [quill, formData.description]);
+
+  useEffect(() => {
+    // Fetch accounts from the API when component mounts
+    const fetchAccounts = async () => {
+      const Header = {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        Authorization: localStorage.getItem('Token'),
+        org: localStorage.getItem('org')
+      }
+      try {
+        const response = await fetchData('/api/accounts/', 'GET', null as any, Header);
+        if (!response.error) {
+          // Combine open and closed accounts
+          const allAccounts = [
+            ...(response.active_accounts?.open_accounts || []),
+            ...(response.closed_accounts?.close_accounts || []),
+          ];
+          setAccounts(allAccounts);
+        }
+      } catch (error) {
+        console.error('Error fetching accounts:', error);
+      }
+    };
+
+    
+    fetchAccounts();
+  }, []);
 
   const handleChange = (e: any) => {
     const { name, value, files, type, checked } = e.target;
@@ -192,26 +235,30 @@ function EditContact() {
       salutation: formData.salutation,
       first_name: formData.first_name,
       last_name: formData.last_name,
-      organization: formData.organization,
       title: formData.title,
       primary_email: formData.primary_email,
       secondary_email: formData.secondary_email,
       mobile_number: formData.mobile_number,
       secondary_number: formData.secondary_number,
       department: formData.department,
-      country: formData.country,
+      country: getCountryIdByName(formData.country),
       language: formData.language,
       do_not_call: formData.do_not_call,
-      address_line: formData.address_line,
+      address_line: formData.address,
       street: formData.street,
       city: formData.city,
       state: formData.state,
       description: formData.description,
       linked_in_url: formData.linked_in_url,
       facebook_url: formData.facebook_url,
-      twitter_username: formData.twitter_username
+      twitter_username: formData.twitter_username,
+      type: formData.type,
+      account: formData.account_id,
+      postcode: formData.postcode,
     }
-    // console.log(data, 'edit')
+    
+    console.log('Submitting data:', data);
+    
     fetchData(`${ContactUrl}/${state?.id}/`, 'PUT', JSON.stringify(data), Header)
       .then((res: any) => {
         console.log('Form data:', res);
@@ -307,21 +354,6 @@ function EditContact() {
                         />
                       </div>
                       <div className='fieldSubContainer'>
-                        <div className='fieldTitle'>Organization</div>
-                        <RequiredTextField
-                          name='organization'
-                          value={formData.organization}
-                          onChange={handleChange}
-                          style={{ width: '70%' }}
-                          size='small'
-                          required
-                          error={!!errors?.organization?.[0]}
-                          helperText={errors?.organization?.[0] ? errors?.organization[0] : ''}
-                        />
-                      </div>
-                    </div>
-                    <div className='fieldContainer2'>
-                      <div className='fieldSubContainer'>
                         <div className='fieldTitle'>Primary Email</div>
                         <RequiredTextField
                           name='primary_email'
@@ -334,6 +366,8 @@ function EditContact() {
                           helperText={errors?.primary_email?.[0] ? errors?.primary_email[0] : ''}
                         />
                       </div>
+                    </div>
+                    <div className='fieldContainer2'>                      
                       <div className='fieldSubContainer'>
                         <div className='fieldTitle'>Secondary Email</div>
                         <TextField
@@ -346,46 +380,13 @@ function EditContact() {
                           helperText={errors?.secondary_email?.[0] ? errors?.secondary_email[0] : ''}
                         />
                       </div>
-
-                    </div>
-                    <div className='fieldContainer2'>
-                      <div className='fieldSubContainer'>
-                        <div className='fieldTitle'>Department</div>
-                        <RequiredTextField
-                          name='department'
-                          id='outlined-error-helper-text'
-                          value={formData.department}
-                          onChange={handleChange}
-                          required
-                          style={{ width: '70%' }}
-                          size='small'
-                          error={!!errors?.department?.[0]}
-                          helperText={errors?.department?.[0] ? errors?.department[0] : ''}
-                        />
-                      </div>
-                      <div className='fieldSubContainer'>
-                        <div className='fieldTitle'>Title</div>
-                        <TextField
-                          name='title'
-                          value={formData.title}
-                          onChange={handleChange}
-                          required
-                          style={{ width: '70%' }}
-                          size='small'
-                          error={!!errors?.title?.[0]}
-                          helperText={errors?.title?.[0] ? errors?.title[0] : ''}
-                        />
-                      </div>
-                    </div>
-                    <div className='fieldContainer2'>
                       <div className='fieldSubContainer'>
                         <div className='fieldTitle'>Mobile Number</div>
                         <Tooltip title="Number must starts with +91">
-                          <RequiredTextField
+                          <TextField
                             name='mobile_number'
                             value={formData.mobile_number}
                             onChange={handleChange}
-                            required
                             style={{ width: '70%' }}
                             size='small'
                             error={!!errors?.mobile_number?.[0]}
@@ -393,11 +394,12 @@ function EditContact() {
                           />
                         </Tooltip>
                       </div>
+                    </div>                    
+                    <div className='fieldContainer2'>                      
                       <div className='fieldSubContainer'>
                         <div className='fieldTitle'>Secondary Number</div>
                         <Tooltip title="Number must starts with +91">
-                          <RequiredTextField
-                            required
+                          <TextField
                             name='secondary_number'
                             value={formData.secondary_number}
                             onChange={handleChange}
@@ -408,12 +410,9 @@ function EditContact() {
                           />
                         </Tooltip>
                       </div>
-                    </div>
-                    <div className='fieldContainer2'>
                       <div className='fieldSubContainer'>
                         <div className='fieldTitle'>Language</div>
-                        <RequiredTextField
-                          required
+                        <TextField
                           name='language'
                           value={formData.language}
                           onChange={handleChange}
@@ -422,6 +421,46 @@ function EditContact() {
                           error={!!errors?.language?.[0]}
                           helperText={errors?.language?.[0] ? errors?.language[0] : ''}
                         />
+                      </div>
+                    </div>
+                    <div className='fieldContainer2'>                      
+                      <div className='fieldSubContainer'>
+                        <div className='fieldTitle'>Linkedin URL</div>
+                        <TextField
+                          name='linked_in_url'
+                          value={formData.linked_in_url}
+                          onChange={handleChange}
+                          style={{ width: '70%' }}
+                          size='small'
+                          error={!!errors?.linked_in_url?.[0]}
+                          helperText={errors?.linked_in_url?.[0] ? errors?.linked_in_url[0] : ''}
+                        />
+                      </div>
+                      <div className='fieldSubContainer'>
+                        <div className='fieldTitle'>Facebook URL</div>
+                        <TextField
+                          name='facebook_url'
+                          value={formData.facebook_url}
+                          onChange={handleChange}
+                          style={{ width: '70%' }}
+                          size='small'
+                          error={!!errors?.facebook_url?.[0]}
+                          helperText={errors?.facebook_url?.[0] ? errors?.facebook_url[0] : ''}
+                        />
+                      </div>
+                    </div>
+                    <div className='fieldContainer2'>
+                      <div className='fieldSubContainer'>
+                        <div className='fieldTitle'>Twitter Username</div>
+                        <TextField
+                            name='twitter_username'
+                            value={formData.twitter_username}
+                            onChange={handleChange}
+                            style={{ width: '70%' }}
+                            size='small'
+                            error={!!errors?.twitter_username?.[0]}
+                            helperText={errors?.twitter_username?.[0] ? errors?.twitter_username[0] : ''}
+                          />
                       </div>
                       <div className='fieldSubContainer'>
                         <div className='fieldTitle'>Do Not Call</div>
@@ -433,10 +472,115 @@ function EditContact() {
                         />
                       </div>
                     </div>
+                    <div className='fieldContainer2'>
+                      <div className='fieldSubContainer'>
+                        <div className='fieldTitle'>Type</div>
+                        <FormControl sx={{ width: '70%' }}>
+                          <Select
+                            name='type'
+                            value={formData.type}
+                            onChange={handleChange}
+                            className={'select'}
+                            size='small'
+                          >
+                            <MenuItem value="individual">Individual</MenuItem>
+                            <MenuItem value="corporate">Corporate</MenuItem>
+                          </Select>
+                        </FormControl>
+                      </div>
+                      <div className='fieldSubContainer'>
+                        {/* Empty div for layout balance */}
+                      </div>
+                    </div>
                   </Box>
                 </AccordionDetails>
               </Accordion>
             </div>
+            
+            {/* Account section - only visible when type is corporate */}
+            {formData.type === 'corporate' && (
+              <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', marginTop: '20px' }}>
+                <Accordion style={{ width: '98%' }}
+                  defaultExpanded
+                >
+                  <AccordionSummary expandIcon={<FiChevronDown style={{ fontSize: '25px' }} />}>
+                    <Typography className='accordion-header'>Account Information</Typography>
+                  </AccordionSummary>
+                  <Divider className='divider' />
+                  <AccordionDetails>
+                    <Box
+                      sx={{ width: '98%', color: '#1A3353', mb: 1 }}
+                      component='form'
+                    >
+                      <div className='fieldContainer'>
+                        <div className='fieldSubContainer'>
+                          <div className='fieldTitle'>Account</div>
+                          <FormControl sx={{ width: '70%' }}>
+                            <Select
+                              name='account_id'
+                              value={formData.account_id || ''}
+                              onChange={handleChange}
+                              className={'select'}
+                              size='small'
+                              open={accountSelectOpen}
+                              onClick={() => setAccountSelectOpen(!accountSelectOpen)}
+                              IconComponent={() => (
+                                <div onClick={() => setAccountSelectOpen(!accountSelectOpen)} className="select-icon-background">
+                                  {accountSelectOpen ? <FiChevronUp className='select-icon' /> : <FiChevronDown className='select-icon' />}
+                                </div>
+                              )}
+                              MenuProps={{
+                                PaperProps: {
+                                  style: {
+                                    maxHeight: '250px'
+                                  }
+                                }
+                              }}
+                            >
+                              {accounts.map((account) => (
+                                <MenuItem key={account.id} value={account.id}>
+                                  {account.name}
+                                </MenuItem>
+                              ))}
+                            </Select>
+                          </FormControl>
+                        </div>
+                        <div className='fieldSubContainer'>
+                          <div className='fieldTitle'>Job Title</div>
+                          <TextField
+                            name='title'
+                            value={formData.title}
+                            onChange={handleChange}
+                            style={{ width: '70%' }}
+                            size='small'
+                            error={!!errors?.title?.[0]}
+                            helperText={errors?.title?.[0] ? errors?.title[0] : ''}
+                          />
+                        </div>
+                      </div>
+                      <div className='fieldContainer2'>
+                        <div className='fieldSubContainer'>
+                          <div className='fieldTitle'>Department</div>
+                          <TextField
+                            name='department'
+                            value={formData.department}
+                            onChange={handleChange}
+                            style={{ width: '70%' }}
+                            size='small'
+                            error={!!errors?.department?.[0]}
+                            helperText={errors?.department?.[0] ? errors?.department[0] : ''}
+                          />
+                        </div>
+                        <div className='fieldSubContainer'>
+                          {/* Empty div for layout balance */}
+                        </div>
+                      </div>
+                    </Box>
+                  </AccordionDetails>
+                </Accordion>
+              </div>
+            )}
+            
             {/* address details */}
             <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', marginTop: '20px' }}>
               <Accordion style={{ width: '98%' }}
@@ -454,15 +598,14 @@ function EditContact() {
                     <div className='fieldContainer'>
                       <div className='fieldSubContainer'>
                         <div className='fieldTitle'>Billing Address</div>
-                        <RequiredTextField
-                          required
-                          name='address_line'
-                          value={formData.address_line}
+                        <TextField
+                          name='address'
+                          value={formData.address}
                           onChange={handleChange}
                           style={{ width: '70%' }}
                           size='small'
-                          error={!!errors?.address_line?.[0]}
-                          helperText={errors?.address_line?.[0] ? errors?.address_line[0] : ''}
+                          error={!!errors?.address?.[0]}
+                          helperText={errors?.address?.[0] ? errors?.address[0] : ''}
                         />
                       </div>
                       <div className='fieldSubContainer'>
@@ -526,7 +669,7 @@ function EditContact() {
                         <FormControl sx={{ width: '70%' }}>
                           <Select
                             name='country'
-                            value={formData.country}
+                            value={getCountryIdByName(formData.country) || ''}
                             open={countrySelectOpen}
                             onClick={() => setCountrySelectOpen(!countrySelectOpen)}
                             IconComponent={() => (
@@ -542,15 +685,25 @@ function EditContact() {
                               }
                             }}
                             className={'select'}
-                            onChange={handleChange}
+                            onChange={(e) => {
+                              // Find the country name from the selected ID
+                              const selectedId = e.target.value;
+                              const selectedCountry = state?.countries?.find((country: any) => country[0] === selectedId);
+                              const countryName = selectedCountry ? selectedCountry[1] : '';
+                              
+                              // Update formData with the country name
+                              setFormData({
+                                ...formData,
+                                country: countryName
+                              });
+                            }}
                             error={!!errors?.country?.[0]}
                           >
-                            {state?.countries?.length && state?.countries.map((option: any) => (
+                            {state?.countries && state.countries.length > 0 && state.countries.map((option: any) => (
                               <MenuItem key={option[0]} value={option[0]}>
                                 {option[1]}
                               </MenuItem>
                             ))}
-
                           </Select>
                           <FormHelperText>{errors?.country?.[0] ? errors?.country[0] : ''}</FormHelperText>
                         </FormControl>
@@ -607,71 +760,7 @@ function EditContact() {
                   </Box>
                 </AccordionDetails>
               </Accordion>
-            </div>
-            {/* Socials */}
-            <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', marginTop: '20px' }}>
-              <Accordion
-                defaultExpanded
-                style={{ width: '98%' }}>
-                <AccordionSummary expandIcon={<FiChevronDown style={{ fontSize: '25px' }} />}>
-                  <Typography className='accordion-header'>Socials</Typography>
-                </AccordionSummary>
-                <Divider className='divider' />
-                <AccordionDetails>
-                  <Box
-                    sx={{ width: '100%', color: '#1A3353', mb: 1 }}
-                    component='form'
-                    noValidate
-                    autoComplete='off'
-                  >
-                    <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-around' }}>
-                      <div style={{ width: '40%', display: 'flex', flexDirection: 'row' }}>
-                        <div style={{ marginRight: '10px', fontSize: '13px', width: '22%', textAlign: 'right', fontWeight: 'bold' }}>Linkedin Url</div>
-                        <TextField
-                          name='linked_in_url'
-                          value={formData.linked_in_url}
-                          onChange={handleChange}
-                          style={{ width: '70%' }}
-                          size='small'
-                          error={!!errors?.linked_in_url?.[0]}
-                          helperText={errors?.linked_in_url?.[0] ? errors?.linked_in_url[0] : ''}
-                        />
-                      </div>
-                      <div style={{ width: '40%', display: 'flex', flexDirection: 'row' }}>
-                        <div style={{ marginRight: '10px', fontSize: '13px', width: '22%', textAlign: 'right', fontWeight: 'bold' }}>Facebook Url</div>
-                        <TextField
-                          name='facebook_url'
-                          value={formData.facebook_url}
-                          onChange={handleChange}
-                          style={{ width: '70%' }}
-                          size='small'
-                          error={!!errors?.facebook_url?.[0]}
-                          helperText={errors?.facebook_url?.[0] ? errors?.facebook_url[0] : ''}
-                        />
-                      </div>
-                    </div>
-                    <div style={{ marginTop: '20px' }}>
-                      <div style={{
-                        width: '40%', display: 'flex', flexDirection: 'row'
-                        , marginLeft: '5%'
-                      }}>
-                        <div style={{ marginRight: '10px', fontSize: '13px', width: '22%', textAlign: 'right', fontWeight: 'bold' }}>Twitter Username</div>
-                        <RequiredTextField
-                          required
-                          name='twitter_username'
-                          value={formData.twitter_username}
-                          onChange={handleChange}
-                          style={{ width: '70%' }}
-                          size='small'
-                          error={!!errors?.twitter_username?.[0]}
-                          helperText={errors?.twitter_username?.[0] ? errors?.twitter_username[0] : ''}
-                        />
-                      </div>
-                    </div>
-                  </Box>
-                </AccordionDetails>
-              </Accordion>
-            </div>
+            </div>            
           </div>
         </form>
       </Box>

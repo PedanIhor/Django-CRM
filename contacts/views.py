@@ -340,27 +340,27 @@ class ContactDetailView(APIView):
                     id__in=teams_list, org=request.profile.org)
                 contact_obj.teams.add(*teams)
 
-            contact_obj.assigned_to.clear()
-            if data.get("assigned_to"):
-                assinged_to_list = json.loads(data.get("assigned_to"))
-                profiles = Profile.objects.filter(
-                    id__in=assinged_to_list, org=request.profile.org
-                )
-                contact_obj.assigned_to.add(*profiles)
+            # contact_obj.assigned_to.clear()
+            # if data.get("assigned_to"):
+            #     assinged_to_list = json.loads(data.get("assigned_to"))
+            #     profiles = Profile.objects.filter(
+            #         id__in=assinged_to_list, org=request.profile.org
+            #     )
+            #     contact_obj.assigned_to.add(*profiles)
 
-            previous_assigned_to_users = list(
-                contact_obj.assigned_to.all().values_list("id", flat=True)
-            )
+            # previous_assigned_to_users = list(
+            #     contact_obj.assigned_to.all().values_list("id", flat=True)
+            # )
 
-            assigned_to_list = list(
-                contact_obj.assigned_to.all().values_list("id", flat=True)
-            )
-            recipients = list(set(assigned_to_list) -
-                              set(previous_assigned_to_users))
-            send_email_to_assigned_user.delay(
-                recipients,
-                contact_obj.id,
-            )
+            # assigned_to_list = list(
+            #     contact_obj.assigned_to.all().values_list("id", flat=True)
+            # )
+            # recipients = list(set(assigned_to_list) -
+            #                   set(previous_assigned_to_users))
+            # send_email_to_assigned_user.delay(
+            #     recipients,
+            #     contact_obj.id,
+            # )
             if request.FILES.get("contact_attachment"):
                 attachment = Attachments()
                 attachment.created_by = request.profile.user
