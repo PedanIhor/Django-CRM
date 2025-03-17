@@ -278,7 +278,7 @@ function EditContact() {
   };
 
   const backbtnHandle = () => {
-    navigate('/app/contacts/contact-details', { state: { contactId: { id: state?.id }, detail: true } })
+    navigate('/app/contacts/contact-details', { state: { contactId: state?.id, detail: true } })
   }
   const module = 'Contacts'
   const crntPage = 'Edit Contact'
