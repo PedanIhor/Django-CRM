@@ -315,6 +315,54 @@ class PublicLeadsAPITests(TestCase):
         self.assertEqual(lead_db.industry, lead_res["industry"])
         self.assertEqual(lead_db.skype_ID, lead_res["skype_ID"])
 
+    def test_update_lead(self):
+        user = User.objects.filter(profile__org__id=self.org.id, email="user1@test.com").first()
+        lead = Lead.objects.filter(org_id=self.org.id).first()
+
+        old_assigned_to_ids = {profile.id for profile in lead.assigned_to.all()}
+        new_assigned_to_ids = {str(profile.id) for profile in Profile.objects.exclude(id__in=old_assigned_to_ids).all()[:2]}
+        old_contacts_ids = {contact.id for contact in lead.contacts.all()}
+        new_contacts_ids = {str(contact.id) for contact in Contact.objects.exclude(id__in=old_contacts_ids).all()[:2]}
+
+        update_payload = POST_REQUEST_PAYLOAD.copy()
+        update_payload["title"] = "Updated Title"
+        update_payload["phone"] = "+911234567999"
+        update_payload["email"] = "updated_email@test.com"
+        update_payload["opportunity_amount"] = 88888
+        update_payload["website"] = "https://updated-site.com"
+        update_payload["status"] = "in process"
+        update_payload["source"] = "email"
+        update_payload["probability"] = 80
+        update_payload["industry"] = "AGRICULTURE"
+        update_payload["skype_ID"] = "updated-skype"
+        update_payload["assigned_to"] = [str(id) for id in list(new_assigned_to_ids)]
+        update_payload["contacts"] = [str(id) for id in list(new_contacts_ids)]
+
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.retrieve_token_for_user(user))
+        lead_url = reverse("common_urls:api_leads:lead_detail", args=[lead.id])
+        res = self.client.put(lead_url, json.dumps(update_payload), headers=self.headers, content_type="application/json")
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+
+        lead.refresh_from_db()
+
+        self.assertEqual(lead.title, "Updated Title")
+        self.assertEqual(lead.phone, "+911234567999")
+        self.assertEqual(lead.email, "updated_email@test.com")
+        self.assertEqual(lead.opportunity_amount, 88888)
+        self.assertEqual(lead.website, "https://updated-site.com")
+        self.assertEqual(lead.description, "")
+        self.assertEqual(lead.teams.count(), 0) # We do not have an user interface to assign a lead to a team for now
+        updated_assigned_ids = {str(id) for id in list(lead.assigned_to.all().values_list("id", flat=True))}
+        self.assertEqual(updated_assigned_ids, new_assigned_to_ids)
+        self.assertEqual(lead.contacts.all().count(), 2)
+        updated_contacts_ids = {str(contact.id) for contact in lead.contacts.all()}
+        self.assertEqual(updated_contacts_ids, new_contacts_ids)
+        self.assertEqual(lead.status, "in process")
+        self.assertEqual(lead.source, "email")
+        self.assertEqual(lead.probability, 80)
+        self.assertEqual(lead.industry, "AGRICULTURE")
+        self.assertEqual(lead.skype_ID, "updated-skype")
+
 
     def proceed_lead_for_status_converted(lead: Lead):
          # TODO: Convert lead to an opportunity if status is "converted"
