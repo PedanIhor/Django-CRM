@@ -382,6 +382,22 @@ class PublicLeadsAPITests(TestCase):
         self.assertEqual(lead.industry, "AGRICULTURE")
         self.assertEqual(lead.skype_ID, "updated-skype")
 
+    def test_update_lead_status(self):
+        lead = Lead.objects.filter(org_id=self.org.id, status="assigned").first()
+
+        payload = {
+            "status": "converted"
+        }
+
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.retrieve_token_for_user(self.sales_manager))
+        lead_url = reverse("common_urls:api_leads:lead_status_update", args=[lead.id])
+        res = self.client.post(lead_url, json.dumps(payload), headers=self.headers, content_type="application/json")
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+
+        lead.refresh_from_db()
+        self.assertEqual(lead.status, "converted")
+
 
     def proceed_lead_for_status_converted(lead: Lead):
          # TODO: Convert lead to an opportunity if status is "converted"

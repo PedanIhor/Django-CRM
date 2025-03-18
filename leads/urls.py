@@ -17,5 +17,5 @@ urlpatterns = [
     path("upload/", views.LeadUploadView.as_view()),
     path("comment/<str:pk>/", views.LeadCommentView.as_view()),
     path("attachment/<str:pk>/", views.LeadAttachmentView.as_view()),
-    path('<str:pk>/status/', views.LeadStatusUpdate.as_view()),
+    path('<str:pk>/status/', views.LeadStatusUpdate.as_view(), name="lead_status_update"),
 ]
