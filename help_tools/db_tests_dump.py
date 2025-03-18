@@ -159,14 +159,13 @@ def fill_leads(org: Org, count: int):
             source=LEAD_SOURCE[source_id][0],
             phone=911234567890 + i)
         json_obj = json.loads(formatted_string)
+        json_obj["org"] = org
         json_obj.pop("lead_attachment")
         json_obj.pop("teams")
         json_obj.pop("assigned_to")
         json_obj.pop("contacts")
         json_obj.pop("tags")
-        lead = Lead(**json_obj)
-        lead.org = org
-        lead.save()
+        lead = Lead.objects.create(**json_obj)
         leads.append(lead)
 
         if i % 3 == 0:

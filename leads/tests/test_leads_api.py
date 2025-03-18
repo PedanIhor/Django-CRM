@@ -4,7 +4,6 @@ Tests for the Leads API.
 
 from django.test import TestCase
 from django.urls import reverse
-from django.db.models import Q
 import json
 
 from rest_framework.test import APIClient
@@ -19,6 +18,8 @@ from common.models import (
 )
 from leads.models import Lead
 from contacts.models import Contact
+
+from unittest.mock import patch
 
 
 LEADS_URL = reverse("common_urls:api_leads:leads")
@@ -93,13 +94,25 @@ class PublicLeadsAPITests(TestCase):
 
     def setUp(self):
         self.client = APIClient()
-        org = db_tests_dump.create_test_org()
-        db_tests_dump.fill_leads(org, 100) # 20 must be converted leads
-        self.org = org
 
+        # Create an organization with a bunch of users, contacts, teams and adresses
+        self.org = db_tests_dump.create_test_org()
+
+        # Set the headers for the requests
         self.headers = {
             "org": self.org.id,
         }
+
+        # Mock the current user with a sales manager to make all the leads created_by equal to the sales_manager
+        self.sales_manager = User.objects.filter(profile__org=self.org, email="user1@test.com").first()
+        patcher = patch("common.base.get_current_user", return_value=self.sales_manager)
+        self.mock_get_current_user = patcher.start()
+
+        # Create 100 leads
+        db_tests_dump.fill_leads(self.org, 100) # 20 must be converted leads
+
+        # Stop mocking the current user
+        patcher.stop()
 
     def retrieve_token_for_role(self, role_name: str):
         user = Profile.objects.get(org__id=self.org.id, role__name=role_name).user
@@ -252,8 +265,7 @@ class PublicLeadsAPITests(TestCase):
         self.assertEqual(db_leads_ids, res_leads_ids)
 
     def test_post_leads(self):
-        user = User.objects.filter(profile__org__id=self.org.id, email="user1@test.com").first()
-        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.retrieve_token_for_user(user))
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.retrieve_token_for_user(self.sales_manager))
 
         payload = POST_REQUEST_PAYLOAD.copy()
 
@@ -267,7 +279,7 @@ class PublicLeadsAPITests(TestCase):
         res = self.client.post(LEADS_URL, json.dumps(payload), headers=self.headers, content_type="application/json")
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Lead.objects.count(), 101)
-        lead = Lead.objects.filter(org__id=self.org.id, created_by_id=user.id).first()
+        lead = Lead.objects.filter(org__id=self.org.id, created_by_id=self.sales_manager.id).first()
         self.assertEqual(lead.title, "Test Lead Title CEO")
         self.assertEqual(lead.phone, "+911234567899")
         self.assertEqual(lead.email, "contact_email@test.com")
@@ -316,7 +328,6 @@ class PublicLeadsAPITests(TestCase):
         self.assertEqual(lead_db.skype_ID, lead_res["skype_ID"])
 
     def test_update_lead(self):
-        user = User.objects.filter(profile__org__id=self.org.id, email="user1@test.com").first()
         lead = Lead.objects.filter(org_id=self.org.id).first()
 
         old_assigned_to_ids = {profile.id for profile in lead.assigned_to.all()}
@@ -338,7 +349,7 @@ class PublicLeadsAPITests(TestCase):
         update_payload["assigned_to"] = [str(id) for id in list(new_assigned_to_ids)]
         update_payload["contacts"] = [str(id) for id in list(new_contacts_ids)]
 
-        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.retrieve_token_for_user(user))
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.retrieve_token_for_user(self.sales_manager))
         lead_url = reverse("common_urls:api_leads:lead_detail", args=[lead.id])
         res = self.client.put(lead_url, json.dumps(update_payload), headers=self.headers, content_type="application/json")
         self.assertEqual(res.status_code, status.HTTP_200_OK)
