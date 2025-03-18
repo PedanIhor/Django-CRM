@@ -297,6 +297,14 @@ class PublicLeadsAPITests(TestCase):
         self.assertEqual(lead.industry, "ADVERTISING")
         self.assertEqual(lead.skype_ID, "any-skype")
 
+    def test_get_lead_details_no_permission(self):
+        user = User.objects.filter(profile__org__id=self.org.id, email="user5@test.com").first()
+        lead_to_get = Lead.objects.exclude(assigned_to__user=user).first()
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.retrieve_token_for_user(user))
+        lead_url = reverse("common_urls:api_leads:lead_detail", args=[lead_to_get.id])
+        res = self.client.get(lead_url, headers=self.headers)
+        self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
+
     def test_get_lead_details(self):
         lead_db = Lead.objects.filter(org_id=self.org.id).first()
         self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.retrieve_token_for_role("ADMIN"))
