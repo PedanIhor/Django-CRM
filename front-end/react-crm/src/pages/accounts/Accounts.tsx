@@ -291,7 +291,7 @@ export default function Accounts({ userPermissions }: { userPermissions: string[
     }
 
     const accountDetail = (accountId: any) => {
-        navigate(`/app/accounts/account-details`, { state: { accountId, detail: true, contacts: contacts || [], status: status || [], tags: tags || [], users: users || [], countries: countries || [], teams: teams || [], leads: leads || [] } })
+        navigate(`/app/accounts/account-details`, { state: { accountId, detail: true, contacts: contacts || [], status: status || [], tags: tags || [], users: users || [], countries: countries || [], teams: teams || [], leads: leads || [], industries: industries || [] } })
     }
     const handleRecordsPerPage = (event: React.ChangeEvent<HTMLSelectElement>) => {
         const newRecordsPerPage = parseInt(event.target.value);

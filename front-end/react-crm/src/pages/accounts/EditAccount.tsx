@@ -16,7 +16,8 @@ import {
     FormHelperText,
     IconButton,
     Select,
-    Divider
+    Divider,
+    Button
 } from '@mui/material'
 import '../../styles/style.css'
 import { AccountsUrl } from '../../services/ApiUrls'
@@ -26,6 +27,9 @@ import { FaFileUpload, FaPlus, FaTimes, FaUpload } from 'react-icons/fa'
 import { CustomPopupIcon, RequiredSelect, RequiredTextField } from '../../styles/CssStyled'
 import { FiChevronDown } from '@react-icons/all-files/fi/FiChevronDown'
 import { FiChevronUp } from '@react-icons/all-files/fi/FiChevronUp'
+import { useQuill } from 'react-quilljs';
+import 'quill/dist/quill.snow.css';
+import { FaTimesCircle, FaCheckCircle } from 'react-icons/fa';
 
 
 
@@ -44,7 +48,9 @@ type FormErrors = {
     website?: string[],
     status?: string[],
     contacts?: string[],
-    file?: string[]
+    file?: string[],
+    industry?: string[],
+    description?: string[]
 };
 interface FormData {
     name: string,
@@ -61,12 +67,15 @@ interface FormData {
     website: string,
     status: string,
     contacts: [],
-    file?: string | null
+    file?: string | null,
+    industry: string,
+    description: string
 }
 
 export function EditAccount() {
     const navigate = useNavigate()
     const { state } = useLocation()
+    console.log(state, 'state');
     const autocompleteRef = useRef<any>(null);
     const [error, setError] = useState(false)
     const [reset, setReset] = useState(false)
@@ -76,6 +85,7 @@ export function EditAccount() {
     const [statusSelectOpen, setStatusSelectOpen] = useState(false)
     const [countrySelectOpen, setCountrySelectOpen] = useState(false)
     const [contactSelectOpen, setContactSelectOpen] = useState(false)
+    const [industrySelectOpen, setIndustrySelectOpen] = useState(false)
     const [errors, setErrors] = useState<FormErrors>({});
     const [formData, setFormData] = useState<FormData>({
         name: '',
@@ -92,8 +102,12 @@ export function EditAccount() {
         website: '',
         status: '',
         contacts: [],
-        file: null
+        file: null,
+        industry: '',
+        description: ''
     })
+    const { quill, quillRef } = useQuill();
+    const initialContentRef = useRef<string | null>(null);
 
     useEffect(() => {
         setFormData(state?.value)
@@ -110,6 +124,13 @@ export function EditAccount() {
             setReset(false)
         }
     }, [reset])
+
+    useEffect(() => {
+        if (quill && state?.value?.description) {
+            initialContentRef.current = state.value.description;
+            quill.clipboard.dangerouslyPasteHTML(state.value.description);
+        }
+    }, [quill, state?.value?.description]);
 
     const backbtnHandle = () => {
         if (state?.edit) {
@@ -186,7 +207,9 @@ export function EditAccount() {
             account_attachment: formData.file,
             website: formData.website,
             status: formData.status,
-            contacts: formData.contacts
+            contacts: formData.contacts,
+            industry: formData.industry,
+            description: formData.description
         }
 
         fetchData(`${AccountsUrl}/${state?.id}/`, 'PUT', JSON.stringify(data), Header)
@@ -219,7 +242,9 @@ export function EditAccount() {
             website: '',
             status: '',
             contacts: [],
-            file: null
+            file: null,
+            industry: '',
+            description: ''
         });
         setErrors({})
         setSelectedContacts([]);
@@ -229,10 +254,25 @@ export function EditAccount() {
         setReset(true)
     }
 
+    const getIndustryIdByName = (industryName: string) => {
+        if (!state?.industries || !industryName) return '';
+        
+        const foundIndustry = state.industries.find((industry: [string, string]) => 
+            industry[1].toLowerCase() === industryName.toLowerCase()
+        );
+        
+        return foundIndustry ? foundIndustry[0] : '';
+    };
 
     const module = 'Accounts'
     const crntPage = 'Add Account'
     const backBtn = state?.edit ? 'Back to Accounts' : 'Back to AccountDetails'
+
+    const resetQuillToInitialState = () => {
+        if (quill && initialContentRef.current !== null) {
+            quill.clipboard.dangerouslyPasteHTML(initialContentRef.current);
+        }
+    };
 
     return (
         <Box sx={{ mt: '60px' }}>
@@ -329,6 +369,34 @@ export function EditAccount() {
                                                 </FormControl>
                                             </div>
                                             <div className='fieldSubContainer'>
+                                                <div className='fieldTitle'>Industry</div>
+                                                <FormControl sx={{ width: '70%' }}>
+                                                    <Select
+                                                        name='industry'
+                                                        value={getIndustryIdByName(formData.industry) || ''}
+                                                        open={industrySelectOpen}
+                                                        onClick={() => setIndustrySelectOpen(!industrySelectOpen)}
+                                                        IconComponent={() => (
+                                                            <div onClick={() => setIndustrySelectOpen(!industrySelectOpen)} className="select-icon-background">
+                                                                {industrySelectOpen ? <FiChevronUp className='select-icon' /> : <FiChevronDown className='select-icon' />}
+                                                            </div>
+                                                        )}
+                                                        className='select'
+                                                        onChange={handleChange}
+                                                        error={!!errors?.industry?.[0]}
+                                                    >
+                                                        {state?.industries?.map((option: [string, string]) => (
+                                                            <MenuItem key={option[0]} value={option[0]}>
+                                                                {option[1]}
+                                                            </MenuItem>
+                                                        ))}
+                                                    </Select>
+                                                    <FormHelperText>{errors?.industry?.[0] ? errors?.industry[0] : ''}</FormHelperText>
+                                                </FormControl>
+                                            </div>
+                                        </div>
+                                        <div className='fieldContainer2'>
+                                            <div className='fieldSubContainer'>
                                                 <div className='fieldTitle'>account_attachment</div>
                                                 <TextField
                                                     name='account_attachment'
@@ -363,6 +431,7 @@ export function EditAccount() {
                                                     error={!!errors?.account_attachment?.[0]}
                                                 />
                                             </div>
+                                            <div className='fieldSubContainer'></div>
                                         </div>
                                     </Box>
                                 </AccordionDetails>
@@ -476,6 +545,51 @@ export function EditAccount() {
                                                 </FormControl>
                                             </div>
                                         </div>
+                                    </Box>
+                                </AccordionDetails>
+                            </Accordion>
+                        </div>
+                        <div className='leadContainer'>
+                            <Accordion defaultExpanded style={{ width: '98%' }}>
+                                <AccordionSummary expandIcon={<FiChevronDown style={{ fontSize: '25px' }} />}>
+                                    <Typography className='accordion-header'>Description</Typography>
+                                </AccordionSummary>
+                                <Divider className='divider' />
+                                <AccordionDetails>
+                                    <Box
+                                        sx={{ width: '100%', mb: 1 }}
+                                        component='form'
+                                        noValidate
+                                        autoComplete='off'
+                                    >
+                                        <div className='DescriptionDetail'>
+                                            <div className='descriptionTitle'>Description</div>
+                                            <div style={{ width: '100%', marginBottom: '3%' }}>
+                                                <div ref={quillRef} />
+                                            </div>
+                                        </div>
+                                        <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', mt: 1.5 }}>
+                                            <Button
+                                                className='header-button'
+                                                onClick={resetQuillToInitialState}
+                                                size='small'
+                                                variant='contained'
+                                                startIcon={<FaTimesCircle style={{ fill: 'white', width: '16px', marginLeft: '2px' }} />}
+                                                sx={{ backgroundColor: '#2b5075', ':hover': { backgroundColor: '#1e3750' } }}
+                                            >
+                                                Cancel
+                                            </Button>
+                                            <Button
+                                                className='header-button'
+                                                onClick={() => setFormData({ ...formData, description: quillRef.current.firstChild.innerHTML })}
+                                                variant='contained'
+                                                size='small'
+                                                startIcon={<FaCheckCircle style={{ fill: 'white', width: '16px', marginLeft: '2px' }} />}
+                                                sx={{ ml: 1 }}
+                                            >
+                                                Save
+                                            </Button>
+                                        </Box>
                                     </Box>
                                 </AccordionDetails>
                             </Accordion>
