@@ -398,7 +398,28 @@ class PublicLeadsAPITests(TestCase):
         lead.refresh_from_db()
         self.assertEqual(lead.status, "converted")
 
+    def test_delete_lead(self):
+        lead_id = Lead.objects.filter(org_id=self.org.id).first().id
 
-    def proceed_lead_for_status_converted(lead: Lead):
-         # TODO: Convert lead to an opportunity if status is "converted"
-        pass
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.retrieve_token_for_user(self.sales_manager))
+        lead_url = reverse("common_urls:api_leads:lead_detail", args=[lead_id])
+        res = self.client.delete(lead_url, headers=self.headers)
+
+        self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
+
+        exists = Lead.objects.filter(id=lead_id).exists()
+        self.assertFalse(exists)
+
+    def test_delete_lead_no_permission(self):
+        user = User.objects.get(profile__org__id=self.org.id, email="user3@test.com")
+        lead_id = Lead.objects.filter(org_id=self.org.id).first().id
+
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.retrieve_token_for_user(user))
+        lead_url = reverse("common_urls:api_leads:lead_detail", args=[lead_id])
+        res = self.client.delete(lead_url, headers=self.headers)
+
+        self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
+
+        exists = Lead.objects.filter(id=lead_id).exists()
+        self.assertTrue(exists)
+
