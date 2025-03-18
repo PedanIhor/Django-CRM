@@ -207,7 +207,10 @@ class LeadListView(APIView, LimitOffsetPagination):
                     )
 
             if data.get("status") == "converted":
-                assert(False, "Must not be allowed on the front end side!")
+                return Response(
+                    {"error": True, "errors": "Must not be allowed on the front end side!"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
             return Response(
                 {"error": False, "message": "Lead Created Successfully"},
@@ -534,7 +537,7 @@ class LeadDetailView(APIView):
             self.object.delete()
             return Response(
                 {"error": False, "message": "Lead deleted Successfully"},
-                status=status.HTTP_200_OK,
+                status=status.HTTP_204_NO_CONTENT,
             )
         return Response(
             {"error": True, "errors": "you don't have permission to delete this lead"},
