@@ -8,6 +8,8 @@ from accounts.models import Account
 from teams.models import Teams
 from help_tools.default_roles import generate_default_access_models
 
+from unittest.mock import patch
+
 faker = Faker()
 
 def seed_database():
@@ -73,6 +75,8 @@ def seed_database():
                 org_admin = profile  # Save admin for later use
 
         # Update created_by_id for all profiles
+        patcher = patch("common.base.get_current_user", return_value=org_admin.user)
+        patcher.start()
         for profile in profiles:
             profile.created_by = org_admin.user
             profile.save()
@@ -88,6 +92,8 @@ def seed_database():
             )
             teams.append(team)
 
+        patcher.stop()
+
         # Create 10–30 contacts for the organization
         contacts = []
         for _ in range(random.randint(10, 30)):
@@ -99,6 +105,9 @@ def seed_database():
                 postcode=faker.postcode(),
                 country="US"
             )
+            # Created by a random profile in the org
+            patcher = patch("common.base.get_current_user", return_value=random.choice(profiles).user)
+            patcher.start()
             contact = Contact.objects.create(
                 salutation=faker.prefix(),
                 first_name=faker.first_name(),
@@ -115,8 +124,8 @@ def seed_database():
                 address=address,
                 org=org,
                 is_active=True,
-                created_by=random.choice(profiles).user  # Created by a random profile in the org
             )
+            patcher.stop()
             # Assign contact to 1–2 profiles
             # Assign contact to one of the teams
             contact.teams.add(random.choice(teams))
@@ -127,6 +136,9 @@ def seed_database():
         num_converted = len(contacts) // 3  # Ensure exactly 1/3 are "converted"
 
         for i, contact in enumerate(contacts):
+            # Created by a random profile in the org
+            patcher = patch("common.base.get_current_user", return_value=random.choice(profiles).user)
+            patcher.start()
             status = "converted" if i < num_converted else random.choice(
                 ['assigned', 'in process', 'recycled', 'closed']
             )
@@ -140,9 +152,9 @@ def seed_database():
                 probability=random.choice([10, 20, 30, 40, 50, 60, 70]),  # Multiples of 10, ≤ 70
                 country=random.choice(['US', 'NL', 'GB']),
                 opportunity_amount=random.randint(6, 100) * 500,  # Multiple of 500, minimum 3000
-                org=org,
-                created_by=random.choice(profiles).user  # Created by a random profile in the org
+                org=org
             )
+            patcher.stop()
             lead.assigned_to.set(random.sample(profiles, random.randint(1, 2)))
             lead.contacts.add(contact)
             leads.append(lead)
@@ -152,6 +164,10 @@ def seed_database():
 
         # Create opportunities based on converted leads
         for lead in converted_leads[:len(leads) // 3]:  # Ensure exactly 1/3 of the total leads
+            # Set created_by_id to org admin
+            patcher = patch("common.base.get_current_user", return_value=org_admin.user)
+            patcher.start()
+
             account = Account.objects.create(
                 name=faker.company(),
                 email=faker.email(),
@@ -163,16 +179,21 @@ def seed_database():
                 website=faker.url(),
                 description=faker.text(),
                 org=org,
-                created_by=org_admin.user  # Set created_by_id to org admin
             )
+
+            patcher.stop()
 
             increase_percentage = random.randint(10, 50) / 100  # Random percentage between 10% and 50%
             probability = min(int(lead.probability * (1 + increase_percentage)), 100)
 
+            # Set created_by_id to the related lead's creator
+            patcher = patch("common.base.get_current_user", return_value=lead.created_by)
+            patcher.start()
+
             opportunity = Opportunity.objects.create(
                 name=f"{lead.title} Opportunity",  # Name reflects lead title
                 stage=random.choice(['QUALIFICATION', 'NEEDS ANALYSIS', 'VALUE PROPOSITION',
-                                     'ID.DECISION MAKERS', 'PERCEPTION ANALYSIS', 
+                                     'ID.DECISION MAKERS', 'PERCEPTION ANALYSIS',
                                      'PROPOSAL/PRICE QUOTE', 'NEGOTIATION/REVIEW', 'CLOSED WON', 'CLOSED LOST']),
                 amount=random.randint(5000, 50000),
                 probability=probability,
@@ -180,8 +201,10 @@ def seed_database():
                 account=account,
                 currency='EUR',  # Set currency to Euro
                 description=f"Opportunity of the converted lead whose id is {lead.id} and whose name title is {lead.title}",
-                created_by=lead.created_by  # Set created_by_id to the related lead's creator
             )
+
+            patcher.stop()
+
             opportunity.contacts.add(lead.contacts.first())
             opportunity.assigned_to.set(lead.assigned_to.all())
 
