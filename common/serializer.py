@@ -242,15 +242,16 @@ class ShowOrganizationListSerializer(serializers.ModelSerializer):
 
 
 class BillingAddressSerializer(serializers.ModelSerializer):
-    country = serializers.SerializerMethodField()
+    country_display = serializers.SerializerMethodField()  # for reading
+    country = serializers.CharField()  # for writing
 
-    def get_country(self, obj):
+    def get_country_display(self, obj):
         return obj.get_country_display()
 
     class Meta:
         model = Address
         fields = ("address_line", "street", "city",
-                  "state", "postcode", "country")
+                  "state", "postcode", "country", "country_display")
 
     def __init__(self, *args, **kwargs):
         account_view = kwargs.pop("account", False)
@@ -321,7 +322,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class ProfileSerializer(serializers.ModelSerializer):
-    # address = BillingAddressSerializer()
+    address = BillingAddressSerializer()  
     role = RoleSerializer()
 
     class Meta:
@@ -334,6 +335,7 @@ class ProfileSerializer(serializers.ModelSerializer):
             "has_marketing_access",
             "has_sales_access",
             "phone",
+            "alternate_phone",
             "date_of_joining",
             "is_active",
         )

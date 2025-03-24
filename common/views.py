@@ -140,6 +140,8 @@ class UsersListView(APIView, LimitOffsetPagination):
                         role=role,
                         address=address_obj,
                         org=request.profile.org,
+                        phone=params.get("phone"),
+                        alternate_phone=params.get("alternate_phone"),
                     )
 
                     send_email_to_newly_added_user(
@@ -212,6 +214,7 @@ class UsersListView(APIView, LimitOffsetPagination):
         context["admin_email"] = settings.ADMIN_EMAIL
         context["roles"] = ROLES
         context["status"] = [("True", "Active"), ("False", "In Active")]
+        context["countries"] = COUNTRIES
         return Response(context)
 
 
@@ -282,8 +285,8 @@ class UserDetailView(APIView):
         context["opportunity_list"] = OpportunitySerializer(
             opportunity_list, many=True
         ).data
-        contacts = Contact.objects.filter(assigned_to=profile_obj)
-        context["contacts"] = ContactSerializer(contacts, many=True).data
+        # contacts = Contact.objects.filter(assigned_to=profile_obj)
+        # context["contacts"] = ContactSerializer(contacts, many=True).data
         cases = Case.objects.filter(assigned_to=profile_obj)
         context["cases"] = CaseSerializer(cases, many=True).data
         context["assigned_data"] = assigned_data

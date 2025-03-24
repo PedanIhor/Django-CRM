@@ -120,6 +120,7 @@ export default function Users() {
     const [inactiveRecordsPerPage, setInactiveRecordsPerPage] = useState<number>(10);
     const [inactiveTotalPages, setInactiveTotalPages] = useState<number>(0);
     const [inactiveLoading, setInactiveLoading] = useState(true);
+    const [countries, setCountries] = useState([]);
 
     useEffect(() => {
         getUsers()
@@ -148,13 +149,14 @@ export default function Users() {
                 // fetchData(`${UsersUrl}/`, 'GET', null as any, Header)
                 .then((res: any) => {
                     if (!res.error) {
-                        // console.log(res, 'users')
+                        console.log(res, 'users')
                         setActiveUsers(res?.active_users?.active_users)
                         setActiveTotalPages(Math.ceil(res?.active_users?.active_users_count / activeRecordsPerPage));
                         setActiveUsersOffset(res?.active_users?.offset)
                         setInactiveUsers(res?.inactive_users?.inactive_users)
                         setInactiveTotalPages(Math.ceil(res?.inactive_users?.inactive_users_count / inactiveRecordsPerPage));
                         setInactiveUsersOffset(res?.inactive_users?.offset)
+                        setCountries(res?.countries);
                         setLoading(false)
                         // setUsersData(
                         //   ...usersData, {
@@ -179,7 +181,7 @@ export default function Users() {
     }
 
     const userDetail = (userId: any) => {
-        navigate(`/app/users/user-details`, { state: { userId, detail: true } })
+        navigate(`/app/users/user-details`, { state: { userId, detail: true, countries } })
     }
     const handleRecordsPerPage = (event: React.ChangeEvent<HTMLSelectElement>) => {
         if (tab == 'active') {
@@ -291,7 +293,7 @@ export default function Users() {
 
     const onAddUser = () => {
         if (!loading) {
-            navigate('/app/users/add-users')
+            navigate('/app/users/add-users', { state: { countries } })
         }
         // navigate('/users/add-users', {
         //   state: {
