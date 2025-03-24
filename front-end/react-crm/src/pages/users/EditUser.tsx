@@ -20,11 +20,11 @@ import {
     FormControl,
     FormHelperText
 } from '@mui/material'
-import { UserUrl } from '../../services/ApiUrls'
+import { UserUrl, RolesUrl } from '../../services/ApiUrls'
 import { fetchData } from '../../components/FetchData'
 import { CustomAppBar } from '../../components/CustomAppBar'
 import { FaArrowDown, FaTimes, FaUpload } from 'react-icons/fa'
-import { AntSwitch, RequiredTextField } from '../../styles/CssStyled'
+import { AntSwitch, RequiredSelect, RequiredTextField } from '../../styles/CssStyled'
 import { FiChevronDown } from '@react-icons/all-files/fi/FiChevronDown'
 import { FiChevronUp } from '@react-icons/all-files/fi/FiChevronUp'
 import '../../styles/style.css'
@@ -65,8 +65,16 @@ interface FormData {
     has_marketing_access: boolean;
     is_organization_admin: boolean;
 }
+
+interface Role {
+    id: string;
+    name: string;
+    permissions: any[];
+}
+
 export function EditUser() {
     const { state } = useLocation()
+    console.log(state, 'state');
     const navigate = useNavigate()
 
     const [reset, setReset] = useState(false)
@@ -94,10 +102,11 @@ export function EditUser() {
         has_marketing_access: false,
         is_organization_admin: false
     })
+    const [roles, setRoles] = useState<Role[]>([]);
+
     useEffect(() => {
         setFormData(state?.value)
     }, [state?.id])
-
 
     useEffect(() => {
         if (reset) {
@@ -133,48 +142,29 @@ export function EditUser() {
         submitForm();
     }
 
-    // const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
-    //     const file = event.target.files?.[0] || null;
-    //     if (file) {
-    //         const reader = new FileReader();
-    //         reader.onload = () => {
-    //             setFormData({ ...formData, profile_pic: reader.result as string });
-    //         };
-    //         reader.readAsDataURL(file);
-    //     }
-    // };
+    const getRoles = async () => {
+        const Header = {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            Authorization: localStorage.getItem('Token'),
+            org: localStorage.getItem('org')
+        }
+        try {
+            await fetchData(`${RolesUrl}/?include_permissions=false`, 'GET', null as any, Header)
+                .then((res: any) => {
+                    if (!res.error) {
+                        setRoles(res);
+                    }
+                })
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        }
+    }
 
+    useEffect(() => {
+        getRoles();
+    }, []);
 
-    // const getEditDetail = (id: any) => {
-    //     fetchData(`${UserUrl}/${id}/`, 'GET', null as any, headers)
-    //         .then((res: any) => {
-    //             console.log('edit detail Form data:', res);
-    //             if (!res.error) {
-    //                 const data = res?.data?.profile_obj
-    //                 setFormData({
-    //                     email: data?.user_details?.email || '',
-    //                     role: data.role || 'ADMIN',
-    //                     phone: data.phone || '',
-    //                     alternate_phone: data.alternate_phone || '',
-    //                     address_line: data?.address?.address_line || '',
-    //                     street: data?.address?.street || '',
-    //                     city: data?.address?.city || '',
-    //                     state: data?.address?.state || '',
-    //                     pincode: data?.address?.pincode || '',
-    //                     country: data?.address?.country || '',
-    //                     profile_pic: data?.user_details?.profile_pic || null,
-    //                     has_sales_access: data.has_sales_access || false,
-    //                     has_marketing_access: data.has_marketing_access || false,
-    //                     is_organization_admin: data.is_organization_admin || false
-    //                 })
-    //             }
-    //             if (res.error) {
-    //                 setError(true)
-    //             }
-    //         })
-    //         .catch(() => {
-    //         })
-    // }
     const submitForm = () => {
         const Header = {
             Accept: 'application/json',
@@ -275,7 +265,7 @@ export function EditUser() {
                                         <div className='fieldContainer'>
                                             <div className='fieldSubContainer'>
                                                 <div className='fieldTitle'>First Name</div>
-                                                <RequiredTextField
+                                                <TextField
                                                     name='first_name'
                                                     value={formData.first_name}
                                                     onChange={handleChange}
@@ -287,7 +277,7 @@ export function EditUser() {
                                             </div>
                                             <div className='fieldSubContainer'>
                                                 <div className='fieldTitle'>Last Name</div>
-                                                <RequiredTextField
+                                                <TextField
                                                     name='last_name'
                                                     value={formData.last_name}
                                                     onChange={handleChange}
@@ -315,7 +305,8 @@ export function EditUser() {
                                             <div className='fieldSubContainer'>
                                                 <div className='fieldTitle'>Role</div>
                                                 <FormControl sx={{ width: '70%' }}>
-                                                    <Select
+                                                    <RequiredSelect
+                                                        required
                                                         name='role'
                                                         value={formData.role}
                                                         open={roleSelectOpen}
@@ -329,13 +320,17 @@ export function EditUser() {
                                                         onChange={handleChange}
                                                         error={!!errors?.role?.[0]}
                                                     >
-                                                        {['ADMIN', 'SALES_MANAGER', 'SALES_REPRESENTATIVE', 'EMPLOYEE'].map((option) => (
-                                                            <MenuItem key={option} value={option}>
-                                                                {option}
-                                                            </MenuItem>
-                                                        ))}
-                                                    </Select>
-                                                    {/* <FormHelperText>{errors?.[0] ? errors[0] : ''}</FormHelperText> */}
+                                                        {roles.length > 0 ? (
+                                                            roles.map((option) => (
+                                                                <MenuItem key={option.id} value={option.id}>
+                                                                    {option.name}
+                                                                </MenuItem>
+                                                            ))
+                                                        ) : (
+                                                            <MenuItem disabled>No roles available</MenuItem>
+                                                        )}
+                                                    </RequiredSelect>
+                                                    <FormHelperText>{errors?.role?.[0] ? errors.role[0] : ''}</FormHelperText>
                                                 </FormControl>
                                             </div>
                                         </div>
@@ -358,8 +353,7 @@ export function EditUser() {
                                             <div className='fieldSubContainer'>
                                                 <div className='fieldTitle'>Alternate Phone</div>
                                                 <Tooltip title="Number must starts with +91">
-                                                    <RequiredTextField
-                                                        required
+                                                    <TextField                                                        
                                                         name='alternate_phone'
                                                         value={formData.alternate_phone}
                                                         onChange={handleChange}

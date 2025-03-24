@@ -25,6 +25,7 @@ type response = {
         last_name: string;
     };
     role: {
+        id: string | number;
         name: string;
         permissions: string[];
     };
@@ -37,8 +38,6 @@ type response = {
         country: string;
     };
     is_organization_admin: boolean;
-    has_marketing_access: boolean;
-    has_sales_access: boolean;
     phone: string;
     alternate_phone: string;
     date_of_joining: string;
@@ -111,7 +110,7 @@ export default function UserDetails() {
                     email: userDetails?.user_details?.email,
                     first_name: userDetails?.user_details?.first_name,
                     last_name: userDetails?.user_details?.last_name,
-                    role: userDetails?.role.name,
+                    role: userDetails?.role?.id,
                     phone: userDetails?.phone,
                     alternate_phone: userDetails?.alternate_phone,
                     address_line: userDetails?.address?.address_line,
@@ -121,11 +120,10 @@ export default function UserDetails() {
                     pincode: userDetails?.address?.postcode,
                     country: userDetails?.address?.country,
                     profile_pic: userDetails?.user_details?.profile_pic,
-                    has_sales_access: userDetails?.has_sales_access,
-                    has_marketing_access: userDetails?.has_marketing_access,
                     is_organization_admin: userDetails?.is_organization_admin,
                 },
-                id: state?.userId
+                id: state?.userId,
+                countries: state?.countries
             }
         })
     }
@@ -239,20 +237,9 @@ export default function UserDetails() {
                                     </div>
                                 </div>
                                 <div style={{ width: '32%' }}>
-                                    <div className='title2'>Marketing Access</div>
+                                    <div className='title2'>Alternate Mobile Number</div>
                                     <div className='title3'>
-                                        <AntSwitch checked={userDetails?.has_marketing_access} />
-                                    </div>
-                                </div>
-                            </div>
-                            <div style={{
-                                padding: '20px', marginTop: '15px', display: 'flex', flexDirection: 'row'
-                                // , justifyContent: 'space-between' 
-                            }}>
-                                <div style={{ width: '34%' }}>
-                                    <div className='title2'>Sales Access</div>
-                                    <div className='title3'>
-                                        <AntSwitch checked={userDetails?.has_sales_access} />
+                                        {userDetails?.alternate_phone || '---'}
                                     </div>
                                 </div>
                                 <div style={{ width: '32%' }}>
@@ -261,15 +248,7 @@ export default function UserDetails() {
                                         {userDetails?.date_of_joining || '---'}
                                     </div>
                                 </div>
-                                {/* <div style={{ width: '32%' }}>
-                                    <div className='title2'>Do Not Call</div>
-                                    <div className='title3'>
-                                        <AntSwitch
-                                            checked={contactDetails?.do_not_call}
-                                            inputProps={{ 'aria-label': 'ant design' }} />
-                                    </div>
-                                </div> */}
-                            </div>
+                            </div>                            
                             {/* Address details */}
                             <div style={{ marginTop: '15px' }}>
                                 <div style={{ padding: '20px', borderBottom: '1px solid lightgray', display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>

@@ -30,7 +30,7 @@ import { UsersUrl } from '../../services/ApiUrls'
 import { fetchData, Header } from '../../components/FetchData'
 import { CustomAppBar } from '../../components/CustomAppBar'
 import { FaArrowAltCircleDown, FaArrowDown, FaTimes, FaUpload } from 'react-icons/fa'
-import { AntSwitch, CustomSelectField, CustomSelectTextField, RequiredTextField } from '../../styles/CssStyled'
+import { AntSwitch, CustomSelectField, CustomSelectTextField, RequiredSelect, RequiredTextField } from '../../styles/CssStyled'
 import { FiChevronDown } from '@react-icons/all-files/fi/FiChevronDown'
 import { FiChevronUp } from '@react-icons/all-files/fi/FiChevronUp'
 import { RolesUrl, SERVER } from '../../services/ApiUrls';
@@ -44,7 +44,7 @@ type FormErrors = {
     street?: string[];
     city?: string[];
     state?: string[];
-    pincode?: string[];
+    postcode?: string[];
     country?: string[];
     profile_pic?: string[];
     has_sales_access?: string[];
@@ -65,7 +65,7 @@ interface FormData {
     street: string,
     city: string,
     state: string,
-    pincode: string,
+    postcode: string,
     country: string,
     profile_pic: string | null,
     has_sales_access: boolean,
@@ -124,14 +124,14 @@ export function AddUsers() {
         email: '',
         first_name: '',
         last_name: '',
-        role: 'ADMIN',
+        role: '',
         phone: '',
         alternate_phone: '',
         address_line: '',
         street: '',
         city: '',
         state: '',
-        pincode: '',
+        postcode: '',
         country: '',
         profile_pic: null,
         has_sales_access: false,
@@ -196,7 +196,7 @@ export function AddUsers() {
             street: formData.street,
             city: formData.city,
             state: formData.state,
-            pincode: formData.pincode,
+            postcode: formData.postcode,
             country: formData.country,
             profile_pic: formData.profile_pic,
             has_sales_access: formData.has_sales_access,
@@ -231,14 +231,14 @@ export function AddUsers() {
             email: '',
             first_name: '',
             last_name: '',
-            role: 'ADMIN',
+            role: '',
             phone: '',
             alternate_phone: '',
             address_line: '',
             street: '',
             city: '',
             state: '',
-            pincode: '',
+            postcode: '',
             country: '',
             profile_pic: null,
             has_sales_access: false,
@@ -323,7 +323,8 @@ export function AddUsers() {
                                             <div className='fieldSubContainer'>
                                                 <div className='fieldTitle'>Role</div>
                                                 <FormControl sx={{ width: '70%' }}>
-                                                    <Select
+                                                    <RequiredSelect
+                                                        required
                                                         name='role'
                                                         value={formData.role}
                                                         open={roleSelectOpen}
@@ -346,7 +347,7 @@ export function AddUsers() {
                                                         ) : (
                                                             <MenuItem disabled>No roles available</MenuItem>
                                                         )}
-                                                    </Select>
+                                                    </RequiredSelect>
                                                     {/* <FormHelperText>{errors?.[0] ? errors[0] : ''}</FormHelperText> */}
                                                 </FormControl>
                                             </div>
@@ -371,8 +372,7 @@ export function AddUsers() {
                                             <div className='fieldSubContainer'>
                                                 <div className='fieldTitle'>Alternate Phone</div>
                                                 <Tooltip title="Number must starts with +91">
-                                                    <RequiredTextField
-                                                        required
+                                                    <TextField                                                        
                                                         name='alternate_phone'
                                                         value={formData.alternate_phone}
                                                         onChange={handleChange}
@@ -383,29 +383,7 @@ export function AddUsers() {
                                                     />
                                                 </Tooltip>
                                             </div>
-                                        </div>
-                                        <div className='CheckBox'>
-                                            <div className='fieldSubContainer_checkbox'>
-                                                <Tooltip title="Select to send an invitation link to the user">
-                                                    <FormControlLabel
-                                                        label="Send Invitation Link to User"
-                                                        control={
-                                                            <Checkbox
-                                                                checked={formData.send_invitation} // Bind the checkbox to formData.send_invitation
-                                                                onChange={(e) => handleChange({ target: { name: 'send_invitation', value: e.target.checked } })}
-                                                                name='send_invitation'
-                                                                color="primary"
-                                                            />
-                                                        }
-
-                                                    />
-                                                </Tooltip>
-                                            </div>
-
-                                            <div className='fieldSubContainer'>
-
-                                            </div>
-                                        </div>
+                                        </div>                                        
                                         {/* <div className='fieldContainer2'>
                                             <div className='fieldSubContainer'>
                                                 <div className='fieldTitle'>Profile picture</div>
@@ -586,16 +564,16 @@ export function AddUsers() {
                                         </div>
                                         <div className='fieldContainer2'>
                                             <div className='fieldSubContainer'>
-                                                <div className='fieldTitle'>Pincode</div>
+                                                <div className='fieldTitle'>Postcode</div>
                                                 <TextField
                                                     required
-                                                    name='pincode'
-                                                    value={formData.pincode}
+                                                    name='postcode'
+                                                    value={formData.postcode}
                                                     onChange={handleChange}
                                                     style={{ width: '70%' }}
                                                     size='small'
-                                                    error={!!profileErrors?.pincode?.[0] || !!userErrors?.pincode?.[0]}
-                                                    helperText={profileErrors?.pincode?.[0] || userErrors?.pincode?.[0] || ''}
+                                                    error={!!profileErrors?.postcode?.[0] || !!userErrors?.postcode?.[0]}
+                                                    helperText={profileErrors?.postcode?.[0] || userErrors?.postcode?.[0] || ''}
                                                 />
                                             </div>
                                             <div className='fieldSubContainer'>
