@@ -53,17 +53,86 @@ from help_tools import help_views
 
 
 class LeadsViewSet(help_views.OrgViewSet):
-    "list_leads", "add_leads", "get_leads", "edit_leads", "delete_leads",
     permission_classes = (crm_permissions(
         get="get_leads",
         list="list_leads",
         post="add_leads",
         put="edit_leads",
-        delete="delete_leads")
+        delete="delete_leads"),
     )
     serializer_class = LeadSerializer
     queryset = Lead.objects.all()
+    pagination_class = LimitOffsetPagination
 
+    def get_queryset(self):
+        queryset = self._filter_queryset(super().get_queryset())
+
+        profile = self.request.profile
+        if profile.role.name == "ADMIN" or self.request.user.is_superuser:
+            return queryset.order_by("-id")
+        queryset = queryset.filter(
+            Q(assigned_to__pk=profile.id) | Q(created_by__id=profile.user.id)
+        )
+
+        return queryset.order_by("-id")
+
+    def list(self, request, *args, **kwargs):
+        context = self._build_default_context()
+
+        queryset = self.get_queryset()
+        queryset_open = queryset.exclude(status="closed")
+        paginated_open = self.paginate_queryset(queryset_open)
+        open_leads = LeadSerializer(paginated_open, many=True)
+
+        context["open_leads"] = {
+            "open_leads": open_leads.data,
+            "leads_count": queryset_open.count(),
+            "offset": self.paginator.offset,
+            "limit": self.paginator.limit,
+        }
+
+        queryset_close = queryset.filter(status="closed")
+        paginated_close = self.paginate_queryset(queryset_close)
+        close_leads = LeadSerializer(paginated_close, many=True)
+
+        context["close_leads"] = {
+            "close_leads": close_leads.data,
+            "leads_count": queryset_close.count(),
+            "offset": self.paginator.offset,
+            "limit": self.paginator.limit,
+        }
+
+        return Response(context, status=status.HTTP_200_OK)
+
+    def _filter_queryset(self, queryset):
+        params = self.request.query_params
+        if params:
+            if params.get("status"):
+                queryset = queryset.filter(status=params.get("status"))
+
+            if params.get("source"):
+                queryset = queryset.filter(source=params.get("source"))
+
+        return queryset
+
+    def _build_default_context(self):
+        contacts = Contact.objects.filter(org=self.org_id).values(
+            "id", "first_name"
+        )
+        users = Profile.objects.filter(is_active=True, org=self.request.profile.org).values(
+            "id", "user__email"
+        )
+        tags = TagsSerializer(Tags.objects.all(), many=True).data
+
+        return {
+            "contacts": contacts,
+            "users": users,
+            "source": LEAD_SOURCE,
+            "status": LEAD_STATUS,
+            "industries": INDCHOICES,
+            "countries": COUNTRIES,
+            "tags": tags,
+        }
 
 class LeadUploadView(APIView):
     model = Lead

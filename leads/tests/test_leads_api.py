@@ -2,10 +2,11 @@
 Tests for the Leads API.
 """
 
-from django.test import TestCase, Client
+from django.test import TestCase
 from django.urls import reverse
 import json
 
+from rest_framework.test import APIClient
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from help_tools import db_tests_dump
@@ -28,11 +29,13 @@ LIST_RESPONSE_KEYS = {
         "leads_count": 0,
         "open_leads": [],
         "offset": 0,
+        "limit": 0,
     },
     "close_leads": {
         "leads_count": 0,
         "close_leads": [],
         "offset": 0,
+        "limit": 0,
     },
     "contacts": [],
     "status": [],
@@ -92,7 +95,7 @@ class PublicLeadsAPITests(TestCase):
     """Test the public features of the leads API."""
 
     def setUp(self):
-        self.client = Client()
+        self.client = APIClient()
 
         # Create an organization with a bunch of users, contacts, teams and adresses
         self.org = db_tests_dump.create_test_org()
@@ -123,22 +126,22 @@ class PublicLeadsAPITests(TestCase):
         refresh = RefreshToken.for_user(user)
         return str(refresh.access_token)
 
-    def authenticate_user(self, user: User):
-        token = self.retrieve_token_for_user(user)
-        self.headers["Authorization"] = f"Bearer {token}"
-
     def test_get_leads_list_org_not_provided(self):
-        res = self.client.get(LEADS_URL, headers={"Authorization": 'Bearer ' + self.retrieve_token_for_role("ADMIN")})
+        print("\n~~~~~~~~~~~~~ test_get_leads_list_org_not_provided ~~~~~~~~~~~~~~~")
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.retrieve_token_for_role("ADMIN"))
+        res = self.client.get(LEADS_URL, headers={})
         self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_get_leads_list_response_structure(self):
-        self.authenticate_user(self.admin)
+        print("\n~~~~~~~~~~~~~ test_get_leads_list_response_structure ~~~~~~~~~~~~~~~")
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.retrieve_token_for_role("ADMIN"))
         res = self.client.get(LEADS_URL, headers=self.headers)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
-        self.assertTrue(set(LIST_RESPONSE_KEYS.keys()).issubset(set(res.data.keys())), "Response keys are not as expected")
+        self.assertEqual(set(LIST_RESPONSE_KEYS.keys()), set(res.data.keys()), "Response keys are not as expected")
 
     def test_get_leads_list_filter_by_status(self):
-        self.authenticate_user(self.admin)
+        print("\n~~~~~~~~~~~~~ test_get_leads_list_filter_by_status ~~~~~~~~~~~~~~~")
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.retrieve_token_for_role("ADMIN"))
         res = self.client.get(LEADS_URL, headers=self.headers, data={"status": "open"})
         for lead in res.data["open_leads"]["open_leads"]:
             self.assertEqual(lead["status"], "open")
@@ -172,7 +175,8 @@ class PublicLeadsAPITests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
 
     def test_get_leads_list_filter_by_source(self):
-        self.authenticate_user(self.admin)
+        print("\n~~~~~~~~~~~~~ test_get_leads_list_filter_by_source ~~~~~~~~~~~~~~~")
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.retrieve_token_for_role("ADMIN"))
         res = self.client.get(LEADS_URL, headers=self.headers, data={"source": "call"})
         for lead in res.data["open_leads"]["open_leads"]:
             self.assertEqual(lead["source"], "call")
@@ -209,7 +213,8 @@ class PublicLeadsAPITests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
 
     def test_get_leads_list_pagination(self):
-        self.authenticate_user(self.admin)
+        print("\n~~~~~~~~~~~~~ test_get_leads_list_pagination ~~~~~~~~~~~~~~~")
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.retrieve_token_for_role("ADMIN"))
         db_open_leads = (Lead.objects
             .filter(org__id=self.org.id)
             .exclude(status='closed')
@@ -251,6 +256,7 @@ class PublicLeadsAPITests(TestCase):
         proceed_limit_offset(50, 150) # Out of bounds
 
     def test_get_leads_list_filter_by_assigned_user(self):
+        print("\n~~~~~~~~~~~~~ test_get_leads_list_filter_by_assigned_user ~~~~~~~~~~~~~~~")
         user = User.objects.filter(profile__org__id=self.org.id, email="user3@test.com").first()
         user_leads = (
             Lead.objects
@@ -260,7 +266,7 @@ class PublicLeadsAPITests(TestCase):
                 .distinct()
                 .all()
         )
-        self.authenticate_user(user)
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.retrieve_token_for_user(user))
         res = self.client.get(LEADS_URL, headers=self.headers, data={"limit": 100, "offset": 0})
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(len(user_leads), len(res.data["open_leads"]["open_leads"]))
@@ -269,7 +275,8 @@ class PublicLeadsAPITests(TestCase):
         self.assertEqual(db_leads_ids, res_leads_ids)
 
     def test_post_leads(self):
-        self.authenticate_user(self.sales_manager)
+        print("\n~~~~~~~~~~~~~ test_post_leads ~~~~~~~~~~~~~~~")
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.retrieve_token_for_user(self.sales_manager))
 
         payload = POST_REQUEST_PAYLOAD.copy()
 
@@ -302,17 +309,19 @@ class PublicLeadsAPITests(TestCase):
         self.assertEqual(lead.skype_ID, "any-skype")
 
     def test_get_lead_details_no_permission(self):
+        print("\n~~~~~~~~~~~~~ test_get_lead_details_no_permission ~~~~~~~~~~~~~~~")
         user = User.objects.filter(profile__org__id=self.org.id, email="user5@test.com").first()
         lead_to_get = Lead.objects.exclude(assigned_to__user=user).first()
-        self.authenticate_user(user)
         lead_url = reverse("common_urls:api_leads:lead-detail", args=[lead_to_get.id])
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.retrieve_token_for_user(user))
         res = self.client.get(lead_url, headers=self.headers)
         self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_get_lead_details(self):
+        print("\n~~~~~~~~~~~~~ test_get_lead_details ~~~~~~~~~~~~~~~")
         lead_db = Lead.objects.filter(org_id=self.org.id).first()
-        self.authenticate_user(self.admin)
         lead_url = reverse("common_urls:api_leads:lead-detail", args=[lead_db.id])
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.retrieve_token_for_role("ADMIN"))
         res = self.client.get(lead_url, headers=self.headers)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(set(GET_RESPONSE_KEYS.keys()), set(res.data.keys()), "Response keys are not as expected")
@@ -340,6 +349,7 @@ class PublicLeadsAPITests(TestCase):
         self.assertEqual(lead_db.skype_ID, lead_res["skype_ID"])
 
     def test_update_lead(self):
+        print("\n~~~~~~~~~~~~~ test_update_lead ~~~~~~~~~~~~~~~")
         lead = Lead.objects.filter(org_id=self.org.id).first()
 
         old_assigned_to_ids = {profile.id for profile in lead.assigned_to.all()}
@@ -361,8 +371,8 @@ class PublicLeadsAPITests(TestCase):
         update_payload["assigned_to"] = [str(id) for id in list(new_assigned_to_ids)]
         update_payload["contacts"] = [str(id) for id in list(new_contacts_ids)]
 
-        self.authenticate_user(self.sales_manager)
         lead_url = reverse("common_urls:api_leads:lead-detail", args=[lead.id])
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.retrieve_token_for_user(self.sales_manager))
         res = self.client.put(lead_url, json.dumps(update_payload), headers=self.headers, content_type="application/json")
         self.assertEqual(res.status_code, status.HTTP_200_OK)
 
@@ -387,13 +397,14 @@ class PublicLeadsAPITests(TestCase):
         self.assertEqual(lead.skype_ID, "updated-skype")
 
     def test_update_lead_status(self):
+        print("\n~~~~~~~~~~~~~ test_update_lead_status ~~~~~~~~~~~~~~~")
         lead = Lead.objects.filter(org_id=self.org.id, status="assigned").first()
 
         payload = {
             "status": "converted"
         }
 
-        self.authenticate_user(self.sales_manager)
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.retrieve_token_for_user(self.sales_manager))
         lead_url = reverse("common_urls:api_leads:lead_status_update", args=[lead.id])
         res = self.client.post(lead_url, json.dumps(payload), headers=self.headers, content_type="application/json")
 
@@ -403,10 +414,11 @@ class PublicLeadsAPITests(TestCase):
         self.assertEqual(lead.status, "converted")
 
     def test_delete_lead(self):
+        print("\n~~~~~~~~~~~~~ test_delete_lead ~~~~~~~~~~~~~~~")
         lead_id = Lead.objects.filter(org_id=self.org.id).first().id
 
-        self.authenticate_user(self.sales_manager)
         lead_url = reverse("common_urls:api_leads:lead-detail", args=[lead_id])
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.retrieve_token_for_user(self.sales_manager))
         res = self.client.delete(lead_url, headers=self.headers)
 
         self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
@@ -415,11 +427,12 @@ class PublicLeadsAPITests(TestCase):
         self.assertFalse(exists)
 
     def test_delete_lead_no_permission(self):
+        print("\n~~~~~~~~~~~~~ test_delete_lead_no_permission ~~~~~~~~~~~~~~~")
         user = User.objects.get(profile__org__id=self.org.id, email="user3@test.com")
         lead_id = Lead.objects.filter(org_id=self.org.id).first().id
 
-        self.authenticate_user(user)
         lead_url = reverse("common_urls:api_leads:lead-detail", args=[lead_id])
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.retrieve_token_for_user(user))
         res = self.client.delete(lead_url, headers=self.headers)
 
         self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
