@@ -39,10 +39,13 @@ interface PermissionsMatrixData {
   permissions: Permission[];
 }
 
-const PermissionsMatrix = () => {
+interface PermissionsMatrixProps {
+  onChanges?: (changes: Map<string, string[]>) => void;
+}
+
+const PermissionsMatrix = ({ onChanges }: PermissionsMatrixProps) => {
   const [matrixData, setMatrixData] = useState<PermissionsMatrixData | null>(null);
   const [changes, setChanges] = useState<Map<string, string[]>>(new Map());
-  const [loading, setLoading] = useState(false);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
@@ -56,6 +59,13 @@ const PermissionsMatrix = () => {
   useEffect(() => {
     fetchPermissionsMatrix();
   }, []);
+
+  useEffect(() => {
+    // Notify parent component when changes occur
+    if (onChanges) {
+      onChanges(changes);
+    }
+  }, [changes, onChanges]);
 
   const fetchPermissionsMatrix = async () => {
     try {
@@ -107,45 +117,6 @@ const PermissionsMatrix = () => {
     }
   };
 
-  const handleSave = async () => {
-    if (changes.size === 0) return;
-
-    setLoading(true);
-    try {
-      const rolePermissions = Array.from(changes.entries()).map(([roleId, permissions]) => ({
-        role_id: roleId,
-        permissions: permissions
-      }));
-
-      await axios.post(`${SERVER}/api/roles/update_permissions/`, {
-        role_permissions: rolePermissions
-      }, {
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-          Authorization: localStorage.getItem('Token'),
-          org: localStorage.getItem('org')                    
-        }
-      });
-
-      await fetchPermissionsMatrix();
-      setChanges(new Map());
-      setSnackbar({
-        open: true,
-        message: "Permissions updated successfully",
-        severity: 'success'
-      });
-    } catch (error) {
-      setSnackbar({
-        open: true,
-        message: "Failed to update permissions",
-        severity: 'error'
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const groupPermissionsByModel = (permissions: Permission[]) => {
     // Group permissions by module_name
     const grouped = permissions.reduce((acc, permission) => {
@@ -177,27 +148,7 @@ const PermissionsMatrix = () => {
   const groupedPermissions = groupPermissionsByModel(matrixData.permissions);
 
   return (
-    <Box sx={{ mt: '60px' }}>
-      <CustomToolbar>
-        <div></div>
-        <Stack sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-          <Button 
-            onClick={handleSave} 
-            disabled={changes.size === 0 || loading}
-            variant="contained"
-            className={'add-button'}
-            sx={{
-              '&.Mui-disabled': {
-                backgroundColor: 'rgba(25, 118, 210, 0.5)', // lighter blue color when disabled
-                color: 'white'
-              }
-            }}
-          >
-            {loading ? 'Saving...' : 'Save Changes'}
-          </Button>
-        </Stack>
-      </CustomToolbar>
-
+    <Box>
       <Container sx={{ width: '100%', maxWidth: '100%', minWidth: '100%' }}>
         <Box sx={{ width: '100%', minWidth: '100%', m: '15px 0px 0px 0px' }}>
           <Paper sx={{ width: 'calc(100%-15px)', mb: 2, p: '0px 15px 15px 15px' }}>
