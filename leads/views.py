@@ -63,23 +63,23 @@ class LeadsViewSet(help_views.OrgViewSet):
     serializer_class = LeadSerializer
     queryset = Lead.objects.all()
     pagination_class = LimitOffsetPagination
+    http_method_names = [m for m in help_views.OrgViewSet.http_method_names if m != 'patch']
 
     def get_queryset(self):
         queryset = self._filter_queryset(super().get_queryset())
-
-        profile = self.request.profile
-        if profile.role.name == "ADMIN" or self.request.user.is_superuser:
-            return queryset.order_by("-id")
-        queryset = queryset.filter(
-            Q(assigned_to__pk=profile.id) | Q(created_by__id=profile.user.id)
-        )
-
         return queryset.order_by("-id")
 
     def list(self, request, *args, **kwargs):
         context = self._build_default_context()
-
+        context["tags"] = TagsSerializer(Tags.objects.all(), many=True).data
         queryset = self.get_queryset()
+
+        profile = request.profile
+        if not (profile.role.name == "ADMIN" or request.user.is_superuser):
+            queryset = queryset.filter(
+                Q(assigned_to__pk=profile.id) | Q(created_by__id=profile.user.id)
+            )
+
         queryset_open = queryset.exclude(status="closed")
         paginated_open = self.paginate_queryset(queryset_open)
         open_leads = LeadSerializer(paginated_open, many=True)
@@ -104,6 +104,45 @@ class LeadsViewSet(help_views.OrgViewSet):
 
         return Response(context, status=status.HTTP_200_OK)
 
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+
+        self._check_permission_for_lead(request, instance)
+
+        context = self._build_default_context()
+
+        assignees_list = self._build_assignees_list_for_lead(request, instance)
+        context["assigned_data"] = assignees_list
+
+        context["lead_obj"] = self.get_serializer(instance).data
+
+        teams = Teams.objects.filter(org=request.profile.org)
+        context["teams"] = TeamsSerializer(teams, many=True).data
+
+        comments = Comment.objects.filter(lead=instance).order_by("-id")
+        context["comments"] = LeadCommentSerializer(comments, many=True).data
+
+        attachments = Attachments.objects.filter(lead=instance).order_by("-id")
+        context["attachments"] = AttachmentsSerializer(attachments, many=True).data
+
+        return Response(context, status=status.HTTP_200_OK)
+
+    def _check_permission_for_lead(self, request, lead):
+        if not (request.profile.role.name == "ADMIN" or request.user.is_superuser):
+            if request.profile not in lead.assigned_to.all():
+                raise PermissionDenied(
+                    "You do not have permission to perform this action"
+                )
+
+    def _build_assignees_list_for_lead(self, request, lead):
+        assignees_list = []
+        for assignee in lead.assigned_to.all():
+            assigned_dict = {}
+            assigned_dict["id"] = assignee.id
+            assigned_dict["name"] = assignee.user.email
+            assignees_list.append(assigned_dict)
+        return assignees_list
+
     def _filter_queryset(self, queryset):
         params = self.request.query_params
         if params:
@@ -120,9 +159,10 @@ class LeadsViewSet(help_views.OrgViewSet):
             "id", "first_name"
         )
         users = Profile.objects.filter(is_active=True, org=self.request.profile.org).values(
-            "id", "user__email"
+            "id", "user__email", "user__profile_pic"
+        ).order_by(
+            "user__email"
         )
-        tags = TagsSerializer(Tags.objects.all(), many=True).data
 
         return {
             "contacts": contacts,
@@ -131,7 +171,6 @@ class LeadsViewSet(help_views.OrgViewSet):
             "status": LEAD_STATUS,
             "industries": INDCHOICES,
             "countries": COUNTRIES,
-            "tags": tags,
         }
 
 class LeadUploadView(APIView):

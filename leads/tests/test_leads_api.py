@@ -50,14 +50,12 @@ GET_RESPONSE_KEYS = {
     "lead_obj": {},
     "attachments": [],
     "comments":[],
-    "users_mention": [],
     "assigned_data": [],
     "teams": [],
     "contacts": [],
     "status": [],
     "source": [],
     "users": [],
-    "users_excluding_team": [],
     "countries": [],
     "industries": [],
 }
@@ -105,7 +103,7 @@ class PublicLeadsAPITests(TestCase):
 
         # Set the headers for the requests
         self.headers = {
-            "org": self.org.id,
+            "org": str(self.org.id),
         }
 
         # Mock the current user with a sales manager to make all the leads created_by equal to the sales_manager
