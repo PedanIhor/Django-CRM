@@ -216,8 +216,7 @@ export default function Sidebar(props: any) {
         { key: 'users', icon: <FaUserFriends />, permission: 'list_users' },
         { key: 'cases', icon: <FaBriefcase />, permission: 'list_cases' },
         { key: 'roles', icon: <FaUserTag />, permission: 'list_roles' },
-        { key: 'settings', icon: <FaCog />, permission: 'list_settings' },
-        { key: 'permissions', icon: <FaShieldAlt />, permission: 'list_roles' },
+        { key: 'settings', icon: <FaCog />, permission: 'list_settings' }
     ];
 
     
@@ -402,7 +401,6 @@ export default function Sidebar(props: any) {
                             <Route path='/app/roles' element={<Roles/>} />
                             <Route path="/app/settings" element={<Settings />} />
                             <Route path="/app/notifications" element={<Notifications fetchUnreadNotificationsCount={fetchUnreadNotificationsCount} />} />
-                            <Route path="/app/permissions" element={<PermissionsMatrix />} />
                             <Route path="/app/my-profile" element={<MyProfile />} />
                         </Routes>
                     </Box>
