@@ -1,3 +1,4 @@
+from leads.serializer import LeadSerializer
 from rest_framework import serializers
 
 from accounts.models import Tags
@@ -26,7 +27,7 @@ class OpportunitySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Opportunity
-        # fields = ‘__all__’
+        # fields = 'all__'
         fields = (
             "id",
             "name",
@@ -81,15 +82,33 @@ class OpportunityCreateSerializer(serializers.ModelSerializer):
                 )
         return name
 
+    def validate_lead(self, lead):
+        if not lead:
+            return lead
+
+        # Check if lead belongs to the same organization
+        if lead.org != self.org:
+            raise serializers.ValidationError(
+                "This lead does not belong to your organization"
+            )
+
+        # Check if lead is already associated with another opportunity
+        # We don't need to exclude self.instance in this check when updating
+        # because OneToOne field will handle that automatically
+        if hasattr(lead, 'opportunity'):
+            raise serializers.ValidationError(
+                "This lead is already associated with another opportunity"
+            )
+
+        return lead
+
     class Meta:
         model = Opportunity
         fields = (
             "name",
-            "account",
             "stage",
             "currency",
             "amount",
-            "lead_source",
             "probability",
             "closed_on",
             "description",
@@ -97,7 +116,8 @@ class OpportunityCreateSerializer(serializers.ModelSerializer):
             "created_at",
             "is_active",
             "created_on_arrow",
-            "org"
+            "org",
+            "lead",
             # "get_team_users",
             # "get_team_and_assigned_users",
             # "get_assigned_users_not_in_teams",
