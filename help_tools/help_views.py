@@ -34,8 +34,9 @@ class OrgViewSet(viewsets.ModelViewSet):
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_superuser:
             org_header = request.headers.get("org")
-            org_id = str(request.profile.org.id)
-            self.org_id = org_id
-            if org_id != org_header:
+            if request.profile is None:
+                raise PermissionDenied("You don't have permissions to perform this action!")
+            self.org_id = str(request.profile.org.id)
+            if self.org_id != org_header:
                 raise PermissionDenied("You don't have permissions to perform this action!")
         return super().dispatch(request, *args, **kwargs)
