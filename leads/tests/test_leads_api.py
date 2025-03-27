@@ -432,8 +432,10 @@ class PublicLeadsAPITests(TestCase):
         self.assertFalse(exists)
 
     def test_delete_lead_no_permission(self):
+        """user2@test.com must not be allowed to delete leads created by user1@test.com"""
+
         print("\n~~~~~~~~~~~~~ test_delete_lead_no_permission ~~~~~~~~~~~~~~~")
-        user = User.objects.get(profile__org__id=self.org.id, email="user3@test.com")
+        user = User.objects.get(profile__org__id=self.org.id, email="user2@test.com")
         lead_id = Lead.objects.filter(org_id=self.org.id).first().id
 
         lead_url = reverse("common_urls:api_leads:lead-detail", args=[lead_id])

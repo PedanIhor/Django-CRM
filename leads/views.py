@@ -157,6 +157,11 @@ class LeadsViewSet(help_views.OrgViewSet):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self._check_edit_permission_for_lead(request, instance)
+        return super().destroy(request, *args, **kwargs)
+
     def _check_read_permission_for_lead(self, request, lead):
         if not (request.profile.role.name == "ADMIN" or request.user.is_superuser):
             if request.profile not in lead.assigned_to.all():
