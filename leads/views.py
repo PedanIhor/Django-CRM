@@ -107,7 +107,7 @@ class LeadsViewSet(help_views.OrgViewSet):
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
 
-        self._check_permission_for_lead(request, instance)
+        self._check_read_permission_for_lead(request, instance)
 
         context = self._build_default_context()
 
@@ -127,9 +127,46 @@ class LeadsViewSet(help_views.OrgViewSet):
 
         return Response(context, status=status.HTTP_200_OK)
 
-    def _check_permission_for_lead(self, request, lead):
+    def create(self, request, *args, **kwargs):
+        data = request.data
+        serializer = LeadCreateSerializer(data=data, request_obj=request)
+        if serializer.is_valid():
+            lead_obj = serializer.save(created_by=request.profile.user, org=request.profile.org)
+            return Response(
+                {"error": False, "message": "Lead Created Successfully"},
+                status=status.HTTP_201_CREATED,
+            )
+        return Response(
+            {"error": True, "errors": serializer.errors},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self._check_edit_permission_for_lead(request, instance)
+
+        serializer = LeadCreateSerializer(instance, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {"error": False, "message": "Lead Updated Successfully"},
+                status=status.HTTP_200_OK,
+            )
+        return Response(
+            {"error": True, "errors": serializer.errors},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    def _check_read_permission_for_lead(self, request, lead):
         if not (request.profile.role.name == "ADMIN" or request.user.is_superuser):
             if request.profile not in lead.assigned_to.all():
+                raise PermissionDenied(
+                    "You do not have permission to perform this action"
+                )
+
+    def _check_edit_permission_for_lead(self, request, lead):
+        if not (request.profile.role.name == "ADMIN" or request.user.is_superuser):
+            if request.profile.user.id != lead.created_by.id:
                 raise PermissionDenied(
                     "You do not have permission to perform this action"
                 )

@@ -272,6 +272,13 @@ class PublicLeadsAPITests(TestCase):
         res_leads_ids = [lead["id"] for lead in res.data["open_leads"]["open_leads"]]
         self.assertEqual(db_leads_ids, res_leads_ids)
 
+    def test_post_leads_without_org(self):
+        print("\n~~~~~~~~~~~~~ test_post_leads_without_org ~~~~~~~~~~~~~~~")
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.retrieve_token_for_user(self.sales_manager))
+        payload = POST_REQUEST_PAYLOAD.copy()
+        res = self.client.post(LEADS_URL, json.dumps(payload), headers={}, content_type="application/json")
+        self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
+
     def test_post_leads(self):
         print("\n~~~~~~~~~~~~~ test_post_leads ~~~~~~~~~~~~~~~")
         self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.retrieve_token_for_user(self.sales_manager))
@@ -383,7 +390,7 @@ class PublicLeadsAPITests(TestCase):
         self.assertEqual(lead.website, "https://updated-site.com")
         self.assertEqual(lead.description, "")
         self.assertEqual(lead.teams.count(), 0) # We do not have an user interface to assign a lead to a team for now
-        updated_assigned_ids = {str(id) for id in list(lead.assigned_to.all().values_list("id", flat=True))}
+        updated_assigned_ids = {str(user.id) for user in list(lead.assigned_to.all())}
         self.assertEqual(updated_assigned_ids, new_assigned_to_ids)
         self.assertEqual(lead.contacts.all().count(), 2)
         updated_contacts_ids = {str(contact.id) for contact in lead.contacts.all()}
