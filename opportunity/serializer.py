@@ -16,7 +16,6 @@ class TagsSerializer(serializers.ModelSerializer):
 
 
 class OpportunitySerializer(serializers.ModelSerializer):
-    account = AccountSerializer()
     closed_by = ProfileSerializer()
     created_by = UserSerializer()
     tags = TagsSerializer(read_only=True, many=True)
@@ -34,7 +33,6 @@ class OpportunitySerializer(serializers.ModelSerializer):
             "stage",
             "currency",
             "amount",
-            "lead_source",
             "probability",
             "contacts",
             "closed_by",
@@ -48,7 +46,6 @@ class OpportunitySerializer(serializers.ModelSerializer):
             "opportunity_attachment",
             "teams",
             "created_on_arrow",
-            "account",
             # "get_team_users",
             # "get_team_and_assigned_users",
             # "get_assigned_users_not_in_teams",

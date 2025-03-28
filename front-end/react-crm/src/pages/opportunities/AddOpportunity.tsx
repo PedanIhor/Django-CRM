@@ -34,12 +34,10 @@ import '../../styles/style.css'
 
 type FormErrors = {
     name?: string[],
-    account?: string[],
     amount?: string[],
     currency?: string[],
     stage?: string[],
     teams?: string[],
-    lead_source?: string[],
     probability?: string[],
     description?: string[],
     assigned_to?: string[],
@@ -54,12 +52,10 @@ type FormErrors = {
 interface FormData {
 
     name: string,
-    account: string,
     amount: string,
     currency: string,
     stage: string,
     teams: string[],
-    lead_source: string,
     probability: number,
     description: string,
     assigned_to: string[],
@@ -88,17 +84,14 @@ export function AddOpportunity() {
     const [currencySelectOpen, setCurrencySelectOpen] = useState(false)
     const [stageSelectOpen, setStageSelectOpen] = useState(false)
     const [contactSelectOpen, setContactSelectOpen] = useState(false)
-    const [accountSelectOpen, setAccountSelectOpen] = useState(false)
 
     const [errors, setErrors] = useState<FormErrors>({});
     const [formData, setFormData] = useState<FormData>({
         name: '',
-        account: '',
         amount: '',
         currency: '',
         stage: '',
         teams: [],
-        lead_source: '',
         probability: 1,
         description: '',
         assigned_to: [],
@@ -191,12 +184,10 @@ export function AddOpportunity() {
         const data = {
 
             name: formData.name,
-            account: formData.account,
             amount: formData.amount,
             currency: formData.currency,
             stage: formData.stage,
             teams: formData.teams,
-            lead_source: formData.lead_source,
             probability: formData.probability,
             description: formData.description,
             assigned_to: formData.assigned_to,
@@ -225,12 +216,10 @@ export function AddOpportunity() {
     const resetForm = () => {
         setFormData({
             name: '',
-            account: '',
             amount: '',
             currency: '',
             stage: '',
             teams: [],
-            lead_source: '',
             probability: 1,
             description: '',
             assigned_to: [],
@@ -302,32 +291,6 @@ export function AddOpportunity() {
                                             </div>
                                         </div>
                                         <div className='fieldContainer2'>
-                                            <div className='fieldSubContainer'>
-                                                <div className='fieldTitle'>Account</div>
-                                                <FormControl sx={{ width: '70%' }}>
-                                                    <Select
-                                                        name='account'
-                                                        value={formData.account}
-                                                        open={accountSelectOpen}
-                                                        onClick={() => setAccountSelectOpen(!accountSelectOpen)}
-                                                        IconComponent={() => (
-                                                            <div onClick={() => setAccountSelectOpen(!accountSelectOpen)} className="select-icon-background">
-                                                                {accountSelectOpen ? <FiChevronUp className='select-icon' /> : <FiChevronDown className='select-icon' />}
-                                                            </div>
-                                                        )}
-                                                        className={'select'}
-                                                        onChange={handleChange}
-                                                        error={!!errors?.account?.[0]}
-                                                    >
-                                                        {state?.account?.length && state?.account.map((option: any) => (
-                                                            <MenuItem key={option?.id} value={option?.id}>
-                                                                {option?.name}
-                                                            </MenuItem>
-                                                        ))}
-                                                    </Select>
-                                                    <FormHelperText className='helperText'>{errors?.currency?.[0] ? errors?.currency[0] : ''}</FormHelperText>
-                                                </FormControl>
-                                            </div>
                                             <div className='fieldSubContainer'>
                                                 <div className='fieldTitle'>Currency</div>
                                                 <FormControl sx={{ width: '70%' }}>
@@ -410,32 +373,6 @@ export function AddOpportunity() {
                                             </div>
                                         </div>
                                         <div className='fieldContainer2'>
-                                            <div className='fieldSubContainer'>
-                                                <div className='fieldTitle'>Lead Source</div>
-                                                <FormControl sx={{ width: '70%' }}>
-                                                    <Select
-                                                        name='lead_source'
-                                                        value={formData.lead_source}
-                                                        open={leadSelectOpen}
-                                                        onClick={() => setLeadSelectOpen(!leadSelectOpen)}
-                                                        IconComponent={() => (
-                                                            <div onClick={() => setLeadSelectOpen(!leadSelectOpen)} className="select-icon-background">
-                                                                {leadSelectOpen ? <FiChevronUp className='select-icon' /> : <FiChevronDown className='select-icon' />}
-                                                            </div>
-                                                        )}
-                                                        className={'select'}
-                                                        onChange={handleChange}
-                                                        error={!!errors?.lead_source?.[0]}
-                                                    >
-                                                        {state?.leadSource?.length && state?.leadSource.map((option: any) => (
-                                                            <MenuItem key={option[0]} value={option[0]}>
-                                                                {option[1]}
-                                                            </MenuItem>
-                                                        ))}
-                                                    </Select>
-                                                    <FormHelperText className='helperText'>{errors?.lead_source?.[0] ? errors?.lead_source[0] : ''}</FormHelperText>
-                                                </FormControl>
-                                            </div>
                                             <div className='fieldSubContainer'>
                                                 <div className='fieldTitle'>Probability</div>
                                                 <TextField
