@@ -4,6 +4,7 @@ from rest_framework import serializers
 from accounts.models import Tags
 from accounts.serializer import AccountSerializer
 from common.serializer import AttachmentsSerializer, ProfileSerializer,UserSerializer
+from common.models import Profile
 from contacts.serializer import ContactSerializer
 from opportunity.models import Opportunity
 from teams.serializer import TeamsSerializer
@@ -55,6 +56,11 @@ class OpportunitySerializer(serializers.ModelSerializer):
 class OpportunityCreateSerializer(serializers.ModelSerializer):
     probability = serializers.IntegerField(max_value=100)
     closed_on = serializers.DateField
+    assigned_to = serializers.PrimaryKeyRelatedField(
+        queryset=Profile.objects.all(),
+        many=True,
+        required=True
+    )
 
     def __init__(self, *args, **kwargs):
         request_obj = kwargs.pop("request_obj", None)
@@ -99,6 +105,15 @@ class OpportunityCreateSerializer(serializers.ModelSerializer):
 
         return lead
 
+    def validate_assigned_to(self, assigned_to):
+        if assigned_to:
+            for profile in assigned_to:
+                if profile.org != self.org:
+                    raise serializers.ValidationError(
+                        f"Profile {profile} does not belong to your organization"
+                    )
+        return assigned_to
+
     class Meta:
         model = Opportunity
         fields = (
@@ -115,6 +130,7 @@ class OpportunityCreateSerializer(serializers.ModelSerializer):
             "created_on_arrow",
             "org",
             "lead",
+            "assigned_to",
             # "get_team_users",
             # "get_team_and_assigned_users",
             # "get_assigned_users_not_in_teams",

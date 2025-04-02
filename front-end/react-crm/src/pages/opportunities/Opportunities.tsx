@@ -89,10 +89,8 @@ export default function Opportunities({ userPermissions }: { userPermissions: st
   const navigate = useNavigate()
   const [tab, setTab] = useState('open');
   const [loading, setLoading] = useState(true);
-
   const [rowsPerPage, setRowsPerPage] = useState(10)
   const [page, setPage] = useState(0)
-
   const [opportunities, setOpportunities] = useState([])
   const [openOpportunities, setOpenOpportunities] = useState([])
   const [openOpportunitiesCount, setOpenOpportunitiesCount] = useState(0)
@@ -105,24 +103,19 @@ export default function Opportunities({ userPermissions }: { userPermissions: st
   const [account, setAccount] = useState([])
   const [stage, setStage] = useState([])
   const [teams, setTeams] = useState([])
-  const [users, setUsers] = useState([])
+  const [profiles, setProfiles] = useState([])
   const [countries, setCountries] = useState([])
-
+  const [leadsList, setLeadsList] = useState([])
   const [deleteRowModal, setDeleteRowModal] = useState(false)
-
   const [selectOpen, setSelectOpen] = useState(false);
-
   const [order, setOrder] = useState('asc')
   const [orderBy, setOrderBy] = useState('name')
-
   const [selected, setSelected] = useState<string[]>([]);
   const [selectedId, setSelectedId] = useState<string[]>([]);
   const [isSelectedId, setIsSelectedId] = useState<boolean[]>([]);
-
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [recordsPerPage, setRecordsPerPage] = useState<number>(10);
   const [totalPages, setTotalPages] = useState<number>(0);
-
   const [selectedTab, setSelectedTab] = useState(0);
 
   useEffect(() => {
@@ -143,6 +136,7 @@ export default function Opportunities({ userPermissions }: { userPermissions: st
         .then((res) => {
           // console.log(res, 'Opportunity')
           if (!res.error) {
+            console.log(res, 'Opportunity');
             setOpportunities(res?.opportunities)
             // setOpenOpportunities(res?.open_leads?.open_leads)
             // setOpenOpportunitiesCount(res?.open_leads?.leads_count)
@@ -156,8 +150,9 @@ export default function Opportunities({ userPermissions }: { userPermissions: st
             setStage(res?.stage)
             setTags(res?.tags)
             setTeams(res?.teams)
-            setUsers(res?.users)
+            setProfiles(res?.profiles_list)
             setCountries(res?.countries)
+            setLeadsList(res?.leads_list)
             setLoading(false)
           }
         })
@@ -176,7 +171,7 @@ export default function Opportunities({ userPermissions }: { userPermissions: st
       navigate('/app/opportunities/add-opportunity', {
         state: {
           detail: false,
-          contacts: contacts || [], leadSource: leadSource || [], currency: currency || [], tags: tags || [], account: account || [], stage: stage || [], users: users || [], teams: teams || [], countries: countries || []
+          contacts: contacts || [], leadSource: leadSource || [], currency: currency || [], tags: tags || [], account: account || [], stage: stage || [], teams: teams || [], countries: countries || [], leadsList: leadsList || [], profiles: profiles || []
         }
       })
     }
@@ -198,7 +193,7 @@ export default function Opportunities({ userPermissions }: { userPermissions: st
     navigate(`/app/opportunities/opportunity-details`, {
       state: {
         opportunityId, detail: true,
-        contacts: contacts || [], leadSource: leadSource || [], currency: currency || [], tags: tags || [], account: account || [], stage: stage || [], users: users || [], teams: teams || [], countries: countries || []
+        contacts: contacts || [], leadSource: leadSource || [], currency: currency || [], tags: tags || [], account: account || [], stage: stage || [], profiles: profiles || [], teams: teams || [], countries: countries || []
       }
     })
   }

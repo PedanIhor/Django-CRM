@@ -13,7 +13,7 @@ from django.db.models import Prefetch
 from accounts.models import Account, Tags
 from accounts.serializer import AccountSerializer, TagsSerailizer
 from common.crm_permissions import crm_permissions
-from common.models import Attachments, Comment, Profile
+from common.models import Attachments, Comment, Profile, User
 from leads.models import Lead
 from leads.serializer import LeadSerializer
 
@@ -46,6 +46,7 @@ class OpportunityListView(APIView, LimitOffsetPagination):
         queryset = self.model.objects.filter(org=self.request.profile.org).order_by("-id")
         accounts = Account.objects.filter(org=self.request.profile.org)
         contacts = Contact.objects.filter(org=self.request.profile.org)
+        profiles = Profile.objects.filter(org=self.request.profile.org)
         leads = Lead.objects.filter(org=self.request.profile.org)
         if self.request.profile.role != "ADMIN" and not self.request.user.is_superuser:
             queryset = queryset.filter(
@@ -100,6 +101,7 @@ class OpportunityListView(APIView, LimitOffsetPagination):
         context["opportunities"] = opportunities
         context["accounts_list"] = AccountSerializer(accounts, many=True).data
         context["contacts_list"] = ContactSerializer(contacts, many=True).data
+        context["profiles_list"] = ProfileSerializer(profiles, many=True).data
         context["leads_list"] = LeadSerializer(leads, many=True).data
         context["tags"] = TagsSerailizer(Tags.objects.filter(), many=True).data
         context["stage"] = STAGES
