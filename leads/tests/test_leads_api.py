@@ -435,11 +435,10 @@ class PublicLeadsAPITests(TestCase):
         self.assertTrue(exists)
 
     def test_get_leads_card_view(self):
-        """Test if get card view list request work properly"""
+        """Test if get card view list request returns 200 status code"""
 
         url = reverse("common_urls:api_leads:leads_card_view")
         self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.retrieve_token_for_user(self.admin))
 
         res = self.client.get(url, headers=self.headers, data={"status": "assigned"})
-        print(res.data)
         self.assertEqual(status.HTTP_200_OK, res.status_code)
