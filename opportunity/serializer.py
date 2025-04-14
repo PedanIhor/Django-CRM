@@ -1,11 +1,14 @@
+from leads.serializer import LeadSerializer
 from rest_framework import serializers
 
 from accounts.models import Tags
 from accounts.serializer import AccountSerializer
 from common.serializer import AttachmentsSerializer, ProfileSerializer,UserSerializer
+from common.models import Profile
 from contacts.serializer import ContactSerializer
 from opportunity.models import Opportunity
 from teams.serializer import TeamsSerializer
+from contacts.models import Contact
 
 
 class TagsSerializer(serializers.ModelSerializer):
@@ -15,7 +18,6 @@ class TagsSerializer(serializers.ModelSerializer):
 
 
 class OpportunitySerializer(serializers.ModelSerializer):
-    account = AccountSerializer()
     closed_by = ProfileSerializer()
     created_by = UserSerializer()
     tags = TagsSerializer(read_only=True, many=True)
@@ -23,17 +25,28 @@ class OpportunitySerializer(serializers.ModelSerializer):
     contacts = ContactSerializer(read_only=True, many=True)
     teams = TeamsSerializer(read_only=True, many=True)
     opportunity_attachment = AttachmentsSerializer(read_only=True, many=True)
+    account = serializers.SerializerMethodField()
+
+    def get_account(self, obj):
+        # Get the first contact's account if available
+        if obj.contacts.exists():
+            contact = obj.contacts.first()
+            if contact.account:
+                return {
+                    'id': contact.account.id,
+                    'name': contact.account.name
+                }
+        return None
 
     class Meta:
         model = Opportunity
-        # fields = ‘__all__’
+        # fields = 'all__'
         fields = (
             "id",
             "name",
             "stage",
             "currency",
             "amount",
-            "lead_source",
             "probability",
             "contacts",
             "closed_by",
@@ -57,11 +70,23 @@ class OpportunitySerializer(serializers.ModelSerializer):
 class OpportunityCreateSerializer(serializers.ModelSerializer):
     probability = serializers.IntegerField(max_value=100)
     closed_on = serializers.DateField
+    assigned_to = serializers.PrimaryKeyRelatedField(
+        queryset=Profile.objects.all(),
+        many=True,
+        required=True
+    )
+    contacts = serializers.PrimaryKeyRelatedField(
+        queryset=Contact.objects.all(),
+        many=True,
+        required=False
+    )
 
     def __init__(self, *args, **kwargs):
         request_obj = kwargs.pop("request_obj", None)
         super().__init__(*args, **kwargs)
         self.org = request_obj.profile.org
+        if not self.instance:
+            self.fields['contacts'].required = True
 
     def validate_name(self, name):
         if self.instance:
@@ -81,15 +106,72 @@ class OpportunityCreateSerializer(serializers.ModelSerializer):
                 )
         return name
 
+    def validate_lead(self, lead):
+        if not lead:
+            return lead
+
+        # Check if lead belongs to the same organization
+        if lead.org != self.org:
+            raise serializers.ValidationError(
+                "This lead does not belong to your organization"
+            )
+
+        # Check if lead is already associated with another opportunity
+        # We don't need to exclude self.instance in this check when updating
+        # because OneToOne field will handle that automatically
+        if hasattr(lead, 'opportunity'):
+            raise serializers.ValidationError(
+                "This lead is already associated with another opportunity"
+            )
+
+        return lead
+
+    def validate_assigned_to(self, assigned_to):
+        if assigned_to:
+            for profile in assigned_to:
+                if profile.org != self.org:
+                    raise serializers.ValidationError(
+                        f"Profile {profile} does not belong to your organization"
+                    )
+        return assigned_to
+
+    def validate_contacts(self, contacts):
+        if contacts:
+            # Check if all contacts belong to the same organization
+            for contact in contacts:
+                if contact.org != self.org:
+                    raise serializers.ValidationError(
+                        f"Contact {contact} does not belong to your organization"
+                    )
+            
+            # Check if all contacts have the same type
+            contact_types = set(contact.type for contact in contacts)
+            if len(contact_types) > 1:
+                raise serializers.ValidationError(
+                    "All contacts must be of the same type (either all individual or all corporate)"
+                )
+            
+            # If contacts are corporate, check if they belong to the same account
+            if 'corporate' in contact_types:
+                account_ids = set(contact.account.id for contact in contacts if contact.account)
+                if len(account_ids) > 1:
+                    raise serializers.ValidationError(
+                        "All corporate contacts must belong to the same account"
+                    )
+                if None in account_ids:
+                    raise serializers.ValidationError(
+                        "Corporate contacts must have an associated account"
+                    )
+        
+        return contacts
+
     class Meta:
         model = Opportunity
         fields = (
             "name",
-            "account",
             "stage",
             "currency",
             "amount",
-            "lead_source",
             "probability",
             "closed_on",
             "description",
@@ -97,7 +179,10 @@ class OpportunityCreateSerializer(serializers.ModelSerializer):
             "created_at",
             "is_active",
             "created_on_arrow",
-            "org"
+            "org",
+            "lead",
+            "assigned_to",
+            "contacts",
             # "get_team_users",
             # "get_team_and_assigned_users",
             # "get_assigned_users_not_in_teams",

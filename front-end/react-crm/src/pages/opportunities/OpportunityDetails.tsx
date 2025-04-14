@@ -76,7 +76,7 @@ type response = {
     opportunity_amount: string;
     website: string;
     description: string;
-    contacts: string;
+    contacts: [];
     status: string;
     source: string;
     address_line: string;
@@ -107,8 +107,6 @@ type response = {
     closed_on: string;
     opportunity_attachment: [];
     account: { id: string; name: string };
-
-
 };
 export const OpportunityDetails = (props: any) => {
     const { state } = useLocation()
@@ -299,12 +297,12 @@ export const OpportunityDetails = (props: any) => {
                     probability: opportunityDetails?.probability,
                     description: opportunityDetails?.description,
                     assigned_to: opportunityDetails?.assigned_to,
-                    contact_name: opportunityDetails?.contact_name,
+                    contacts: opportunityDetails?.contacts,
                     due_date: opportunityDetails?.closed_on,
                     tags: opportunityDetails?.tags,
                     opportunity_attachment: opportunityDetails?.opportunity_attachment,
                 }, id: state?.opportunityId,
-                contacts: state?.contacts || [], leadSource: state?.leadSource || [], currency: state?.currency || [], tags: state?.tags || [], account: state?.account || [], stage: state?.stage || [], users: state?.users || [], teams: state?.teams || [], countries: state?.countries || []
+                contacts: state?.contacts || [], leadSource: state?.leadSource || [], currency: state?.currency || [], tags: state?.tags || [], account: state?.account || [], stage: state?.stage || [], users: state?.users || [], teams: state?.teams || [], countries: state?.countries || [], profiles: state?.profiles || [],
             }
         }
         )
@@ -558,7 +556,24 @@ export const OpportunityDetails = (props: any) => {
                                 <div style={{ width: '32%' }}>
                                     <div className='title2'>Account</div>
                                     <div className='title3'>
-                                        {opportunityDetails?.account?.name || '----'}
+                                        {opportunityDetails?.account?.name ? (
+                                            <Link
+                                                component="button"
+                                                onClick={() => navigate('/app/accounts/account-details', {
+                                                    state: { accountId: opportunityDetails.account.id }
+                                                })}
+                                                sx={{
+                                                    cursor: 'pointer',
+                                                    textDecoration: 'none',
+                                                    color: '#3E79F7',
+                                                    '&:hover': {
+                                                        textDecoration: 'underline'
+                                                    }
+                                                }}
+                                            >
+                                                {opportunityDetails.account.name}
+                                            </Link>
+                                        ) : '----'}
                                     </div>
                                 </div>
                             </div>
@@ -592,17 +607,38 @@ export const OpportunityDetails = (props: any) => {
                                     <div className='title3'>
                                         {opportunityDetails?.currency || '----'}
                                     </div>
-                                </div>
+                                </div>                                
                                 <div style={{ width: '32%' }}>
-                                    <div className='title2'>Users</div>
+                                    <div className='title2'>Closed Date</div>
                                     <div className='title3'>
-                                        {opportunityDetails?.users || '----'}
+                                        {opportunityDetails?.closed_on || '----'}
                                     </div>
                                 </div>
                                 <div style={{ width: '32%' }}>
                                     <div className='title2'>Contacts</div>
                                     <div className='title3'>
-                                        {opportunityDetails?.contact_name || '----'}
+                                        {opportunityDetails?.contacts?.length ? (
+                                            opportunityDetails.contacts.map((contact: any, index: number) => (
+                                                <Link
+                                                    key={index}
+                                                    component="button"
+                                                    onClick={() => navigate('/app/contacts/contact-details', {
+                                                        state: { contactId: contact.id }
+                                                    })}
+                                                    sx={{
+                                                        cursor: 'pointer',
+                                                        textDecoration: 'none',
+                                                        color: '#3E79F7',
+                                                        '&:hover': {
+                                                            textDecoration: 'underline'
+                                                        }
+                                                    }}
+                                                >
+                                                    {contact.first_name} {contact.last_name}
+                                                    {index < opportunityDetails.contacts.length - 1 ? ', ' : ''}
+                                                </Link>
+                                            ))
+                                        ) : '----'}
                                     </div>
                                 </div>
                             </div>
@@ -618,17 +654,29 @@ export const OpportunityDetails = (props: any) => {
                                     <div className='title3'>
                                         {opportunityDetails?.assigned_to?.length
                                             ? opportunityDetails.assigned_to.map((assigned: any, index: number) => (
-                                                <span key={index}>{assigned.user_details.email || 'No Email'}</span>
+                                                <Link
+                                                    key={index}
+                                                    component="button"
+                                                    onClick={() => navigate('/app/users/user-details', {
+                                                        state: { userId: assigned.id }
+                                                    })}
+                                                    sx={{
+                                                        cursor: 'pointer',
+                                                        textDecoration: 'none',
+                                                        color: '#3E79F7',
+                                                        '&:hover': {
+                                                            textDecoration: 'underline'
+                                                        }
+                                                    }}
+                                                >
+                                                    {assigned.user_details.email || 'No Email'}
+                                                    {index < opportunityDetails.assigned_to.length - 1 ? ', ' : ''}
+                                                </Link>
                                             ))
                                             : '----'}
                                     </div>
                                 </div>
-                                <div style={{ width: '32%' }}>
-                                    <div className='title2'>Closed Date</div>
-                                    <div className='title3'>
-                                        {opportunityDetails?.closed_on || '----'}
-                                    </div>
-                                </div>
+                                <div style={{ width: '32%' }}></div>
                             </div>
                             {/* </div> */}
                             {/* Description */}

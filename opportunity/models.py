@@ -13,13 +13,6 @@ from teams.models import Teams
 
 class Opportunity(BaseModel):
     name = models.CharField(pgettext_lazy("Name of Opportunity", "Name"), max_length=64)
-    account = models.ForeignKey(
-        Account,
-        related_name="opportunities",
-        on_delete=models.CASCADE,
-        blank=True,
-        null=True,
-    )
     stage = models.CharField(
         pgettext_lazy("Stage of Opportunity", "Stage"), max_length=64, choices=STAGES
     )
@@ -28,9 +21,6 @@ class Opportunity(BaseModel):
     )
     amount = models.DecimalField(
         _("Opportunity Amount"), decimal_places=2, max_digits=12, blank=True, null=True
-    )
-    lead_source = models.CharField(
-        _("Source of Lead"), max_length=255, choices=SOURCES, blank=True, null=True
     )
     probability = models.IntegerField(default=0, blank=True, null=True)
     contacts = models.ManyToManyField(Contact)
@@ -56,6 +46,13 @@ class Opportunity(BaseModel):
         null=True,
         blank=True,
         related_name="oppurtunity_org",
+    )
+    lead = models.OneToOneField(
+        'leads.Lead',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='opportunity'
     )
 
     class Meta:

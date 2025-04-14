@@ -198,7 +198,6 @@ def seed_database():
                 amount=random.randint(5000, 50000),
                 probability=probability,
                 org=org,
-                account=account,
                 currency='EUR',  # Set currency to Euro
                 description=f"Opportunity of the converted lead whose id is {lead.id} and whose name title is {lead.title}",
             )

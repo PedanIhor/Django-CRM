@@ -13,7 +13,9 @@ from django.db.models import Prefetch
 from accounts.models import Account, Tags
 from accounts.serializer import AccountSerializer, TagsSerailizer
 from common.crm_permissions import crm_permissions
-from common.models import Attachments, Comment, Profile
+from common.models import Attachments, Comment, Profile, User
+from leads.models import Lead
+from leads.serializer import LeadSerializer
 
 #from common.external_auth import CustomDualAuthentication
 from common.serializer import (
@@ -44,6 +46,8 @@ class OpportunityListView(APIView, LimitOffsetPagination):
         queryset = self.model.objects.filter(org=self.request.profile.org).order_by("-id")
         accounts = Account.objects.filter(org=self.request.profile.org)
         contacts = Contact.objects.filter(org=self.request.profile.org)
+        profiles = Profile.objects.filter(org=self.request.profile.org)
+        leads = Lead.objects.filter(org=self.request.profile.org)
         if self.request.profile.role != "ADMIN" and not self.request.user.is_superuser:
             queryset = queryset.filter(
                 Q(created_by=self.request.profile.user) | Q(assigned_to=self.request.profile)
@@ -52,6 +56,9 @@ class OpportunityListView(APIView, LimitOffsetPagination):
                 Q(created_by=self.request.profile.user) | Q(assigned_to=self.request.profile)
             ).distinct()
             contacts = contacts.filter(
+                Q(created_by=self.request.profile.user) | Q(assigned_to=self.request.profile)
+            ).distinct()
+            leads = leads.filter(
                 Q(created_by=self.request.profile.user) | Q(assigned_to=self.request.profile)
             ).distinct()
 
@@ -94,6 +101,8 @@ class OpportunityListView(APIView, LimitOffsetPagination):
         context["opportunities"] = opportunities
         context["accounts_list"] = AccountSerializer(accounts, many=True).data
         context["contacts_list"] = ContactSerializer(contacts, many=True).data
+        context["profiles_list"] = ProfileSerializer(profiles, many=True).data
+        context["leads_list"] = LeadSerializer(leads, many=True).data
         context["tags"] = TagsSerailizer(Tags.objects.filter(), many=True).data
         context["stage"] = STAGES
         context["lead_source"] = SOURCES
@@ -165,14 +174,14 @@ class OpportunityListView(APIView, LimitOffsetPagination):
                 attachment.attachment = self.request.FILES.get("opportunity_attachment")
                 attachment.save()
 
-            recipients = list(
-                opportunity_obj.assigned_to.all().values_list("id", flat=True)
-            )
+            # recipients = list(
+            #     opportunity_obj.assigned_to.all().values_list("id", flat=True)
+            # )
 
-            send_email_to_assigned_user.delay(
-                recipients,
-                opportunity_obj.id,
-            )
+            # send_email_to_assigned_user.delay(
+            #     recipients,
+            #     opportunity_obj.id,
+            # )
             return Response(
                 {"error": False, "message": "Opportunity Created Successfully"},
                 status=status.HTTP_200_OK,
@@ -259,7 +268,7 @@ class OpportunityDetailView(APIView):
 
             opportunity_object.assigned_to.clear()
             if params.get("assigned_to"):
-                assigned_to_list = list(map(lambda details: details.get('id', None), params.get("assigned_to")))
+                assigned_to_list = params.get("assigned_to")
                 profiles = Profile.objects.filter(
                     id__in=assigned_to_list, org=request.profile.org, is_active=True
                 )
