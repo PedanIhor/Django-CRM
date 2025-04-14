@@ -5,7 +5,7 @@ import { FiPlus } from "@react-icons/all-files/fi/FiPlus";
 import { FiChevronLeft } from "@react-icons/all-files/fi/FiChevronLeft";
 import { FiChevronRight } from "@react-icons/all-files/fi/FiChevronRight";
 import { CustomTab, CustomToolbar, FabLeft, FabRight, StyledTableCell, StyledTableRow } from '../../styles/CssStyled';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { fetchData } from '../../components/FetchData';
 import { getComparator, stableSort } from '../../components/Sorting';
 import { Label } from '../../components/Label';
@@ -16,6 +16,7 @@ import { FiChevronUp } from '@react-icons/all-files/fi/FiChevronUp';
 import { FiChevronDown } from '@react-icons/all-files/fi/FiChevronDown';
 import { EnhancedTableHead } from '../../components/EnchancedTableHead';
 import OpportunitiesCardView from './OpportunitiesCardView';
+import SuccessSnackbar from '../../components/SuccessSnackbar';
 
 
 interface HeadCell {
@@ -87,6 +88,7 @@ type Item = {
 
 export default function Opportunities({ userPermissions }: { userPermissions: string[] }) {
   const navigate = useNavigate()
+  const location = useLocation()
   const [tab, setTab] = useState('open');
   const [loading, setLoading] = useState(true);
   const [rowsPerPage, setRowsPerPage] = useState(10)
@@ -117,10 +119,17 @@ export default function Opportunities({ userPermissions }: { userPermissions: st
   const [recordsPerPage, setRecordsPerPage] = useState<number>(10);
   const [totalPages, setTotalPages] = useState<number>(0);
   const [selectedTab, setSelectedTab] = useState(0);
+  const [successMessage, setSuccessMessage] = useState<string>('');
+  const [showSuccess, setShowSuccess] = useState<boolean>(false);
 
   useEffect(() => {
     getOpportunities()
-  }, [currentPage, recordsPerPage]);
+    // Check if we have a success message from navigation
+    if (location.state?.successMessage) {
+      setSuccessMessage(location.state.successMessage);
+      setShowSuccess(true);
+    }
+  }, [currentPage, recordsPerPage, location]);
 
   const getOpportunities = async () => {
     const Header = {
@@ -429,7 +438,24 @@ export default function Opportunities({ userPermissions }: { userPermissions: st
                                 {item?.name ? item?.name : '---'}
                               </TableCell>
                               <TableCell className='tableCell'>
-                                {item?.account ? item?.account?.name : '---'}
+                                {item?.account ? (
+                                  <Link
+                                    component="button"
+                                    onClick={() => navigate('/app/accounts/account-details', {
+                                      state: { accountId: item.account.id }
+                                    })}
+                                    sx={{
+                                      cursor: 'pointer',
+                                      textDecoration: 'none',
+                                      color: '#3E79F7',
+                                      '&:hover': {
+                                        textDecoration: 'underline'
+                                      }
+                                    }}
+                                  >
+                                    {item.account.name}
+                                  </Link>
+                                ) : '---'}
                               </TableCell>
                               <TableCell className='tableCell'>
                                 {item?.assigned_to && item?.assigned_to.length > 0 ? (
@@ -512,6 +538,12 @@ export default function Opportunities({ userPermissions }: { userPermissions: st
         modalDialog={modalDialog}
         modalTitle={modalTitle}
         DeleteItem={deleteItem}
+      />
+
+      <SuccessSnackbar
+        open={showSuccess}
+        onClose={() => setShowSuccess(false)}
+        message={successMessage}
       />
     </Box>
   )

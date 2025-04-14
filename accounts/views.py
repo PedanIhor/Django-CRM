@@ -391,9 +391,6 @@ class AccountDetailView(APIView):
                 "contacts": ContactSerializer(
                     self.account.contacts.all(), many=True
                 ).data,
-                "opportunity_list": OpportunitySerializer(
-                    Opportunity.objects.filter(account=self.account), many=True
-                ).data,
                 "users": ProfileSerializer(
                     Profile.objects.filter(
                         is_active=True, org=self.request.profile.org

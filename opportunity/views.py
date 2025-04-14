@@ -174,14 +174,14 @@ class OpportunityListView(APIView, LimitOffsetPagination):
                 attachment.attachment = self.request.FILES.get("opportunity_attachment")
                 attachment.save()
 
-            recipients = list(
-                opportunity_obj.assigned_to.all().values_list("id", flat=True)
-            )
+            # recipients = list(
+            #     opportunity_obj.assigned_to.all().values_list("id", flat=True)
+            # )
 
-            send_email_to_assigned_user.delay(
-                recipients,
-                opportunity_obj.id,
-            )
+            # send_email_to_assigned_user.delay(
+            #     recipients,
+            #     opportunity_obj.id,
+            # )
             return Response(
                 {"error": False, "message": "Opportunity Created Successfully"},
                 status=status.HTTP_200_OK,
@@ -268,7 +268,7 @@ class OpportunityDetailView(APIView):
 
             opportunity_object.assigned_to.clear()
             if params.get("assigned_to"):
-                assigned_to_list = list(map(lambda details: details.get('id', None), params.get("assigned_to")))
+                assigned_to_list = params.get("assigned_to")
                 profiles = Profile.objects.filter(
                     id__in=assigned_to_list, org=request.profile.org, is_active=True
                 )

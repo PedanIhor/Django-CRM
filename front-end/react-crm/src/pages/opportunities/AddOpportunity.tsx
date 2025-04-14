@@ -50,7 +50,6 @@ type FormErrors = {
   probability?: string[];
   description?: string[];
   assigned_to?: string[];
-  contact_name?: string[];
   contacts?: string[];
   due_date?: string[];
   tags?: string[];
@@ -68,7 +67,6 @@ interface FormData {
   probability: number;
   description: string;
   assigned_to: string[];
-  contact_name: string;
   contacts: string[];
   due_date: string;
   tags: string[];
@@ -106,7 +104,6 @@ export function AddOpportunity() {
     probability: 1,
     description: '',
     assigned_to: [],
-    contact_name: '',
     contacts: [],
     due_date: '',
     tags: [],
@@ -210,8 +207,7 @@ export function AddOpportunity() {
       probability: formData.probability,
       description: formData.description,
       assigned_to: formData.assigned_to,
-      // contacts: formData.contacts,
-      contact_name: formData.contacts,
+      contacts: formData.contacts,
       due_date: formData.due_date,
       tags: formData.tags,
       opportunity_attachment: formData.file,
@@ -222,7 +218,11 @@ export function AddOpportunity() {
         // console.log('Form data:', res);
         if (!res.error) {
           resetForm();
-          navigate('/app/opportunities');
+          navigate('/app/opportunities', {
+            state: {
+              successMessage: 'Opportunity created successfully!'
+            }
+          });
         }
         if (res.error) {
           setError(true);
@@ -241,7 +241,6 @@ export function AddOpportunity() {
       probability: 1,
       description: '',
       assigned_to: [],
-      contact_name: '',
       contacts: [],
       due_date: '',
       tags: [],
@@ -346,47 +345,68 @@ export function AddOpportunity() {
                     </div>
                     <div className="fieldContainer2">
                       <div className="fieldSubContainer">
-                        <div className="fieldTitle">Contact Name</div>
-                        <FormControl sx={{ width: '70%' }}>
-                          <RequiredSelect
-                            name="contact_name"
-                            value={formData.contact_name}
-                            open={contactSelectOpen}
-                            onClick={() =>
-                              setContactSelectOpen(!contactSelectOpen)
+                        <div className="fieldTitle">Contacts</div>
+                        <FormControl
+                          error={!!errors?.contacts?.[0]}
+                          sx={{ width: '70%' }}
+                        >
+                          <Autocomplete
+                            multiple
+                            value={selectedContacts}
+                            limitTags={2}
+                            options={state.contacts || []}
+                            getOptionLabel={(option: any) =>
+                              state.contacts ? option?.first_name : option
                             }
-                            IconComponent={() => (
-                              <div
-                                onClick={() =>
-                                  setContactSelectOpen(!contactSelectOpen)
-                                }
-                                className="select-icon-background"
-                              >
-                                {contactSelectOpen ? (
-                                  <FiChevronUp className="select-icon" />
-                                ) : (
-                                  <FiChevronDown className="select-icon" />
-                                )}
-                              </div>
+                            onChange={(e: any, value: any) =>
+                              handleChange2('contacts', value)
+                            }
+                            size="small"
+                            filterSelectedOptions
+                            renderTags={(value, getTagProps) =>
+                              value.map((option, index) => (
+                                <Chip
+                                  deleteIcon={
+                                    <FaTimes style={{ width: '9px' }} />
+                                  }
+                                  sx={{
+                                    backgroundColor: 'rgba(0, 0, 0, 0.08)',
+                                    height: '18px',
+                                  }}
+                                  variant="outlined"
+                                  label={
+                                    state.contacts ? option?.first_name : option
+                                  }
+                                  {...getTagProps({ index })}
+                                />
+                              ))
+                            }
+                            popupIcon={
+                              <CustomPopupIcon>
+                                <FaPlus className="input-plus-icon" />
+                              </CustomPopupIcon>
+                            }
+                            renderInput={(params) => (
+                              <RequiredTextField
+                                {...params}
+                                placeholder="Add Contacts"
+                                InputProps={{
+                                  ...params.InputProps,
+                                  sx: {
+                                    '& .MuiAutocomplete-popupIndicator': {
+                                      '&:hover': { backgroundColor: 'white' },
+                                    },
+                                    '& .MuiAutocomplete-endAdornment': {
+                                      mt: '-8px',
+                                      mr: '-8px',
+                                    },
+                                  },
+                                }}
+                              />
                             )}
-                            className="select"
-                            onChange={handleChange}
-                            error={!!errors?.contact_name?.[0]}
-                          >
-                            {state?.contacts?.length &&
-                              state?.contacts.map((option: any) => (
-                                <MenuItem
-                                  key={option?.id}
-                                  value={option?.first_name}
-                                >
-                                  {option?.first_name}
-                                </MenuItem>
-                              ))}
-                          </RequiredSelect>
-                          <FormHelperText className="helperText">
-                            {errors?.contact_name?.[0]
-                              ? errors?.contact_name[0]
-                              : ''}
+                          />
+                          <FormHelperText>
+                            {errors?.contacts?.[0] || ''}
                           </FormHelperText>
                         </FormControl>
                       </div>
@@ -607,7 +627,6 @@ export function AddOpportunity() {
                             multiple
                             limitTags={5}
                             options={state.tags || []}
-                            // options={state.contacts ? state.contacts.map((option: any) => option) : ['']}
                             getOptionLabel={(option: any) => option}
                             onChange={(e: any, value: any) =>
                               handleChange2('tags', value)
@@ -729,7 +748,6 @@ export function AddOpportunity() {
                             multiple
                             limitTags={5}
                             options={state.teams || []}
-                            // options={state.contacts ? state.contacts.map((option: any) => option) : ['']}
                             getOptionLabel={(option: any) => option}
                             onChange={(e: any, value: any) =>
                               handleChange2('teams', value)
