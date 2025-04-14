@@ -212,7 +212,7 @@ export default function Sidebar(props: any) {
         { key: 'leads', icon: <FaUsers />, permission: 'list_leads' },
         { key: 'contacts', icon: <FaAddressBook />, permission: 'list_contacts' },
         { key: 'opportunities', icon: <FaHandshake />, permission: 'list_opportunities' },
-        { key: 'accounts', icon: <FaBuilding />, permission: 'get_accounts' },
+        { key: 'accounts', icon: <FaBuilding />, permission: 'list_accounts' },
         { key: 'users', icon: <FaUserFriends />, permission: 'list_users' },
         { key: 'cases', icon: <FaBriefcase />, permission: 'list_cases' },
         { key: 'roles', icon: <FaUserTag />, permission: 'list_roles' },

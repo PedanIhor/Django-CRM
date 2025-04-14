@@ -75,7 +75,6 @@ class LeadSerializer(serializers.ModelSerializer):
 
 class LeadCreateSerializer(serializers.ModelSerializer):
     assigned_to = serializers.ListField(required=False)
-    teams = serializers.ListField(required=False)
     contacts = serializers.ListField(required=False)
     tags = serializers.ListField(required=False)
     org = serializers.CharField(required=False)
@@ -118,55 +117,11 @@ class LeadCreateSerializer(serializers.ModelSerializer):
             "close_date",
             "assigned_to",
             "contacts",
-            "teams",
             "tags",
             "industry",
             "skype_ID",
             "org",
         )
-
-    # def create(self, validated_data):
-    #     # ... create method if you have one ...
-    #     pass
-
-    def update(self, instance, validated_data):
-        instance.title = validated_data.get('title', instance.title)
-        instance.phone = validated_data.get('phone', instance.phone)
-        instance.email = validated_data.get('email', instance.email)
-        instance.status = validated_data.get('status', instance.status)
-        instance.source = validated_data.get('source', instance.source)
-        instance.website = validated_data.get('website', instance.website)
-        instance.description = validated_data.get('description', instance.description)
-        instance.opportunity_amount = validated_data.get('opportunity_amount', instance.opportunity_amount)
-        instance.skype_ID = validated_data.get('skype_ID', instance.skype_ID)
-        instance.industry = validated_data.get('industry', instance.industry)
-        instance.probability = validated_data.get('probability', instance.probability)
-
-        # Handle assigned_to - extract IDs from the profile objects
-        if 'assigned_to' in validated_data:
-            assigned_to_ids = []
-            for profile in validated_data['assigned_to']:
-                if isinstance(profile, dict):
-                    assigned_to_ids.append(profile.get('id'))
-                else:
-                    assigned_to_ids.append(profile)
-            instance.assigned_to.set(assigned_to_ids)
-
-        # Handle other many-to-many relationships
-        if 'contacts' in validated_data:
-            contact_ids = [c.get('id') if isinstance(c, dict) else c for c in validated_data['contacts']]
-            instance.contacts.set(contact_ids)
-
-        if 'teams' in validated_data:
-            team_ids = [t.get('id') if isinstance(t, dict) else t for t in validated_data['teams']]
-            instance.teams.set(team_ids)
-
-        if 'tags' in validated_data:
-            tag_ids = [t.get('id') if isinstance(t, dict) else t for t in validated_data['tags']]
-            instance.tags.set(tag_ids)
-
-        instance.save()
-        return instance
 
 
 class LeadCreateSwaggerSerializer(serializers.ModelSerializer):
