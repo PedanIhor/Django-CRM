@@ -13,7 +13,7 @@ roles_permissions_names = {
     "ADMIN": [
         "list_leads", "add_leads", "get_leads", "edit_leads", "delete_leads", "update_lead_status",
         "list_contacts", "add_contacts", "get_contacts", "edit_contacts", "delete_contacts",
-        "list_opportunities", "add_opportunities", "get_opportunities", "edit_opportunities", "delete_opportunities", "update_opportunity_status"
+        "list_opportunities", "add_opportunities", "get_opportunities", "edit_opportunities", "delete_opportunities", "update_opportunity_status",
         "list_accounts", "add_accounts", "get_accounts", "edit_accounts", "delete_accounts",
         "list_users", "add_users", "get_users", "edit_users", "delete_users",
         "list_cases", "add_cases", "get_cases", "edit_cases", "delete_cases",

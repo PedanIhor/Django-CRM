@@ -1,6 +1,8 @@
 import React, { ChangeEvent, useEffect, useState } from 'react'
 import { Check, Close } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
+import SuccessSnackbar from '../../components/SuccessSnackbar';
+
 import {
     Card,
     Link,
@@ -212,6 +214,10 @@ function LeadDetails(props: any) {
     const [currentStatus, setCurrentStatus] = useState('')
     const [activeStep, setActiveStep] = useState(0);
     const [updatingStage, setUpdatingStage] = useState(false);
+    const [previousStatus, setPreviousStatus] = useState('');
+    const [showSnackbar, setShowSnackbar] = useState(false);
+
+
 
     useEffect(() => {
         getLeadDetails(state.leadId)
@@ -272,6 +278,7 @@ function LeadDetails(props: any) {
                     setTeams(res?.teams)
                     setComments(res?.comments)
                     setCurrentStatus(res?.lead_obj?.status)
+                    setPreviousStatus(res?.lead_obj?.status)
 
                     // Format contacts for the dropdown
                     const formattedContacts = res.contacts.map((contact: any) => ({
@@ -330,6 +337,13 @@ function LeadDetails(props: any) {
             .catch(() => {
             })
     }
+
+    useEffect(() => {
+        if (currentStatus === 'converted' && previousStatus !== 'converted') {
+            setShowSnackbar(true);
+        }
+
+    }, [currentStatus, previousStatus]);
 
     const backbtnHandle = () => {
         navigate('/app/leads')
@@ -546,6 +560,23 @@ function LeadDetails(props: any) {
     // console.log(tags, countries, source, status, industries, users, contacts, 'leaddetail')
     return (
         <Box sx={{ mt: '60px' }}>
+            <SuccessSnackbar
+                open={showSnackbar}
+                onClose={() => setShowSnackbar(false)}
+                message="🎉 Congratulations! Lead is Converted!"
+                sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    fontSize: '1.2rem', 
+                    fontWeight: 'bold', 
+                    textAlign: 'center', 
+                    backgroundColor: '#fff', 
+                    color: '#4caf50', 
+                    // border: '2px solid #388e3c', 
+                    boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.6)', 
+                    borderRadius: '8px', 
+                }}
+            />
             <div>
                 <CustomAppBar backbtnHandle={backbtnHandle} module={module} backBtn={backBtn} crntPage={crntPage} editHandle={editHandle} />
                 <Box

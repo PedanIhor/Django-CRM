@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Check, Close } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
+import ConfettiAnimation from '../../components/ConfettiAnimation';
+import SuccessSnackbar from '../../components/SuccessSnackbar';
 
 import {
     Card,
@@ -142,6 +144,9 @@ export const OpportunityDetails = (props: any) => {
     const [closedWonCompleted, setClosedWonCompleted] = useState(false);
     const [closedLostCompleted, setClosedLostCompleted] = useState(false);
     const [updatedStages, setUpdatedStages] = React.useState(stages);
+    const [showConfetti, setShowConfetti] = useState(false);
+    const [previousStage, setPreviousStage] = useState('');
+    const [showSnackbar, setShowSnackbar] = useState(false);
 
 
     useEffect(() => {
@@ -159,8 +164,6 @@ export const OpportunityDetails = (props: any) => {
             console.log(activeStep)
         }
     }, [stages, currentStage]);
-
-
 
 
     const CustomStepConnector = styled(StepConnector)({
@@ -211,13 +214,6 @@ export const OpportunityDetails = (props: any) => {
         return <div className={className} style={iconStyle}>{icon}</div>;
     };
 
-
-
-
-
-
-
-
     const getOpportunityDetails = (id: any) => {
         const Header = {
             Accept: 'application/json',
@@ -250,6 +246,7 @@ export const OpportunityDetails = (props: any) => {
                     // setTeams(res?.teams)
                     // setComments(res?.comments)
                     setCurrentStage(res?.opportunity_obj.stage)
+                    setPreviousStage(res?.opportunity_obj.stage)
                     setStages(res?.stage?.map((stage: [string, string]) => stage[1]) || []);
                     
 
@@ -308,7 +305,18 @@ export const OpportunityDetails = (props: any) => {
         )
     }
 
+    useEffect(() => {
+        if (currentStage === 'CLOSED WON' && previousStage !== 'CLOSED WON') {
+            setShowConfetti(true);
+            setShowSnackbar(true);
     
+            // Stop the confetti after 10 seconds
+            setTimeout(() => setShowConfetti(false), 10000);
+        }
+    
+        // Update the previous stage
+        // setPreviousStage(currentStage);
+    }, [currentStage, previousStage]);
 
     const handleStageUpdate = async () => {
         if (activeStep > -1) {
@@ -398,6 +406,24 @@ export const OpportunityDetails = (props: any) => {
 
     return (
         <Box sx={{ mt: '60px' }}>
+            <ConfettiAnimation run={showConfetti} />
+            <SuccessSnackbar
+                open={showSnackbar}
+                onClose={() => setShowSnackbar(false)}
+                message="🎉 Congratulations! Opportunity Closed as Won!"
+                sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    fontSize: '1.2rem', 
+                    fontWeight: 'bold', 
+                    textAlign: 'center', 
+                    backgroundColor: '#fff', 
+                    color: '#4caf50', 
+                    // border: '2px solid #388e3c', 
+                    boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.6)', 
+                    borderRadius: '8px', 
+                }}
+            />
             <div>
                 <CustomAppBar backbtnHandle={backbtnHandle} module={module} backBtn={backBtn} crntPage={crntPage} editHandle={editHandle} />
                 <Box
