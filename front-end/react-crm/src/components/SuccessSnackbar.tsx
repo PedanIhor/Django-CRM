@@ -6,12 +6,13 @@ interface SuccessSnackbarProps {
     open: boolean;
     onClose: () => void;
     message: string;
+    sx?: object;
 }
 
-const SuccessSnackbar: React.FC<SuccessSnackbarProps> = ({ open, onClose, message }) => {
+const SuccessSnackbar: React.FC<SuccessSnackbarProps> = ({ open, onClose, message, sx }) => {
     return (
-        <Snackbar open={open} autoHideDuration={3000} onClose={onClose}>
-            <Alert onClose={onClose} severity="success" sx={{ width: '100%' }}>
+        <Snackbar open={open} autoHideDuration={10000} onClose={onClose} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
+            <Alert onClose={onClose} severity="success" sx={{ width: '100%', ...sx }}>
                 {message}
             </Alert>
         </Snackbar>
